@@ -1,0 +1,1099 @@
+-- supabase/migrations/20260223000000_initial_schema.sql
+CREATE TABLE IF NOT EXISTS "learning_queue" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"lesson_id" uuid NOT NULL,
+	"status" text DEFAULT 'pending' NOT NULL,
+	"progress_pct" integer DEFAULT 0 NOT NULL,
+	"added_during" text DEFAULT 'onboarding' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "learning_queue_user_id_lesson_id_unique" UNIQUE("user_id","lesson_id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "lessons" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"question_id" uuid NOT NULL,
+	"title" text NOT NULL,
+	"content" jsonb NOT NULL,
+	"estimated_duration_minutes" integer DEFAULT 5 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "lessons_question_id_unique" UNIQUE("question_id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "onboarding_progress" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"current_step" text DEFAULT 'gist' NOT NULL,
+	"quiz_question_index" integer DEFAULT 0 NOT NULL,
+	"lesson_preference" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "onboarding_progress_user_id_unique" UNIQUE("user_id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "questions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"order_index" integer NOT NULL,
+	"difficulty" text NOT NULL,
+	"category" text NOT NULL,
+	"question_text" text NOT NULL,
+	"options" jsonb NOT NULL,
+	"correct_option" integer NOT NULL,
+	"explanation" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "questions_order_index_unique" UNIQUE("order_index")
+);
+
+
+CREATE TABLE IF NOT EXISTS "quiz_attempts" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"question_id" uuid NOT NULL,
+	"selected_option" integer NOT NULL,
+	"is_correct" boolean NOT NULL,
+	"time_spent_seconds" integer,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "sat_problems" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"subtopic_id" uuid NOT NULL,
+	"order_index" integer NOT NULL,
+	"difficulty" text NOT NULL,
+	"question_text" text NOT NULL,
+	"options" jsonb NOT NULL,
+	"correct_option" integer NOT NULL,
+	"explanation" text NOT NULL,
+	"solution_steps" jsonb NOT NULL,
+	"concept_tags" jsonb NOT NULL,
+	"common_errors" jsonb NOT NULL,
+	"time_recommendation_seconds" integer NOT NULL,
+	"sat_frequency" text NOT NULL,
+	"hint" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "sat_problems_subtopic_id_order_index_unique" UNIQUE("subtopic_id","order_index")
+);
+
+
+CREATE TABLE IF NOT EXISTS "sat_quiz_answers" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"session_id" uuid NOT NULL,
+	"problem_id" uuid NOT NULL,
+	"selected_option" integer NOT NULL,
+	"is_correct" boolean NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "sat_quiz_sessions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"subtopic_id" uuid NOT NULL,
+	"score" integer NOT NULL,
+	"total_questions" integer NOT NULL,
+	"time_elapsed_seconds" integer NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "schedules" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"day_of_week" text NOT NULL,
+	"start_time" text NOT NULL,
+	"end_time" text NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "sessions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"schedule_id" uuid NOT NULL,
+	"scheduled_date" date NOT NULL,
+	"status" text DEFAULT 'planned' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "subtopics" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"topic_id" uuid NOT NULL,
+	"slug" text NOT NULL,
+	"name" text NOT NULL,
+	"order_index" integer NOT NULL,
+	"description" text NOT NULL,
+	"learning_objectives" jsonb NOT NULL,
+	"key_formulas" jsonb NOT NULL,
+	"common_mistakes" jsonb NOT NULL,
+	"tips_and_tricks" jsonb NOT NULL,
+	"difficulty" text NOT NULL,
+	"estimated_minutes" integer NOT NULL,
+	"prerequisite_subtopic_slugs" jsonb NOT NULL,
+	"conceptual_overview" jsonb NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "subtopics_topic_id_slug_unique" UNIQUE("topic_id","slug")
+);
+
+
+CREATE TABLE IF NOT EXISTS "topics" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" text NOT NULL,
+	"name" text NOT NULL,
+	"icon" text NOT NULL,
+	"order_index" integer NOT NULL,
+	"color_scheme" text NOT NULL,
+	"overview" text NOT NULL,
+	"learning_objectives" jsonb NOT NULL,
+	"sat_relevance" jsonb NOT NULL,
+	"difficulty_distribution" jsonb NOT NULL,
+	"estimated_total_minutes" integer NOT NULL,
+	"prerequisites" jsonb NOT NULL,
+	"key_concepts" jsonb NOT NULL,
+	"pro_tips" jsonb NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "topics_slug_unique" UNIQUE("slug"),
+	CONSTRAINT "topics_order_index_unique" UNIQUE("order_index")
+);
+
+
+CREATE TABLE IF NOT EXISTS "user_preferences" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"lesson_delivery" text,
+	"theme" text DEFAULT 'system',
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_preferences_user_id_unique" UNIQUE("user_id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clerk_id" text NOT NULL,
+	"email" text NOT NULL,
+	"display_name" text,
+	"avatar_url" text,
+	"skill_score" integer,
+	"onboarding_completed" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "users_clerk_id_unique" UNIQUE("clerk_id")
+);
+
+
+ALTER TABLE "learning_queue" ADD CONSTRAINT "learning_queue_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "learning_queue" ADD CONSTRAINT "learning_queue_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "lessons" ADD CONSTRAINT "lessons_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "onboarding_progress" ADD CONSTRAINT "onboarding_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sat_problems" ADD CONSTRAINT "sat_problems_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "public"."subtopics"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sat_quiz_answers" ADD CONSTRAINT "sat_quiz_answers_session_id_sat_quiz_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."sat_quiz_sessions"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sat_quiz_answers" ADD CONSTRAINT "sat_quiz_answers_problem_id_sat_problems_id_fk" FOREIGN KEY ("problem_id") REFERENCES "public"."sat_problems"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sat_quiz_sessions" ADD CONSTRAINT "sat_quiz_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sat_quiz_sessions" ADD CONSTRAINT "sat_quiz_sessions_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "public"."subtopics"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "schedules" ADD CONSTRAINT "schedules_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_schedule_id_schedules_id_fk" FOREIGN KEY ("schedule_id") REFERENCES "public"."schedules"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "subtopics" ADD CONSTRAINT "subtopics_topic_id_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."topics"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+-- supabase/migrations/20260303000000_add_target_score_friendships.sql
+CREATE TABLE IF NOT EXISTS "friendships" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"friend_user_id" uuid NOT NULL,
+	"status" text DEFAULT 'pending' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE "users" ADD COLUMN "target_score" integer;
+
+ALTER TABLE "friendships" ADD CONSTRAINT "friendships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "friendships" ADD CONSTRAINT "friendships_friend_user_id_users_id_fk" FOREIGN KEY ("friend_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+-- supabase/migrations/20260304000000_add_best_streak.sql
+ALTER TABLE "users" ADD COLUMN "best_streak" integer DEFAULT 0 NOT NULL;
+-- supabase/migrations/20260304010000_topics_subject.sql
+ALTER TABLE "topics" DROP CONSTRAINT "topics_order_index_unique";
+
+ALTER TABLE "topics" ADD COLUMN "subject" text DEFAULT 'math' NOT NULL;
+
+ALTER TABLE "topics" ADD CONSTRAINT "topics_subject_order_index" UNIQUE("subject","order_index");
+-- supabase/migrations/20260309000000_custom_topics.sql
+CREATE TABLE IF NOT EXISTS "custom_quiz_answers" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"session_id" uuid NOT NULL,
+	"question_id" uuid NOT NULL,
+	"selected_option" integer NOT NULL,
+	"is_correct" boolean NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "custom_quiz_sessions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"topic_id" uuid NOT NULL,
+	"score" integer NOT NULL,
+	"total_questions" integer NOT NULL,
+	"time_elapsed_seconds" integer NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "custom_topic_questions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"topic_id" uuid NOT NULL,
+	"order_index" integer NOT NULL,
+	"difficulty" text NOT NULL,
+	"question_text" text NOT NULL,
+	"options" jsonb NOT NULL,
+	"correct_option" integer NOT NULL,
+	"explanation" text NOT NULL,
+	"solution_steps" jsonb NOT NULL,
+	"hint" text NOT NULL,
+	"time_recommendation_seconds" integer NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "custom_topic_questions_topic_id_order_index_unique" UNIQUE("topic_id","order_index")
+);
+
+
+CREATE TABLE IF NOT EXISTS "custom_topics" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
+	"learning_objectives" jsonb NOT NULL,
+	"tips_and_tricks" jsonb NOT NULL,
+	"common_mistakes" jsonb NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_session_id_custom_quiz_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."custom_quiz_sessions"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_question_id_custom_topic_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."custom_topic_questions"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "custom_topic_questions" ADD CONSTRAINT "custom_topic_questions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "custom_topics" ADD CONSTRAINT "custom_topics_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+
+CREATE INDEX "custom_quiz_answers_session_id_idx" ON "custom_quiz_answers" USING btree ("session_id");
+
+CREATE INDEX "custom_quiz_sessions_user_id_idx" ON "custom_quiz_sessions" USING btree ("user_id");
+
+CREATE INDEX "custom_topic_questions_topic_id_idx" ON "custom_topic_questions" USING btree ("topic_id");
+
+CREATE INDEX "friendships_user_id_status_idx" ON "friendships" USING btree ("user_id","status");
+
+CREATE INDEX "learning_queue_user_id_status_idx" ON "learning_queue" USING btree ("user_id","status");
+
+CREATE INDEX "questions_difficulty_idx" ON "questions" USING btree ("difficulty");
+
+CREATE INDEX "quiz_attempts_user_id_idx" ON "quiz_attempts" USING btree ("user_id");
+
+CREATE INDEX "sat_problems_subtopic_id_idx" ON "sat_problems" USING btree ("subtopic_id");
+
+CREATE INDEX "sat_quiz_answers_session_id_idx" ON "sat_quiz_answers" USING btree ("session_id");
+
+CREATE INDEX "sat_quiz_answers_session_id_is_correct_idx" ON "sat_quiz_answers" USING btree ("session_id","is_correct");
+
+CREATE INDEX "sat_quiz_sessions_user_id_idx" ON "sat_quiz_sessions" USING btree ("user_id");
+
+CREATE INDEX "sat_quiz_sessions_user_id_subtopic_id_idx" ON "sat_quiz_sessions" USING btree ("user_id","subtopic_id");
+
+CREATE INDEX "schedules_user_id_is_active_idx" ON "schedules" USING btree ("user_id","is_active");
+
+CREATE INDEX "sessions_user_id_scheduled_date_idx" ON "sessions" USING btree ("user_id","scheduled_date");
+
+CREATE INDEX "sessions_user_id_status_idx" ON "sessions" USING btree ("user_id","status");
+
+CREATE INDEX "subtopics_topic_id_idx" ON "subtopics" USING btree ("topic_id");
+-- supabase/migrations/20260311000000_micro_lessons.sql
+CREATE TABLE IF NOT EXISTS "micro_lessons" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"subtopic_id" uuid NOT NULL,
+	"lesson_content" text DEFAULT '' NOT NULL,
+	"whiteboard_steps" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"status" text DEFAULT 'generating' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "micro_lessons_subtopic_id_unique" UNIQUE("subtopic_id")
+);
+
+
+ALTER TABLE "micro_lessons" ADD CONSTRAINT "micro_lessons_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "public"."subtopics"("id") ON DELETE cascade ON UPDATE no action;
+-- supabase/migrations/20260311010000_practice_problems.sql
+CREATE TABLE IF NOT EXISTS "practice_problems" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"subtopic_id" uuid,
+	"topic_slug" text NOT NULL,
+	"subtopic_slug" text NOT NULL,
+	"order_index" integer NOT NULL,
+	"difficulty" text NOT NULL,
+	"question_text" text NOT NULL,
+	"options" jsonb NOT NULL,
+	"correct_option" integer NOT NULL,
+	"explanation" text NOT NULL,
+	"solution_steps" jsonb NOT NULL,
+	"concept_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"common_errors" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"time_recommendation_seconds" integer NOT NULL,
+	"sat_frequency" text,
+	"hint" text DEFAULT '' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+
+
+CREATE INDEX "practice_problems_topic_subtopic_idx" ON "practice_problems" USING btree ("topic_slug","subtopic_slug");
+-- supabase/migrations/20260312_rpc_functions.sql
+-- RPC functions for atomic operations
+-- Run these in the Supabase SQL editor or via `supabase db push`
+
+-- save_sat_quiz_session: atomically inserts session + answers
+CREATE OR REPLACE FUNCTION save_sat_quiz_session(
+  p_user_id uuid,
+  p_subtopic_id uuid,
+  p_score int,
+  p_total_questions int,
+  p_time_elapsed_seconds int,
+  p_answers jsonb
+) RETURNS sat_quiz_sessions AS $$
+DECLARE v_session sat_quiz_sessions;
+BEGIN
+  INSERT INTO sat_quiz_sessions (user_id, subtopic_id, score, total_questions, time_elapsed_seconds)
+  VALUES (p_user_id, p_subtopic_id, p_score, p_total_questions, p_time_elapsed_seconds)
+  RETURNING * INTO v_session;
+
+  IF jsonb_array_length(p_answers) > 0 THEN
+    INSERT INTO sat_quiz_answers (session_id, problem_id, selected_option, is_correct)
+    SELECT v_session.id,
+           (a->>'problemId')::uuid,
+           (a->>'selectedOption')::int,
+           (a->>'isCorrect')::bool
+    FROM jsonb_array_elements(p_answers) a;
+  END IF;
+
+  RETURN v_session;
+END;
+$$ LANGUAGE plpgsql;
+
+-- save_custom_topic: atomically inserts topic + questions
+CREATE OR REPLACE FUNCTION save_custom_topic(
+  p_user_id uuid,
+  p_title text,
+  p_description text,
+  p_learning_objectives jsonb,
+  p_tips_and_tricks jsonb,
+  p_common_mistakes jsonb,
+  p_questions jsonb
+) RETURNS custom_topics AS $$
+DECLARE v_topic custom_topics;
+BEGIN
+  INSERT INTO custom_topics (user_id, title, description, learning_objectives, tips_and_tricks, common_mistakes)
+  VALUES (p_user_id, p_title, p_description, p_learning_objectives, p_tips_and_tricks, p_common_mistakes)
+  RETURNING * INTO v_topic;
+
+  IF jsonb_array_length(p_questions) > 0 THEN
+    INSERT INTO custom_topic_questions (topic_id, order_index, difficulty, question_text, options, correct_option, explanation, solution_steps, hint, time_recommendation_seconds)
+    SELECT v_topic.id,
+           (q->>'orderIndex')::int,
+           q->>'difficulty',
+           q->>'questionText',
+           (q->'options')::jsonb,
+           (q->>'correctOption')::int,
+           q->>'explanation',
+           (q->'solutionSteps')::jsonb,
+           q->>'hint',
+           (q->>'timeRecommendationSeconds')::int
+    FROM jsonb_array_elements(p_questions) q;
+  END IF;
+
+  RETURN v_topic;
+END;
+$$ LANGUAGE plpgsql;
+
+-- save_custom_quiz_session: atomically inserts session + answers
+CREATE OR REPLACE FUNCTION save_custom_quiz_session(
+  p_user_id uuid,
+  p_topic_id uuid,
+  p_score int,
+  p_total_questions int,
+  p_time_elapsed_seconds int,
+  p_answers jsonb
+) RETURNS custom_quiz_sessions AS $$
+DECLARE v_session custom_quiz_sessions;
+BEGIN
+  INSERT INTO custom_quiz_sessions (user_id, topic_id, score, total_questions, time_elapsed_seconds)
+  VALUES (p_user_id, p_topic_id, p_score, p_total_questions, p_time_elapsed_seconds)
+  RETURNING * INTO v_session;
+
+  IF jsonb_array_length(p_answers) > 0 THEN
+    INSERT INTO custom_quiz_answers (session_id, question_id, selected_option, is_correct)
+    SELECT v_session.id,
+           (a->>'questionId')::uuid,
+           (a->>'selectedOption')::int,
+           (a->>'isCorrect')::bool
+    FROM jsonb_array_elements(p_answers) a;
+  END IF;
+
+  RETURN v_session;
+END;
+$$ LANGUAGE plpgsql;
+
+-- supabase/migrations/20260313_excalidraw_lessons.sql
+-- Excalidraw-based lessons (MCP-powered)
+-- Stores the accumulated Excalidraw element set + lesson text per subtopic.
+
+create table if not exists excalidraw_lessons (
+  id            uuid primary key default gen_random_uuid(),
+  subtopic_id   uuid not null unique references subtopics(id) on delete cascade,
+  lesson_content text not null default '',
+  elements      jsonb not null default '[]'::jsonb,
+  checkpoint_id text,
+  status        text not null default 'generating'
+                  check (status in ('generating', 'ready', 'error')),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index if not exists excalidraw_lessons_subtopic_id_idx
+  on excalidraw_lessons(subtopic_id);
+
+-- supabase/migrations/20260319000000_tutor_lesson_plans.sql
+-- AI-generated tutor lesson plans per subtopic.
+-- Stores the structured LessonPlan JSON for on-demand AI tutor sessions.
+
+create table if not exists tutor_lesson_plans (
+  id            uuid primary key default gen_random_uuid(),
+  subtopic_id   uuid not null unique references subtopics(id) on delete cascade,
+  plan_content  jsonb not null default '{}'::jsonb,
+  status        text not null default 'generating'
+                  check (status in ('generating', 'ready', 'error')),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index if not exists tutor_lesson_plans_subtopic_id_idx
+  on tutor_lesson_plans(subtopic_id);
+
+-- supabase/migrations/20260319010000_custom_tutor_lesson_plans.sql
+create table if not exists custom_tutor_lesson_plans (
+  id              uuid primary key default gen_random_uuid(),
+  custom_topic_id uuid not null unique references custom_topics(id) on delete cascade,
+  plan_content    jsonb not null default '{}'::jsonb,
+  status          text not null default 'generating'
+                    check (status in ('generating', 'ready', 'error')),
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists custom_tutor_lesson_plans_topic_id_idx
+  on custom_tutor_lesson_plans(custom_topic_id);
+
+-- supabase/migrations/20260402_detailed_hint.sql
+-- Add detailed_hint column for gradient scaffolding (nudge → walk-through → reveal)
+ALTER TABLE practice_problems ADD COLUMN IF NOT EXISTS detailed_hint text;
+ALTER TABLE sat_problems ADD COLUMN IF NOT EXISTS detailed_hint text;
+
+-- supabase/migrations/20260403_drop_tutor_lesson_plans.sql
+-- Drop tutor lesson plan tables (tutor route removed)
+DROP TABLE IF EXISTS custom_tutor_lesson_plans;
+DROP TABLE IF EXISTS tutor_lesson_plans;
+
+-- supabase/migrations/20260406_adaptive_core.sql
+-- Adaptive Core: subsection skill tracking, difficulty levels, daily quests, XP
+
+-- A. Add difficulty_level (1-10) to sat_problems
+ALTER TABLE sat_problems ADD COLUMN IF NOT EXISTS difficulty_level integer;
+
+UPDATE sat_problems SET difficulty_level =
+  CASE difficulty
+    WHEN 'easy' THEN 1 + floor(random() * 3)::int
+    WHEN 'medium' THEN 4 + floor(random() * 3)::int
+    WHEN 'hard' THEN 7 + floor(random() * 4)::int
+    ELSE 5
+  END
+WHERE difficulty_level IS NULL;
+
+ALTER TABLE sat_problems ALTER COLUMN difficulty_level SET NOT NULL;
+ALTER TABLE sat_problems ADD CONSTRAINT sat_problems_difficulty_level_check
+  CHECK (difficulty_level >= 1 AND difficulty_level <= 10);
+
+-- B. Add difficulty_level and response_time_ms to sat_quiz_answers
+ALTER TABLE sat_quiz_answers ADD COLUMN IF NOT EXISTS difficulty_level integer;
+ALTER TABLE sat_quiz_answers ADD COLUMN IF NOT EXISTS response_time_ms integer;
+
+-- C. Subsection skills — per-user per-subtopic adaptive state
+CREATE TABLE IF NOT EXISTS subsection_skills (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subtopic_id uuid NOT NULL REFERENCES subtopics(id) ON DELETE CASCADE,
+  section_category text NOT NULL CHECK (section_category IN ('ReadingWriting', 'Math')),
+  level integer DEFAULT 1 NOT NULL CHECK (level >= 1 AND level <= 10),
+  xp integer DEFAULT 0 NOT NULL,
+  total_attempts integer DEFAULT 0 NOT NULL,
+  correct_attempts integer DEFAULT 0 NOT NULL,
+  last_10 boolean[] DEFAULT '{}' NOT NULL,
+  streak_correct integer DEFAULT 0 NOT NULL,
+  streak_wrong integer DEFAULT 0 NOT NULL,
+  last_seen_at timestamptz,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz DEFAULT now() NOT NULL,
+  CONSTRAINT subsection_skills_user_subtopic_unique UNIQUE(user_id, subtopic_id)
+);
+
+-- D. Daily quests — one per user per day
+CREATE TABLE IF NOT EXISTS daily_quests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quest_date date NOT NULL,
+  status text DEFAULT 'pending' NOT NULL CHECK (status IN ('pending', 'in_progress', 'completed')),
+  score integer DEFAULT 0 NOT NULL,
+  total_questions integer DEFAULT 20 NOT NULL,
+  correct_count integer DEFAULT 0 NOT NULL,
+  xp_earned integer DEFAULT 0 NOT NULL,
+  time_elapsed_seconds integer DEFAULT 0 NOT NULL,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz DEFAULT now() NOT NULL,
+  CONSTRAINT daily_quests_user_date_unique UNIQUE(user_id, quest_date)
+);
+
+-- E. Daily quest problems — the 20 selected problems per quest
+CREATE TABLE IF NOT EXISTS daily_quest_problems (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  quest_id uuid NOT NULL REFERENCES daily_quests(id) ON DELETE CASCADE,
+  problem_id uuid NOT NULL REFERENCES sat_problems(id) ON DELETE CASCADE,
+  subtopic_id uuid NOT NULL REFERENCES subtopics(id) ON DELETE CASCADE,
+  order_index integer NOT NULL,
+  bucket text NOT NULL CHECK (bucket IN ('weak', 'mid', 'stretch')),
+  difficulty_level integer NOT NULL,
+  selected_option integer,
+  is_correct boolean,
+  response_time_ms integer,
+  answered_at timestamptz,
+  CONSTRAINT daily_quest_problems_quest_order_unique UNIQUE(quest_id, order_index)
+);
+
+-- F. SAT profile + XP columns on users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS start_composite integer;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS current_composite integer;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS current_reading_writing integer;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS current_math integer;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS total_xp integer DEFAULT 0 NOT NULL;
+
+-- G. Indexes
+CREATE INDEX IF NOT EXISTS idx_subsection_skills_user ON subsection_skills(user_id);
+CREATE INDEX IF NOT EXISTS idx_subsection_skills_user_level ON subsection_skills(user_id, level);
+CREATE INDEX IF NOT EXISTS idx_daily_quests_user_date ON daily_quests(user_id, quest_date);
+CREATE INDEX IF NOT EXISTS idx_daily_quest_problems_quest ON daily_quest_problems(quest_id);
+CREATE INDEX IF NOT EXISTS idx_sat_problems_subtopic_difficulty ON sat_problems(subtopic_id, difficulty_level);
+
+-- supabase/migrations/20260407_drop_excalidraw_lessons.sql
+drop table if exists excalidraw_lessons;
+
+-- supabase/migrations/20260407_unified_problems.sql
+-- Unified problems schema: merges questions, sat_problems, practice_problems, custom_topic_questions
+-- into a single problems table, and merges quiz session/answer tables.
+
+-- Cleanup from any partial prior run
+DROP TABLE IF EXISTS quiz_answers;
+DROP TABLE IF EXISTS quiz_sessions;
+DROP TABLE IF EXISTS problems;
+DROP TYPE IF EXISTS session_source;
+DROP TYPE IF EXISTS problem_source;
+
+-- ============================================================
+-- A. Create unified problems table
+-- ============================================================
+
+CREATE TYPE problem_source AS ENUM ('onboarding', 'sat', 'practice', 'custom');
+
+CREATE TABLE problems (
+  id                          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  source                      problem_source NOT NULL,
+
+  -- Linking (nullable per source type)
+  subtopic_id                 uuid REFERENCES subtopics(id) ON DELETE CASCADE,
+  custom_topic_id             uuid REFERENCES custom_topics(id) ON DELETE CASCADE,
+  topic_slug                  text,
+  subtopic_slug               text,
+
+  -- Classification
+  order_index                 integer NOT NULL,
+  difficulty                  text NOT NULL,
+  difficulty_level            integer NOT NULL DEFAULT 5
+    CHECK (difficulty_level >= 1 AND difficulty_level <= 10),
+  category                    text,
+
+  -- Content
+  question_text               text NOT NULL,
+  options                     jsonb NOT NULL,
+  correct_option              integer NOT NULL,
+  explanation                 text NOT NULL,
+  solution_steps              jsonb NOT NULL DEFAULT '[]'::jsonb,
+  concept_tags                jsonb NOT NULL DEFAULT '[]'::jsonb,
+  common_errors               jsonb NOT NULL DEFAULT '[]'::jsonb,
+  hint                        text NOT NULL DEFAULT '',
+  detailed_hint               text,
+  time_recommendation_seconds integer NOT NULL DEFAULT 60,
+  sat_frequency               text,
+
+  created_at                  timestamptz NOT NULL DEFAULT now(),
+
+  -- Integrity constraints
+  CONSTRAINT problems_source_linking CHECK (
+    CASE source
+      WHEN 'sat'        THEN subtopic_id IS NOT NULL
+      WHEN 'practice'   THEN subtopic_id IS NOT NULL OR (topic_slug IS NOT NULL AND subtopic_slug IS NOT NULL)
+      WHEN 'custom'     THEN custom_topic_id IS NOT NULL
+      WHEN 'onboarding' THEN true
+    END
+  )
+);
+
+CREATE INDEX idx_problems_source ON problems(source);
+CREATE INDEX idx_problems_subtopic ON problems(subtopic_id) WHERE subtopic_id IS NOT NULL;
+CREATE INDEX idx_problems_subtopic_difficulty ON problems(subtopic_id, difficulty_level) WHERE subtopic_id IS NOT NULL;
+CREATE INDEX idx_problems_custom_topic ON problems(custom_topic_id) WHERE custom_topic_id IS NOT NULL;
+CREATE INDEX idx_problems_slug_pair ON problems(topic_slug, subtopic_slug) WHERE topic_slug IS NOT NULL;
+CREATE UNIQUE INDEX idx_problems_onboarding_order ON problems(order_index) WHERE source = 'onboarding';
+CREATE UNIQUE INDEX idx_problems_sat_subtopic_order ON problems(subtopic_id, order_index) WHERE source = 'sat';
+CREATE UNIQUE INDEX idx_problems_custom_topic_order ON problems(custom_topic_id, order_index) WHERE custom_topic_id IS NOT NULL;
+
+-- ============================================================
+-- B. Create unified quiz_sessions table
+-- ============================================================
+
+CREATE TYPE session_source AS ENUM ('onboarding', 'sat', 'custom');
+
+CREATE TABLE quiz_sessions (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id              uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source               session_source NOT NULL,
+  subtopic_id          uuid REFERENCES subtopics(id) ON DELETE CASCADE,
+  custom_topic_id      uuid REFERENCES custom_topics(id) ON DELETE CASCADE,
+  score                integer NOT NULL DEFAULT 0,
+  total_questions      integer NOT NULL DEFAULT 1,
+  time_elapsed_seconds integer NOT NULL DEFAULT 0,
+  created_at           timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_quiz_sessions_user ON quiz_sessions(user_id);
+CREATE INDEX idx_quiz_sessions_user_source ON quiz_sessions(user_id, source);
+CREATE INDEX idx_quiz_sessions_user_subtopic ON quiz_sessions(user_id, subtopic_id) WHERE subtopic_id IS NOT NULL;
+
+-- ============================================================
+-- C. Create unified quiz_answers table
+-- ============================================================
+
+CREATE TABLE quiz_answers (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id       uuid NOT NULL REFERENCES quiz_sessions(id) ON DELETE CASCADE,
+  problem_id       uuid NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  selected_option  integer NOT NULL,
+  is_correct       boolean NOT NULL,
+  difficulty_level integer,
+  response_time_ms integer,
+  created_at       timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_quiz_answers_session ON quiz_answers(session_id);
+CREATE INDEX idx_quiz_answers_session_correct ON quiz_answers(session_id, is_correct);
+CREATE INDEX idx_quiz_answers_problem ON quiz_answers(problem_id);
+
+-- ============================================================
+-- D. Migrate data
+-- ============================================================
+
+-- D1: Onboarding questions → problems
+INSERT INTO problems (id, source, order_index, difficulty, difficulty_level, category, question_text, options, correct_option, explanation, created_at)
+SELECT id, 'onboarding'::problem_source, order_index, difficulty, 5, category, question_text, options, correct_option, explanation, created_at
+FROM questions;
+
+-- D2: SAT problems → problems
+INSERT INTO problems (id, source, subtopic_id, order_index, difficulty, difficulty_level, question_text, options, correct_option, explanation, solution_steps, concept_tags, common_errors, hint, detailed_hint, time_recommendation_seconds, sat_frequency, created_at)
+SELECT id, 'sat'::problem_source, subtopic_id, order_index, difficulty, difficulty_level, question_text, options, correct_option, explanation, solution_steps, concept_tags, common_errors, hint, detailed_hint, time_recommendation_seconds, sat_frequency, created_at
+FROM sat_problems;
+
+-- D3: Practice problems → problems
+INSERT INTO problems (id, source, subtopic_id, topic_slug, subtopic_slug, order_index, difficulty, difficulty_level, question_text, options, correct_option, explanation, solution_steps, concept_tags, common_errors, hint, detailed_hint, time_recommendation_seconds, sat_frequency, created_at)
+SELECT id, 'practice'::problem_source, subtopic_id, topic_slug, subtopic_slug, order_index, difficulty,
+  CASE difficulty WHEN 'easy' THEN 2 WHEN 'medium' THEN 5 WHEN 'hard' THEN 8 ELSE 5 END,
+  question_text, options, correct_option, explanation, solution_steps, concept_tags, common_errors, hint, detailed_hint, time_recommendation_seconds, sat_frequency, COALESCE(created_at, now())
+FROM practice_problems;
+
+-- D4: Custom topic questions → problems
+INSERT INTO problems (id, source, custom_topic_id, order_index, difficulty, difficulty_level, question_text, options, correct_option, explanation, solution_steps, hint, time_recommendation_seconds, created_at)
+SELECT id, 'custom'::problem_source, topic_id, order_index, difficulty, 5, question_text, options, correct_option, explanation, solution_steps, hint, time_recommendation_seconds, created_at
+FROM custom_topic_questions;
+
+-- D5: SAT quiz sessions → quiz_sessions
+INSERT INTO quiz_sessions (id, user_id, source, subtopic_id, score, total_questions, time_elapsed_seconds, created_at)
+SELECT id, user_id, 'sat'::session_source, subtopic_id, score, total_questions, time_elapsed_seconds, created_at
+FROM sat_quiz_sessions;
+
+-- D6: SAT quiz answers → quiz_answers
+INSERT INTO quiz_answers (id, session_id, problem_id, selected_option, is_correct, difficulty_level, response_time_ms, created_at)
+SELECT id, session_id, problem_id, selected_option, is_correct, difficulty_level, response_time_ms, created_at
+FROM sat_quiz_answers;
+
+-- D7: Custom quiz sessions → quiz_sessions
+INSERT INTO quiz_sessions (id, user_id, source, custom_topic_id, score, total_questions, time_elapsed_seconds, created_at)
+SELECT id, user_id, 'custom'::session_source, topic_id, score, total_questions, time_elapsed_seconds, created_at
+FROM custom_quiz_sessions;
+
+-- D8: Custom quiz answers → quiz_answers
+INSERT INTO quiz_answers (id, session_id, problem_id, selected_option, is_correct, created_at)
+SELECT id, session_id, question_id, selected_option, is_correct, created_at
+FROM custom_quiz_answers;
+
+-- D9: Onboarding quiz_attempts → quiz_sessions + quiz_answers
+INSERT INTO quiz_sessions (id, user_id, source, score, total_questions, time_elapsed_seconds, created_at)
+SELECT id, user_id, 'onboarding'::session_source,
+  CASE WHEN is_correct THEN 1 ELSE 0 END,
+  1,
+  COALESCE(time_spent_seconds, 0),
+  created_at
+FROM quiz_attempts;
+
+INSERT INTO quiz_answers (session_id, problem_id, selected_option, is_correct, created_at)
+SELECT id, question_id, selected_option, is_correct, created_at
+FROM quiz_attempts;
+
+-- ============================================================
+-- E. Re-point foreign keys
+-- ============================================================
+
+-- E1: daily_quest_problems.problem_id → problems
+ALTER TABLE daily_quest_problems
+  DROP CONSTRAINT IF EXISTS daily_quest_problems_problem_id_fkey,
+  DROP CONSTRAINT IF EXISTS daily_quest_problems_problem_id_sat_problems_id_fk;
+
+ALTER TABLE daily_quest_problems
+  ADD CONSTRAINT daily_quest_problems_problem_id_problems_fk
+  FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE;
+
+-- E2: lessons.question_id → rename to problem_id, FK to problems
+ALTER TABLE lessons
+  DROP CONSTRAINT IF EXISTS lessons_question_id_questions_id_fk;
+
+ALTER TABLE lessons RENAME COLUMN question_id TO problem_id;
+
+ALTER TABLE lessons
+  RENAME CONSTRAINT lessons_question_id_unique TO lessons_problem_id_unique;
+
+ALTER TABLE lessons
+  ADD CONSTRAINT lessons_problem_id_problems_fk
+  FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE;
+
+-- ============================================================
+-- F. Drop old functions that depend on old table types
+-- ============================================================
+
+DROP FUNCTION IF EXISTS save_sat_quiz_session(uuid, uuid, integer, integer, integer, jsonb);
+DROP FUNCTION IF EXISTS save_custom_topic(uuid, text, text, jsonb, jsonb, jsonb, jsonb);
+DROP FUNCTION IF EXISTS save_custom_quiz_session(uuid, uuid, integer, integer, integer, jsonb);
+
+-- ============================================================
+-- G. Drop old tables (order matters for FK deps)
+-- ============================================================
+
+DROP TABLE IF EXISTS quiz_attempts;
+DROP TABLE IF EXISTS sat_quiz_answers;
+DROP TABLE IF EXISTS sat_quiz_sessions;
+DROP TABLE IF EXISTS custom_quiz_answers;
+DROP TABLE IF EXISTS custom_quiz_sessions;
+DROP TABLE IF EXISTS custom_topic_questions;
+DROP TABLE IF EXISTS practice_problems;
+DROP TABLE IF EXISTS sat_problems;
+DROP TABLE IF EXISTS questions;
+
+-- supabase/migrations/20260412_subtopic_lore.sql
+CREATE TABLE IF NOT EXISTS "subtopic_lore" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"subtopic_id" uuid NOT NULL,
+	"whiteboard_steps" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"status" text DEFAULT 'generating' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "subtopic_lore_subtopic_id_unique" UNIQUE("subtopic_id")
+);
+
+ALTER TABLE "subtopic_lore" ADD CONSTRAINT "subtopic_lore_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "public"."subtopics"("id") ON DELETE cascade ON UPDATE no action;
+
+-- supabase/migrations/20260413_full_sat.sql
+-- Full SAT practice test module: test blueprints, attempts, and per-question answers.
+
+-- ============================================================
+-- A. Extend enums
+-- ============================================================
+
+ALTER TYPE problem_source ADD VALUE IF NOT EXISTS 'full_sat';
+ALTER TYPE session_source ADD VALUE IF NOT EXISTS 'full_sat';
+
+-- ============================================================
+-- B. Update CHECK constraint on problems to allow full_sat
+-- ============================================================
+
+ALTER TABLE problems DROP CONSTRAINT problems_source_linking;
+ALTER TABLE problems ADD CONSTRAINT problems_source_linking CHECK (
+  CASE source
+    WHEN 'sat'        THEN subtopic_id IS NOT NULL
+    WHEN 'full_sat'   THEN subtopic_id IS NOT NULL
+    WHEN 'practice'   THEN subtopic_id IS NOT NULL OR (topic_slug IS NOT NULL AND subtopic_slug IS NOT NULL)
+    WHEN 'custom'     THEN custom_topic_id IS NOT NULL
+    WHEN 'onboarding' THEN true
+  END
+);
+
+-- ============================================================
+-- C. full_sat_tests — reusable test blueprints
+-- ============================================================
+
+CREATE TABLE full_sat_tests (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  test_number integer NOT NULL UNIQUE,
+  name        text NOT NULL,
+  status      text NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft', 'active', 'retired')),
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+-- ============================================================
+-- D. full_sat_test_problems — maps problems into test sections/modules
+-- ============================================================
+
+CREATE TABLE full_sat_test_problems (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  test_id     uuid NOT NULL REFERENCES full_sat_tests(id) ON DELETE CASCADE,
+  problem_id  uuid NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  section     text NOT NULL CHECK (section IN ('reading_writing', 'math')),
+  module      integer NOT NULL CHECK (module IN (1, 2)),
+  order_index integer NOT NULL,
+  CONSTRAINT full_sat_test_problems_unique UNIQUE (test_id, section, module, order_index)
+);
+
+CREATE INDEX idx_fst_problems_test ON full_sat_test_problems(test_id);
+CREATE INDEX idx_fst_problems_test_section ON full_sat_test_problems(test_id, section, module);
+
+-- ============================================================
+-- E. full_sat_attempts — per-user test attempts
+-- ============================================================
+
+CREATE TABLE full_sat_attempts (
+  id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id               uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  test_id               uuid NOT NULL REFERENCES full_sat_tests(id) ON DELETE CASCADE,
+  status                text NOT NULL DEFAULT 'in_progress'
+    CHECK (status IN ('in_progress', 'completed', 'abandoned')),
+
+  -- Section scores (SAT 200-800 scale)
+  rw_raw_score          integer,
+  rw_scaled_score       integer,
+  math_raw_score        integer,
+  math_scaled_score     integer,
+  total_score           integer,
+
+  -- Module-level tracking (for future adaptive Module 2)
+  rw_module1_correct    integer DEFAULT 0,
+  math_module1_correct  integer DEFAULT 0,
+
+  -- Timing
+  rw_time_seconds       integer DEFAULT 0,
+  math_time_seconds     integer DEFAULT 0,
+  total_time_seconds    integer DEFAULT 0,
+
+  -- Current position (for resuming)
+  current_section       text DEFAULT 'reading_writing',
+  current_module        integer DEFAULT 1,
+  current_question      integer DEFAULT 0,
+
+  started_at            timestamptz NOT NULL DEFAULT now(),
+  completed_at          timestamptz,
+  created_at            timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_full_sat_attempts_user ON full_sat_attempts(user_id);
+CREATE INDEX idx_full_sat_attempts_user_status ON full_sat_attempts(user_id, status);
+CREATE INDEX idx_full_sat_attempts_user_completed ON full_sat_attempts(user_id, completed_at DESC);
+
+-- ============================================================
+-- F. full_sat_answers — per-question answers within an attempt
+-- ============================================================
+
+CREATE TABLE full_sat_answers (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  attempt_id      uuid NOT NULL REFERENCES full_sat_attempts(id) ON DELETE CASCADE,
+  problem_id      uuid NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  section         text NOT NULL CHECK (section IN ('reading_writing', 'math')),
+  module          integer NOT NULL CHECK (module IN (1, 2)),
+  order_index     integer NOT NULL,
+  selected_option integer,
+  is_correct      boolean,
+  response_time_ms integer,
+  answered_at     timestamptz,
+  CONSTRAINT full_sat_answers_attempt_order UNIQUE (attempt_id, section, module, order_index)
+);
+
+CREATE INDEX idx_full_sat_answers_attempt ON full_sat_answers(attempt_id);
+
+-- ============================================================
+-- G. RLS policies (match existing patterns)
+-- ============================================================
+
+ALTER TABLE full_sat_tests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE full_sat_test_problems ENABLE ROW LEVEL SECURITY;
+ALTER TABLE full_sat_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE full_sat_answers ENABLE ROW LEVEL SECURITY;
+
+-- Tests and test problems are readable by all authenticated users
+CREATE POLICY "Anyone can read active tests"
+  ON full_sat_tests FOR SELECT
+  USING (true);
+
+CREATE POLICY "Anyone can read test problems"
+  ON full_sat_test_problems FOR SELECT
+  USING (true);
+
+-- Attempts: users can only see/modify their own
+CREATE POLICY "Users can read own attempts"
+  ON full_sat_attempts FOR SELECT
+  USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can insert own attempts"
+  ON full_sat_attempts FOR INSERT
+  WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can update own attempts"
+  ON full_sat_attempts FOR UPDATE
+  USING (auth.uid()::text = user_id::text);
+
+-- Answers: users can only see/modify answers for their own attempts
+CREATE POLICY "Users can read own answers"
+  ON full_sat_answers FOR SELECT
+  USING (attempt_id IN (SELECT id FROM full_sat_attempts WHERE user_id::text = auth.uid()::text));
+
+CREATE POLICY "Users can insert own answers"
+  ON full_sat_answers FOR INSERT
+  WITH CHECK (attempt_id IN (SELECT id FROM full_sat_attempts WHERE user_id::text = auth.uid()::text));
+
+CREATE POLICY "Users can update own answers"
+  ON full_sat_answers FOR UPDATE
+  USING (attempt_id IN (SELECT id FROM full_sat_attempts WHERE user_id::text = auth.uid()::text));
+
+-- supabase/migrations/20260414_engagement_tracking.sql
+-- =============================================================
+-- Engagement Tracking: quiz question events + micro-lesson sessions
+-- =============================================================
+
+-- 1. Quiz question events — records every significant phase transition
+--    during a quiz (wrong answers, hints, tutor entries, practice)
+CREATE TABLE quiz_question_events (
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id          uuid NOT NULL REFERENCES quiz_sessions(id) ON DELETE CASCADE,
+  problem_id          uuid NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  user_id             uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_type          text NOT NULL CHECK (event_type IN (
+    'answer_correct',
+    'answer_wrong',
+    'hint_shown',
+    'tutor_entered',
+    'tutor_correct',
+    'practice_started',
+    'practice_correct',
+    'practice_exhausted'
+  )),
+  response_time_ms    integer,
+  selected_option     integer,
+  wrong_count         integer,
+  practice_problem_id uuid REFERENCES problems(id) ON DELETE SET NULL,
+  created_at          timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_qqe_session ON quiz_question_events(session_id);
+CREATE INDEX idx_qqe_user ON quiz_question_events(user_id);
+CREATE INDEX idx_qqe_user_problem ON quiz_question_events(user_id, problem_id);
+
+-- 2. Micro-lesson sessions — tracks engagement with micro-lessons
+CREATE TABLE micro_lesson_sessions (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  micro_lesson_id   uuid NOT NULL REFERENCES micro_lessons(id) ON DELETE CASCADE,
+  subtopic_id       uuid NOT NULL REFERENCES subtopics(id) ON DELETE CASCADE,
+  started_at        timestamptz NOT NULL DEFAULT now(),
+  last_heartbeat_at timestamptz NOT NULL DEFAULT now(),
+  ended_at          timestamptz,
+  duration_seconds  integer DEFAULT 0,
+  steps_viewed      integer DEFAULT 0,
+  total_steps       integer DEFAULT 0,
+  checkins_correct  integer DEFAULT 0,
+  checkins_total    integer DEFAULT 0,
+  chat_messages     integer DEFAULT 0,
+  completed         boolean DEFAULT false,
+  created_at        timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_mls_user ON micro_lesson_sessions(user_id);
+CREATE INDEX idx_mls_user_subtopic ON micro_lesson_sessions(user_id, subtopic_id);
+
+-- 3. Denormalized columns on quiz_answers for fast queries
+ALTER TABLE quiz_answers ADD COLUMN IF NOT EXISTS wrong_count integer DEFAULT 0;
+ALTER TABLE quiz_answers ADD COLUMN IF NOT EXISTS hint_used boolean DEFAULT false;
+ALTER TABLE quiz_answers ADD COLUMN IF NOT EXISTS tutor_used boolean DEFAULT false;
+ALTER TABLE quiz_answers ADD COLUMN IF NOT EXISTS practice_completed boolean DEFAULT false;
+
+-- supabase/migrations/20260415_email_notifications.sql
+-- Timezone on users for computing reminder windows
+ALTER TABLE users ADD COLUMN timezone text NOT NULL DEFAULT 'America/New_York';
+
+-- Track whether a session reminder was already sent
+ALTER TABLE sessions ADD COLUMN reminder_sent_at timestamptz;
+
+-- Index for cron: find today's unsent reminders efficiently
+CREATE INDEX idx_sessions_reminder_pending
+  ON sessions (scheduled_date, status)
+  WHERE reminder_sent_at IS NULL;
+
+-- supabase/migrations/20260415_onboarding_plan_fields.sql
+-- Add onboarding plan fields to user_preferences
+ALTER TABLE user_preferences
+  ADD COLUMN IF NOT EXISTS name text,
+  ADD COLUMN IF NOT EXISTS grade text,
+  ADD COLUMN IF NOT EXISTS learner_types text[],
+  ADD COLUMN IF NOT EXISTS interests text[],
+  ADD COLUMN IF NOT EXISTS struggling_topic text;
+
+-- Update onboarding_progress default step from 'gist' to 'plan'
+ALTER TABLE onboarding_progress
+  ALTER COLUMN current_step SET DEFAULT 'plan';
+

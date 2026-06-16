@@ -1,0 +1,377 @@
+"use client";
+
+import { useState, useCallback, useRef } from "react";
+import { useAudioAnalyzer } from "./use-audio-analyzer";
+import { sanitizeForTTS } from "@/lib/sanitize-for-tts";
+import type { WhiteboardStep } from "@/types/whiteboard";
+
+export type MentorMessage = {
+  role: "user" | "tutor";
+  content: string;
+  isStreaming?: boolean;
+};
+
+type Mode = "text" | "voice";
+
+const MAX_HISTORY = 20;
+
+export function useMentorConversation() {
+  const [messages, setMessages] = useState<MentorMessage[]>([]);
+  const [mode, setMode] = useState<Mode>("text");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [whiteboardSteps, setWhiteboardSteps] = useState<WhiteboardStep[]>([]);
+  const [isWhiteboardStreaming, setIsWhiteboardStreaming] = useState(false);
+
+  const messagesRef = useRef<MentorMessage[]>([]);
+  messagesRef.current = messages;
+
+  const nextStepIdRef = useRef(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tokenBufferRef = useRef("");
+  const rafRef = useRef<number>(0);
+
+  const {
+    amplitude,
+    connectStream: connectAudioStream,
+    connectElement: connectAudioElement,
+    disconnect: disconnectAudio,
+  } = useAudioAnalyzer();
+
+  const streamChat = useCallback(async (question: string): Promise<string> => {
+    const history = messagesRef.current
+      .filter((m) => !m.isStreaming)
+      .slice(-MAX_HISTORY)
+      .map((m) => ({
+        role: m.role === "tutor" ? "assistant" : "user",
+        content: m.content,
+      }));
+
+    const res = await fetch("/api/agent/mentor-chat/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history }),
+    });
+
+    if (!res.ok || !res.body) {
+      throw new Error("Stream failed");
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "tutor", content: "", isStreaming: true },
+    ]);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = "";
+    let buffer = "";
+    let receivedWbSteps = false;
+
+    const flushTokens = () => {
+      if (tokenBufferRef.current) {
+        const pending = tokenBufferRef.current;
+        tokenBufferRef.current = "";
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === "tutor" && last.isStreaming) {
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + pending,
+            };
+          }
+          return updated;
+        });
+      }
+      rafRef.current = requestAnimationFrame(flushTokens);
+    };
+    rafRef.current = requestAnimationFrame(flushTokens);
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") {
+            setIsWhiteboardStreaming(false);
+            continue;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.token) {
+              fullContent += parsed.token;
+              tokenBufferRef.current += parsed.token;
+            }
+            if (parsed.wb_step) {
+              if (!receivedWbSteps) {
+                receivedWbSteps = true;
+                setIsWhiteboardStreaming(true);
+                nextStepIdRef.current = 0;
+                setWhiteboardSteps([]);
+              }
+              const step = {
+                ...parsed.wb_step,
+                id: nextStepIdRef.current++,
+              } as WhiteboardStep;
+              setWhiteboardSteps((prev) => [...prev, step]);
+            }
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    } finally {
+      cancelAnimationFrame(rafRef.current);
+      setIsWhiteboardStreaming(false);
+      if (tokenBufferRef.current) {
+        const remaining = tokenBufferRef.current;
+        tokenBufferRef.current = "";
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === "tutor" && last.isStreaming) {
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + remaining,
+            };
+          }
+          return updated;
+        });
+      }
+      setMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.role === "tutor" && last.isStreaming) {
+          updated[updated.length - 1] = { ...last, isStreaming: false };
+        }
+        return updated;
+      });
+    }
+
+    return fullContent;
+  }, []);
+
+  const transcribeAudio = useCallback(async (blob: Blob): Promise<string> => {
+    const form = new FormData();
+    form.append("audio", blob);
+    const res = await fetch("/api/agent/speech-to-text", {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (
+        data.detail?.includes?.("quota") ||
+        data.detail?.status === "quota_exceeded"
+      ) {
+        throw new Error("QUOTA_EXCEEDED");
+      }
+      throw new Error("Transcription failed");
+    }
+    const data = await res.json();
+    return data.text;
+  }, []);
+
+  const playTTS = useCallback(
+    async (text: string): Promise<void> => {
+      const res = await fetch("/api/agent/text-to-speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("TTS failed");
+      const audioBlob = await res.blob();
+      const url = URL.createObjectURL(audioBlob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      setIsSpeaking(true);
+
+      try {
+        connectAudioElement(audio);
+      } catch {
+        // Audio analyzer is optional
+      }
+
+      await new Promise<void>((resolve) => {
+        audio.onended = () => {
+          setIsSpeaking(false);
+          disconnectAudio();
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          disconnectAudio();
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        audio.play();
+      });
+    },
+    [connectAudioElement, disconnectAudio]
+  );
+
+  const processVoiceInput = useCallback(
+    async (audioBlob: Blob) => {
+      setIsProcessing(true);
+      try {
+        const transcription = await transcribeAudio(audioBlob);
+        if (!transcription.trim()) return;
+
+        setMessages((prev) => [
+          ...prev,
+          { role: "user", content: transcription },
+        ]);
+
+        const response = await streamChat(transcription);
+
+        const rawText = response.split("<<<WHITEBOARD>>>")[0].trim();
+        const ttsText = sanitizeForTTS(rawText);
+        if (ttsText) await playTTS(ttsText);
+      } catch (err) {
+        if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "tutor",
+              content:
+                "Voice mode is currently unavailable. Switching to text mode to continue.",
+            },
+          ]);
+          setMode("text");
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "tutor",
+              content:
+                "I'm having trouble connecting right now. Please try again in a moment.",
+            },
+          ]);
+        }
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [transcribeAudio, streamChat, playTTS]
+  );
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      try {
+        connectAudioStream(stream);
+      } catch {
+        // Audio analyzer is optional
+      }
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach((t) => t.stop());
+        disconnectAudio();
+        processVoiceInput(blob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "tutor",
+          content:
+            "Microphone access is required for voice mode. Please allow microphone access and try again.",
+        },
+      ]);
+    }
+  }, [processVoiceInput, connectAudioStream, disconnectAudio]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isProcessing) return;
+
+      setMessages((prev) => [...prev, { role: "user", content: text }]);
+      setIsProcessing(true);
+
+      try {
+        await streamChat(text);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "tutor",
+            content:
+              "I'm having trouble connecting right now. Please try again in a moment.",
+          },
+        ]);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isProcessing, streamChat]
+  );
+
+  const reset = useCallback(() => {
+    setMessages([]);
+    setWhiteboardSteps([]);
+    nextStepIdRef.current = 0;
+  }, []);
+
+  const toggleMode = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsSpeaking(false);
+    }
+    disconnectAudio();
+    if (isRecording) stopRecording();
+    setMode((prev) => (prev === "text" ? "voice" : "text"));
+  }, [isRecording, stopRecording, disconnectAudio]);
+
+  return {
+    messages,
+    mode,
+    isRecording,
+    isProcessing,
+    isSpeaking,
+    amplitude,
+    whiteboardSteps,
+    isWhiteboardStreaming,
+    sendMessage,
+    startRecording,
+    stopRecording,
+    toggleMode,
+    reset,
+  };
+}
