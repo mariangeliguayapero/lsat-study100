@@ -15,7 +15,7 @@ export function SatSkills({ topics }: { topics: TopicData[] }) {
   return (
     <div className="border bg-card p-5 h-full">
       <h2 className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        SAT Skills
+        LSAT Skills
       </h2>
       <div className="space-y-0">
         {topics.map((topic) => (

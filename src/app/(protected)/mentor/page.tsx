@@ -18,7 +18,7 @@ const SUGGESTIONS = [
   "How am I doing overall?",
   "What should I focus on this week?",
   "Help me make a study plan",
-  "I'm feeling stuck on math",
+  "I'm stuck on Logical Reasoning",
 ];
 
 export default function MentorPage() {
@@ -82,7 +82,8 @@ export default function MentorPage() {
   }, [input]);
 
   useEffect(() => {
-    if (isWhiteboardStreaming) setSelections([]);
+    if (!isWhiteboardStreaming) return;
+    queueMicrotask(() => setSelections([]));
   }, [isWhiteboardStreaming]);
 
   const handleElementSelect = useCallback(
@@ -174,10 +175,10 @@ export default function MentorPage() {
               </div>
               <div className="text-center space-y-1">
                 <h1 className="text-xl font-semibold tracking-tight">
-                  SAT Prep Mentor
+                  LSAT Prep Mentor
                 </h1>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                  I&apos;m your personal SAT coach. I know your progress, your
+                  I&apos;m your personal LSAT coach. I know your progress, your
                   strengths, and where you can improve. Ask me anything.
                 </p>
               </div>

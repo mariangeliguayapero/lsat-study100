@@ -13,7 +13,7 @@ export function welcomeEmailHtml({ displayName }: { displayName: string }) {
       <td style="padding:40px 32px;text-align:center;">
         <h1 style="margin:0 0 16px;font-size:24px;color:#111827;">Welcome to Athena, ${displayName}!</h1>
         <p style="margin:0 0 24px;font-size:16px;color:#4b5563;line-height:1.6;">
-          You're all set to start your SAT prep journey. Athena uses AI-powered lessons, quizzes, and tutoring to help you reach your target score.
+          You're all set to start your LSAT prep journey. Athena uses AI-powered lessons, quizzes, and tutoring to help you reach your target score.
         </p>
         <a href="${appUrl}/dashboard" style="display:inline-block;padding:12px 32px;background:#6366f1;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;">
           Go to Dashboard
@@ -54,7 +54,7 @@ export function sessionReminderHtml({
           Start Session
         </a>
         <p style="margin:24px 0 0;font-size:14px;color:#9ca3af;">
-          Consistency is the key to SAT success. You've got this!
+          Consistency is the key to LSAT success. You've got this!
         </p>
       </td>
     </tr>

@@ -8,7 +8,7 @@ export async function getDashboardData(userId: string) {
   const todayDayOfWeek = DAY_NAMES[new Date().getDay()];
 
   // Fetch sessions with schedule info (join via schedules)
-  const [upcomingSessionsRes, allSessionsRes, queueRes] = await Promise.all([
+  const [upcomingSessionsRes, queueRes] = await Promise.all([
     supabase
       .from("sessions")
       .select("id, scheduled_date, status, schedules!schedule_id(day_of_week, start_time, end_time)")
@@ -16,12 +16,6 @@ export async function getDashboardData(userId: string) {
       .gte("scheduled_date", today)
       .order("scheduled_date", { ascending: true })
       .limit(5),
-    supabase
-      .from("sessions")
-      .select("id, scheduled_date, status, schedules!schedule_id(day_of_week, start_time)")
-      .eq("user_id", userId)
-      .order("scheduled_date", { ascending: false })
-      .limit(10),
     supabase
       .from("learning_queue")
       .select("id, lesson_id, status, progress_pct, lessons!lesson_id(title, estimated_duration_minutes)")
@@ -39,17 +33,6 @@ export async function getDashboardData(userId: string) {
       dayOfWeek: sched?.day_of_week ?? null,
       startTime: sched?.start_time ?? null,
       endTime: sched?.end_time ?? null,
-    };
-  });
-
-  const sessionHistory = (allSessionsRes.data ?? []).map((s) => {
-    const sched = s.schedules as Pick<ScheduleInfo, "day_of_week" | "start_time"> | null;
-    return {
-      id: s.id,
-      scheduledDate: s.scheduled_date,
-      status: s.status,
-      dayOfWeek: sched?.day_of_week ?? null,
-      startTime: sched?.start_time ?? null,
     };
   });
 
@@ -189,12 +172,12 @@ export async function getDashboardData(userId: string) {
     .eq("user_id", userId)
     .eq("source", "sat");
 
-  const SAT_SECTION_MAP: Record<string, string> = {
-    "reading-and-writing": "Reading & Writing",
-    "algebra": "Math — No Calculator",
-    "geometry": "Math — Calculator",
-    "statistics": "Math — Calculator",
-    "advanced-math": "Math — No Calculator",
+  const LSAT_SECTION_MAP: Record<string, string> = {
+    "reading-and-writing": "Reading Comprehension",
+    "algebra": "Logical Reasoning",
+    "geometry": "Logical Reasoning",
+    "statistics": "Analytical Reasoning",
+    "advanced-math": "Logical Reasoning",
   };
 
   let battleZones: { name: string; slug: string; done: number }[] = [];
@@ -248,7 +231,7 @@ export async function getDashboardData(userId: string) {
     }
 
     battleZones = (topicsData ?? []).map((t) => ({
-      name: SAT_SECTION_MAP[t.slug] || t.name,
+      name: LSAT_SECTION_MAP[t.slug] || t.name,
       slug: t.slug,
       done: correctByTopic[t.id] ?? 0,
     }));

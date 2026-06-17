@@ -84,7 +84,7 @@ export function ProfileNameEditor({
 
   return (
     <div className="flex items-center gap-2">
-      <p className="text-base font-semibold">{displayName ?? "SAT Quest"}</p>
+      <p className="text-base font-semibold">{displayName ?? "LSAT Quest"}</p>
       <button
         onClick={() => setEditing(true)}
         className="text-muted-foreground hover:text-foreground"

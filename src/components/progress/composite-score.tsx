@@ -10,15 +10,15 @@ export function CompositeScore({
   targetScore: number;
 }) {
   const pointsToTarget = Math.max(targetScore - score, 0);
-  const pointsToPerfect = Math.max(1600 - score, 0);
-  const pct = Math.min((score / 1600) * 100, 100);
+  const pointsToPerfect = Math.max(180 - score, 0);
+  const pct = Math.min(Math.max(((score - 120) / 60) * 100, 0), 100);
 
   return (
     <div className="border bg-card p-6">
       <div className="flex items-baseline justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Composite Score
+            Estimated LSAT Score
           </p>
           <span className="text-5xl font-bold tabular-nums tracking-tight">
             {score}
@@ -47,7 +47,7 @@ export function CompositeScore({
         {/* Target marker */}
         <div
           className="absolute top-0 h-3 w-0.5 bg-foreground/40"
-          style={{ left: `${(targetScore / 1600) * 100}%` }}
+          style={{ left: `${Math.min(Math.max(((targetScore - 120) / 60) * 100, 0), 100)}%` }}
         />
       </div>
 

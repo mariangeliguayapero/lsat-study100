@@ -24,7 +24,8 @@ export async function GET() {
     getLastCompletedAttempt(user.id),
   ]);
 
-  const rankProgress = getRankProgress(profileData.totalScore);
+  const displayScore = Math.max(profileData.totalScore, 120);
+  const rankProgress = getRankProgress(displayScore);
 
   const latestSatAttempt = lastAttempt
     ? {
@@ -92,7 +93,7 @@ export async function GET() {
       threshold: r.threshold,
       weapon: r.weapon,
       emoji: r.emoji,
-      active: profileData.totalScore >= r.threshold,
+      active: displayScore >= r.threshold,
     })),
   });
 }

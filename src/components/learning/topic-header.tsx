@@ -1,5 +1,6 @@
 "use client";
 
+import { createElement } from "react";
 import { Clock, Target } from "lucide-react";
 import { getTopicIcon } from "@/lib/topic-icons";
 
@@ -23,7 +24,7 @@ export function TopicHeader({ topic }: { topic: TopicHeaderProps }) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-          <Icon className="h-5 w-5 text-foreground" />
+          {createElement(Icon, { className: "h-5 w-5 text-foreground" })}
         </div>
         <h1 className="text-2xl font-bold">{topic.name}</h1>
       </div>
@@ -37,7 +38,7 @@ export function TopicHeader({ topic }: { topic: TopicHeaderProps }) {
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Target className="h-4 w-4" />
-          <span>{topic.satRelevance.percentageOfTest}% of SAT</span>
+          <span>{topic.satRelevance.percentageOfTest}% of LSAT</span>
         </div>
         {total > 0 && (
           <div className="flex items-center gap-1.5">
