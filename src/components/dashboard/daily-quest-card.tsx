@@ -14,16 +14,16 @@ export function DailyQuestCard() {
 
   const quest = data?.quest;
 
-  // Quest still loading/generating (auto-generated on GET)
+  // Quest unavailable until LSAT content/adaptive generation is ready.
   if (!quest) {
     return (
       <div className="relative border-2 border-muted-foreground/20 bg-gradient-to-b from-muted/50 to-transparent px-6 py-8 text-center rounded-lg">
         <Swords className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
         <p className="text-lg font-semibold text-muted-foreground">
-          Preparing your quest...
+          Daily LSAT quest coming soon
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your adaptive daily quest is being generated
+          Adaptive practice will unlock after the LSAT question bank is set up
         </p>
       </div>
     );

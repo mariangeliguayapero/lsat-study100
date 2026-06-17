@@ -21,12 +21,12 @@ type Topic = {
 };
 
 const SUBJECTS = [
-  { key: "math", label: "Math" },
-  { key: "reading-writing", label: "Reading & Writing" },
+  { key: "logical-reasoning", label: "Logical Reasoning" },
+  { key: "reading-comprehension", label: "Reading Comprehension" },
 ] as const;
 
 export default function LearningPage() {
-  const [activeSubject, setActiveSubject] = useState<string>("math");
+  const [activeSubject, setActiveSubject] = useState<string>("logical-reasoning");
 
   const {
     data,
@@ -116,7 +116,7 @@ export default function LearningPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Target className="h-3 w-3" />
-                      {topic.satRelevance.percentageOfTest}% of SAT
+                      {topic.satRelevance.percentageOfTest}% of LSAT
                     </span>
                   </div>
                 </CardContent>
@@ -128,7 +128,7 @@ export default function LearningPage() {
 
       {filteredTopics.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          No topics available yet for this subject.
+          No LSAT topics available yet for this section.
         </p>
       )}
     </div>

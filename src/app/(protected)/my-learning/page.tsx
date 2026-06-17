@@ -11,16 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Clock, Search, BookOpen } from "lucide-react";
 
 const SUGGESTED_TOPICS = [
-  "Python basics",
-  "World War II",
-  "Photosynthesis",
-  "The French Revolution",
-  "Newton's laws of motion",
-  "Supply and demand",
-  "Mitosis vs meiosis",
-  "The water cycle",
-  "Shakespeare's tragedies",
-  "Climate change",
+  "Logical Reasoning flaws",
+  "Necessary assumptions",
+  "Strengthen questions",
+  "Weaken questions",
+  "Parallel reasoning",
+  "Conditional logic",
+  "Reading Comprehension main point",
+  "Author attitude",
+  "Passage structure",
+  "Comparative passages",
 ];
 
 type TopicSummary = { id: string; title: string; createdAt: string };
@@ -125,11 +125,11 @@ export default function MyLearningPage() {
               Powered by Athena
             </div>
             <h1 className="text-4xl font-bold tracking-tight mb-3">
-              Learn anything
+              Learn LSAT concepts
             </h1>
             <p className="text-muted-foreground max-w-sm mx-auto">
-              Type any topic and Athena will build you a personalised lesson,
-              quiz, and micro-lesson in seconds.
+              Type any LSAT topic and Athena will build you a personalised
+              lesson, quiz, and micro-lesson in seconds.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export default function MyLearningPage() {
           <div className="relative mb-3">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
-              placeholder="e.g. Photosynthesis, World War II, Python basics…"
+              placeholder="e.g. Flaw questions, conditional logic, main point..."
               value={topic}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setTopic(e.target.value)

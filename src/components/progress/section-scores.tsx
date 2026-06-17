@@ -13,27 +13,20 @@ type SectionData = {
 export function SectionScores({
   rw,
   math,
-  targetScore,
 }: {
   rw: SectionData;
   math: SectionData;
   targetScore: number;
 }) {
-  const sectionTarget = Math.round(targetScore / 2);
-
   return (
     <div className="grid grid-cols-2 gap-4 h-full">
         <SectionCard
-          label="Reading & Writing"
-          score={rw.scaledScore}
-          max={800}
-          target={sectionTarget}
+          label="Reading Comprehension"
+          score={rw.accuracy}
         />
         <SectionCard
-          label="Math"
-          score={math.scaledScore}
-          max={800}
-          target={sectionTarget}
+          label="Logical Reasoning"
+          score={math.accuracy}
         />
     </div>
   );
@@ -42,15 +35,11 @@ export function SectionScores({
 function SectionCard({
   label,
   score,
-  max,
-  target,
 }: {
   label: string;
   score: number;
-  max: number;
-  target: number;
 }) {
-  const pct = max > 0 ? Math.min((score / max) * 100, 100) : 0;
+  const pct = Math.min(score, 100);
 
   return (
     <div className="border bg-card p-5">
@@ -59,7 +48,7 @@ function SectionCard({
       </p>
       <div className="mt-2 flex items-baseline gap-1.5">
         <span className="text-4xl font-bold tabular-nums">{score}</span>
-        <span className="text-sm text-muted-foreground">/ {max}</span>
+        <span className="text-sm text-muted-foreground">%</span>
       </div>
       <div className="mt-3 h-2 w-full overflow-hidden bg-muted">
         <motion.div
@@ -70,7 +59,7 @@ function SectionCard({
         />
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        Target: {target}
+        Accuracy by section
       </p>
     </div>
   );

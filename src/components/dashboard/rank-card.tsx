@@ -13,7 +13,8 @@ export function RankCard({
   totalScore: number;
   weeklyDelta: number;
 }) {
-  const { current, next, pct, pointsToNext } = getRankProgress(totalScore);
+  const displayScore = Math.max(totalScore, 120);
+  const { current, next, pct, pointsToNext } = getRankProgress(displayScore);
 
   return (
     <motion.div
@@ -48,7 +49,7 @@ export function RankCard({
       {/* Score + weekly delta */}
       <div className="mt-4 flex items-baseline gap-3">
         <span className="text-5xl font-bold tracking-tight tabular-nums">
-          {totalScore}
+          {displayScore}
         </span>
         {weeklyDelta > 0 && (
           <span className="text-sm font-medium text-muted-foreground">

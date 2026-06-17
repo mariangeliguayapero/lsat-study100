@@ -15,7 +15,6 @@ import { BattleZones } from "@/components/dashboard/battle-zones";
 import { CompanionCard } from "@/components/dashboard/companion-card";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { FriendsLeaderboard } from "@/components/dashboard/friends-leaderboard";
-import { FullSatCard } from "@/components/dashboard/full-sat-card";
 import { ParticlesBackground } from "@/components/particles-background";
 
 type StreakDay = {
@@ -45,8 +44,8 @@ type DashboardData = {
     avatarUrl: string | null;
     targetScore: number | null;
   };
-  upcomingSessions: any[];
-  queueItems: any[];
+  upcomingSessions: unknown[];
+  queueItems: unknown[];
   totalQueueCount: number;
   completedLessonCount: number;
   completedSessions: number;
@@ -172,10 +171,6 @@ export default function DashboardPage() {
 
               <motion.div variants={staggerItem}>
                 <DailyQuestCard />
-              </motion.div>
-
-              <motion.div variants={staggerItem}>
-                <FullSatCard />
               </motion.div>
 
               <motion.div variants={staggerItem}>

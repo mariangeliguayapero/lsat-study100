@@ -20,8 +20,8 @@ function formatDate(dateStr: string): string {
 
 function scoreColor(score: number | null): string {
   if (score === null) return "text-muted-foreground";
-  if (score >= 1200) return "text-green-500";
-  if (score >= 900) return "text-amber-500";
+  if (score >= 165) return "text-green-500";
+  if (score >= 150) return "text-amber-500";
   return "text-red-500";
 }
 
@@ -34,12 +34,12 @@ export function SatScoreHistory({
     return (
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          SAT Score
+          LSAT Score
         </h3>
         <p className="mt-3 text-sm text-muted-foreground">
           No test scores yet.{" "}
-          <Link href="/full-sat" className="underline hover:text-foreground">
-            Take a practice test
+          <Link href="/learning" className="underline hover:text-foreground">
+            Start LSAT practice
           </Link>
         </p>
       </div>
@@ -49,15 +49,15 @@ export function SatScoreHistory({
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        SAT Score
+        LSAT Score
       </h3>
       <div className="mt-4">
         <span className={`text-3xl font-bold ${scoreColor(latestAttempt.totalScore)}`}>
           {latestAttempt.totalScore ?? "—"}
         </span>
         <div className="mt-1 flex gap-4 text-sm text-muted-foreground">
-          <span>R&W: {latestAttempt.rwScaledScore ?? "—"}</span>
-          <span>Math: {latestAttempt.mathScaledScore ?? "—"}</span>
+          <span>RC: {latestAttempt.rwScaledScore ?? "—"}</span>
+          <span>LR: {latestAttempt.mathScaledScore ?? "—"}</span>
         </div>
         {latestAttempt.completedAt && (
           <p className="mt-1 text-xs text-muted-foreground">

@@ -15,9 +15,9 @@ export function ProgressHeader() {
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Progress
         </p>
-        <h1 className="text-2xl font-bold tracking-tight">SAT Progress</h1>
+        <h1 className="text-2xl font-bold tracking-tight">LSAT Progress</h1>
         <p className="text-sm text-muted-foreground">
-          Digital SAT &middot; 1600 scale
+          LSAT Prep &middot; 120-180 scale
         </p>
       </div>
     </div>

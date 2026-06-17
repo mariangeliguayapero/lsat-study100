@@ -145,7 +145,12 @@ export default function ProfilePage() {
 
   if (!data || !data.user) return null;
 
-  const { user, totalScore, questsDone, totalTimeSeconds, accuracy, rank, tiers } = data;
+  const { user, questsDone, totalTimeSeconds, accuracy, rank, tiers } = data;
+  const totalScore = Math.max(data.totalScore, 120);
+  const targetScore =
+    user.targetScore != null && user.targetScore >= 120 && user.targetScore <= 180
+      ? user.targetScore
+      : null;
   const bestStreak = Math.max(data.bestStreak, data.streak);
 
   return (
@@ -239,7 +244,7 @@ export default function ProfilePage() {
             {/* Divider */}
             <div className="my-8 border-b" />
 
-            {/* SAT Score History */}
+            {/* LSAT Score History */}
             <motion.div variants={staggerItem}>
               <SatScoreHistory latestAttempt={data.latestSatAttempt} />
             </motion.div>
@@ -254,7 +259,7 @@ export default function ProfilePage() {
               </h3>
               <div className="mt-4 flex items-baseline justify-between">
                 <span className="text-2xl font-bold">
-                  {user.targetScore ?? rank.next?.threshold ?? totalScore}
+                  {targetScore ?? rank.next?.threshold ?? totalScore}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   Currently {totalScore}
@@ -266,8 +271,8 @@ export default function ProfilePage() {
                   initial={{ width: 0 }}
                   animate={{
                     width: `${
-                      user.targetScore
-                        ? Math.min(Math.round((totalScore / user.targetScore) * 100), 100)
+                      targetScore && targetScore > 120
+                        ? Math.min(Math.max(Math.round(((totalScore - 120) / (targetScore - 120)) * 100), 0), 100)
                         : rank.pct
                     }%`,
                   }}

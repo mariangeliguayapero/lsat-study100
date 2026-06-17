@@ -180,7 +180,7 @@ export default function SubtopicPage() {
                 <ClipboardList className="h-5 w-5 text-primary" />
               </div>
               <p className="font-bold text-sm uppercase tracking-wide mb-1">Take Quiz</p>
-              <p className="text-xs text-muted-foreground mb-4">{problems.length} questions — SAT-style practice</p>
+              <p className="text-xs text-muted-foreground mb-4">{problems.length} questions - LSAT-style practice</p>
               <div className="flex items-center gap-1 text-xs font-semibold text-primary">
                 Enter <ArrowRight className="h-3 w-3" />
               </div>
@@ -241,7 +241,7 @@ export default function SubtopicPage() {
               <p className="text-sm text-muted-foreground">{subtopic.conceptualOverview.realWorldExample}</p>
             </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">On the SAT</h4>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">On the LSAT</h4>
               <p className="text-sm text-muted-foreground">{subtopic.conceptualOverview.satContext}</p>
             </div>
           </div>

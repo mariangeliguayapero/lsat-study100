@@ -20,9 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Athena — SAT Math Prep",
+  title: "Athena — LSAT Prep",
   description:
-    "AI-powered SAT Math preparation with adaptive tutoring and structured accountability.",
+    "AI-powered LSAT preparation with adaptive tutoring and structured accountability.",
 };
 
 export default function RootLayout({

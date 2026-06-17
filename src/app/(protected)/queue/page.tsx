@@ -130,10 +130,14 @@ export default function ProgressPage() {
 
   if (!data) return null;
 
-  const compositeScore =
-    data.sectionScores.readingWriting.scaledScore +
-    data.sectionScores.math.scaledScore;
-  const targetScore = data.user.targetScore ?? data.targetScore ?? 1400;
+  const averageAccuracy =
+    (data.sectionScores.readingWriting.accuracy + data.sectionScores.math.accuracy) / 2;
+  const compositeScore = Math.round(120 + (averageAccuracy / 100) * 60);
+  const rawTargetScore = data.user.targetScore ?? data.targetScore;
+  const targetScore =
+    rawTargetScore != null && rawTargetScore >= 120 && rawTargetScore <= 180
+      ? rawTargetScore
+      : 170;
 
   return (
     <div className="p-6 pb-16">
@@ -148,7 +152,7 @@ export default function ProgressPage() {
           <ProgressHeader />
         </motion.div>
 
-        {/* Section Scores + SAT Skills row */}
+        {/* Section performance + LSAT Skills row */}
         <motion.div variants={staggerItem}>
           <h2 className="mt-8 mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Section Scores
