@@ -110,7 +110,7 @@ export async function getDashboardData(userId: string) {
       .gte("created_at", sevenDaysAgo.toISOString()),
   ]);
 
-  const totalScore = (allScoresRes.data ?? []).reduce((sum, s) => sum + s.score, 0);
+  const sessionScoreTotal = (allScoresRes.data ?? []).reduce((sum, s) => sum + s.score, 0);
   const weeklyDelta = (weeklyScoresRes.data ?? []).reduce((sum, s) => sum + s.score, 0);
 
   const pendingLessons = queueItems.filter((q) => q.status !== "completed");
@@ -252,12 +252,20 @@ export async function getDashboardData(userId: string) {
   // User target score
   const { data: userRecord } = await supabase
     .from("users")
-    .select("target_score")
+    .select("target_score, current_composite")
     .eq("id", userId)
     .limit(1)
     .maybeSingle();
 
   const targetScore = userRecord?.target_score ?? null;
+  const totalScore =
+    userRecord?.current_composite != null &&
+    userRecord.current_composite >= 120 &&
+    userRecord.current_composite <= 180
+      ? userRecord.current_composite
+      : sessionScoreTotal >= 120 && sessionScoreTotal <= 180
+        ? sessionScoreTotal
+        : 120;
 
   // Friends scores
   const { data: friendRows } = await supabase

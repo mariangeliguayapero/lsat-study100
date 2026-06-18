@@ -97,7 +97,7 @@ export function RankCard({
       {/* Weapon icons row */}
       <div className="mt-5 flex items-center gap-3 border-t pt-4">
         {RANKS.map((rank) => {
-          const unlocked = totalScore >= rank.threshold;
+          const unlocked = displayScore >= rank.threshold;
           return (
             <div
               key={rank.name}

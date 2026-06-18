@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabase/client";
 import type { SubsectionSkill, SectionCategory } from "@/types/adaptive";
+import type { Database } from "@/types/supabase";
+
+const LSAT_SUBJECTS = ["logical-reasoning", "reading-comprehension", "analytical-reasoning"];
+type SubsectionSkillInsert = Database["public"]["Tables"]["subsection_skills"]["Insert"];
 
 function mapSkill(row: Record<string, unknown>): SubsectionSkill {
   return {
@@ -20,11 +24,20 @@ function mapSkill(row: Record<string, unknown>): SubsectionSkill {
   };
 }
 
+async function getLsatSubtopicIdSet(): Promise<Set<string>> {
+  const { data } = await supabase
+    .from("subtopics")
+    .select("id, topics!inner(subject)")
+    .in("topics.subject", LSAT_SUBJECTS);
+
+  return new Set((data ?? []).map((row) => row.id));
+}
+
 export async function getSubsectionSkill(
   userId: string,
   subtopicId: string
 ): Promise<SubsectionSkill | null> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("subsection_skills")
     .select("*")
     .eq("user_id", userId)
@@ -38,27 +51,33 @@ export async function getSubsectionSkill(
 export async function getAllSubsectionSkills(
   userId: string
 ): Promise<SubsectionSkill[]> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("subsection_skills")
     .select("*")
     .eq("user_id", userId)
     .order("level", { ascending: true });
 
-  return (data ?? []).map(mapSkill);
+  const allowedSubtopicIds = await getLsatSubtopicIdSet();
+  return (data ?? [])
+    .filter((row: Record<string, unknown>) => allowedSubtopicIds.has(row.subtopic_id as string))
+    .map(mapSkill);
 }
 
 export async function getSubsectionSkillsBySection(
   userId: string,
   sectionCategory: SectionCategory
 ): Promise<SubsectionSkill[]> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("subsection_skills")
     .select("*")
     .eq("user_id", userId)
     .eq("section_category", sectionCategory)
     .order("level", { ascending: true });
 
-  return (data ?? []).map(mapSkill);
+  const allowedSubtopicIds = await getLsatSubtopicIdSet();
+  return (data ?? [])
+    .filter((row: Record<string, unknown>) => allowedSubtopicIds.has(row.subtopic_id as string))
+    .map(mapSkill);
 }
 
 export async function upsertSubsectionSkill(
@@ -76,7 +95,7 @@ export async function upsertSubsectionSkill(
     lastSeenAt: string;
   }>
 ): Promise<SubsectionSkill> {
-  const row: Record<string, unknown> = {
+  const row: SubsectionSkillInsert = {
     user_id: userId,
     subtopic_id: subtopicId,
     section_category: sectionCategory,
@@ -92,7 +111,7 @@ export async function upsertSubsectionSkill(
   if (updates.streakWrong !== undefined) row.streak_wrong = updates.streakWrong;
   if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("subsection_skills")
     .upsert(row, { onConflict: "user_id,subtopic_id" })
     .select()
@@ -103,29 +122,32 @@ export async function upsertSubsectionSkill(
 }
 
 export async function initializeAllSkills(userId: string): Promise<SubsectionSkill[]> {
-  // Fetch all subtopics with their topic's subject
+  // Fetch LSAT subtopics with their topic's subject.
   const { data: subtopics } = await supabase
     .from("subtopics")
     .select("id, topic_id, topics!inner(subject)")
+    .in("topics.subject", LSAT_SUBJECTS)
     .order("order_index");
 
   if (!subtopics || subtopics.length === 0) return [];
 
   // Check which skills already exist
-  const { data: existing } = await (supabase as any)
+  const { data: existing } = await supabase
     .from("subsection_skills")
     .select("subtopic_id")
     .eq("user_id", userId);
 
-  const existingIds = new Set((existing ?? []).map((r: any) => r.subtopic_id as string));
+  const existingIds = new Set(
+    (existing ?? []).map((row: { subtopic_id: string }) => row.subtopic_id)
+  );
 
   const toInsert = subtopics
     .filter((s) => !existingIds.has(s.id))
     .map((s) => {
       const topic = s.topics as unknown as { subject: string };
-      const subject = topic?.subject ?? "math";
+      const subject = topic?.subject ?? "logical-reasoning";
       const sectionCategory =
-        subject === "math" ? "Math" : "ReadingWriting";
+        subject === "reading-comprehension" ? "ReadingWriting" : "Math";
       return {
         user_id: userId,
         subtopic_id: s.id,
@@ -137,7 +159,7 @@ export async function initializeAllSkills(userId: string): Promise<SubsectionSki
     return getAllSubsectionSkills(userId);
   }
 
-  const { error } = await (supabase as any).from("subsection_skills").insert(toInsert);
+  const { error } = await supabase.from("subsection_skills").insert(toInsert);
   if (error) throw new Error(error.message);
 
   return getAllSubsectionSkills(userId);

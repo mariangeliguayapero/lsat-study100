@@ -7,6 +7,7 @@ import {
   Compass,
   PieChart,
   TrendingUp,
+  Brain,
   BookOpen,
   Layers,
   PenTool,
@@ -15,6 +16,15 @@ import {
 } from "lucide-react";
 
 const slugToIcon: Record<string, LucideIcon> = {
+  // LSAT
+  "logical-reasoning": Brain,
+  "reading-comprehension": BookOpen,
+  "flaw-questions": Brain,
+  "assumption-questions": CheckSquare,
+  "strengthen-weaken": TrendingUp,
+  "main-point-structure": Layers,
+  "inference-detail": BookOpen,
+
   // Math
   algebra: Variable,
   geometry: Triangle,

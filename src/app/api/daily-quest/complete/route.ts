@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   // Aggregate results from quest problems
-  const { data: problems } = await (supabase as any)
+  const { data: problems } = await supabase
     .from("daily_quest_problems")
     .select("is_correct, difficulty_level")
     .eq("quest_id", questId)
@@ -57,57 +57,79 @@ export async function POST(req: Request) {
   });
 
   // Recompute section scores from all historical data
-  const { data: rwAnswers } = await (supabase as any)
+  const { data: rwAnswers } = await supabase
     .from("quiz_answers")
     .select("is_correct, quiz_sessions!inner(user_id, subtopic_id, subtopics!inner(topics!inner(subject)))")
     .eq("quiz_sessions.user_id", user.id)
-    .eq("quiz_sessions.source", "sat") as { data: any[] | null };
+    .eq("quiz_sessions.source", "sat") as {
+      data:
+        | {
+            is_correct: boolean;
+            quiz_sessions: {
+              subtopics: { topics: { subject: string } };
+            };
+          }[]
+        | null;
+    };
 
   // Also include daily quest answers
-  const { data: dqProblems } = await (supabase as any)
+  const { data: dqProblems } = await supabase
     .from("daily_quest_problems")
     .select("is_correct, subtopics!inner(topics!inner(subject)), daily_quests!inner(user_id)")
     .eq("daily_quests.user_id", user.id)
-    .not("is_correct", "is", null) as { data: any[] | null };
+    .not("is_correct", "is", null) as {
+      data:
+        | {
+            is_correct: boolean;
+            subtopics: { topics: { subject: string } };
+          }[]
+        | null;
+    };
 
-  let rwCorrect = 0, rwTotal = 0, mathCorrect = 0, mathTotal = 0;
+  let rcCorrect = 0, rcTotal = 0, lrCorrect = 0, lrTotal = 0;
 
   for (const a of rwAnswers ?? []) {
     const session = a.quiz_sessions as {
       subtopics: { topics: { subject: string } };
     };
     const subject = session?.subtopics?.topics?.subject;
-    if (subject === "math") {
-      mathTotal++;
-      if (a.is_correct) mathCorrect++;
+    if (subject === "reading-comprehension") {
+      rcTotal++;
+      if (a.is_correct) rcCorrect++;
     } else {
-      rwTotal++;
-      if (a.is_correct) rwCorrect++;
+      lrTotal++;
+      if (a.is_correct) lrCorrect++;
     }
   }
 
   for (const p of dqProblems ?? []) {
     const subtopic = p.subtopics as { topics: { subject: string } };
     const subject = subtopic?.topics?.subject;
-    if (subject === "math") {
-      mathTotal++;
-      if (p.is_correct) mathCorrect++;
+    if (subject === "reading-comprehension") {
+      rcTotal++;
+      if (p.is_correct) rcCorrect++;
     } else {
-      rwTotal++;
-      if (p.is_correct) rwCorrect++;
+      lrTotal++;
+      if (p.is_correct) lrCorrect++;
     }
   }
 
-  const rwAccuracy = rwTotal > 0 ? rwCorrect / rwTotal : 0;
-  const mathAccuracy = mathTotal > 0 ? mathCorrect / mathTotal : 0;
-  const rwScore = Math.min(800, Math.round(200 + rwAccuracy * 600));
-  const mathScore = Math.min(800, Math.round(200 + mathAccuracy * 600));
-  const composite = rwScore + mathScore;
+  const rcAccuracy = rcTotal > 0 ? rcCorrect / rcTotal : 0;
+  const lrAccuracy = lrTotal > 0 ? lrCorrect / lrTotal : 0;
+  const averageAccuracy =
+    rcTotal > 0 && lrTotal > 0
+      ? (rcAccuracy + lrAccuracy) / 2
+      : rcTotal > 0
+        ? rcAccuracy
+        : lrAccuracy;
+  const rcScore = Math.round(120 + rcAccuracy * 60);
+  const lrScore = Math.round(120 + lrAccuracy * 60);
+  const composite = Math.round(120 + averageAccuracy * 60);
 
   const updates: Record<string, number> = {
     currentComposite: composite,
-    currentReadingWriting: rwScore,
-    currentMath: mathScore,
+    currentReadingWriting: rcScore,
+    currentMath: lrScore,
   };
 
   // Set start_composite on first quest ever
@@ -131,8 +153,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     quest,
     scores: {
-      readingWriting: rwScore,
-      math: mathScore,
+      readingWriting: rcScore,
+      math: lrScore,
       composite,
     },
   });
