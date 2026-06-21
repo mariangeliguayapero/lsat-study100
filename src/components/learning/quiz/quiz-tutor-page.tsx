@@ -87,7 +87,7 @@ export function QuizTutorPageContent() {
         autoOpen={questionPhase === "tutor"}
         autoMessage={
           questionPhase === "tutor"
-            ? "The student got this question wrong twice. Please explain this concept step by step."
+            ? "The student missed this LSAT question twice. Guide them Socratically through the stimulus or passage, the task, and the answer-choice trap without revealing the correct option immediately."
             : undefined
         }
         onSelectAnswer={(i) => handleSelectAnswer(currentProblem.id, i)}

@@ -46,12 +46,14 @@ export async function POST(req: Request) {
       .map((t) => ({ name: t.name, accuracy: t.accuracy }));
 
     const studentContext = {
+      exam: "LSAT",
+      score_scale: "120-180",
       display_name: user.displayName,
       target_score: user.targetScore,
-      current_composite: user.currentComposite,
+      estimated_lsat_score: user.currentComposite,
       section_scores: {
-        reading_writing: progress.sectionScores.readingWriting.scaledScore,
-        math: progress.sectionScores.math.scaledScore,
+        reading_comprehension: progress.sectionScores.readingWriting.scaledScore,
+        logical_reasoning: progress.sectionScores.math.scaledScore,
       },
       overall_accuracy: progress.overallStats.accuracy,
       total_questions_attempted: progress.overallStats.totalQuestions,

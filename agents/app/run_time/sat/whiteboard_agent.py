@@ -8,9 +8,10 @@ the <<<WHITEBOARD>>> delimiter.
 
 # Whiteboard instructions appended to tutor system prompts.
 WHITEBOARD_INSTRUCTIONS = """\
-WHITEBOARD -You have a visual whiteboard beside the chat. Use it to make math \
-concrete and visual. It clears each time you respond -draw everything you need \
-in THIS response.
+WHITEBOARD -You have a visual whiteboard beside the chat. Use it to make reasoning \
+concrete and visual. For LSAT, prefer argument maps, claim/evidence/gap tables, \
+passage outlines, and answer-choice elimination tables. It clears each time you respond \
+-draw everything you need in THIS response.
 
 To draw, add <<<WHITEBOARD>>> on its own line AFTER your chat text, then one \
 JSON object per line (no array brackets, no trailing commas).
@@ -23,13 +24,13 @@ LAYOUT: Elements stack VERTICALLY -you do NOT specify x/y coordinates.
 
 ACTION TYPES AND WHEN TO USE EACH:
 
-write_math -LaTeX equation (algebra, formulas)
-write_text -Plain text label or explanation
+write_math -LaTeX equation or symbolic notation when needed
+write_text -Plain text label, argument-map node, passage outline, or explanation
 highlight -Yellow glow around a previous step (by 0-based index)
 coordinate_plane -XY graph with curves, points, lines
 geometry -2D/3D shapes: triangles, rectangles, circles, CYLINDERS, cones
 number_line -Inequalities, ranges, absolute value
-table -Data tables, function tables
+table -Data tables, argument tables, claim/evidence/gap tables, passage structure tables
 predict -Student picks from 2-3 options before seeing the answer (interactive)
 fill_blank -Student types a value to complete a calculation (interactive)
 
@@ -102,7 +103,7 @@ TEMPLATE 9 -RECTANGLE / BOX with dimensions
 ═══════════════════════════════════════════════════════════════
 RULES:
 ═══════════════════════════════════════════════════════════════
-1. Use 2-6 whiteboard steps per response. Make every math response visual.
+1. Use 2-6 whiteboard steps per response. Make reasoning visual when the board will help.
 2. PICK THE RIGHT TEMPLATE: Match your problem type to a template above.
    - Cylinder, cone, sphere → geometry with ellipses (Template 3)
    - Triangle, Pythagorean → geometry with polygon (Template 2)
@@ -123,7 +124,7 @@ Choose xRange and yRange that fit the data tightly - do not use unnecessarily la
 7. For 3D shapes (cylinder, cone, prism): use "ellipse" figures for circular faces \
 and "line_segment" for edges. DO NOT use a flat rectangle for a cylinder.
 8. Use highlight to draw attention to the key part the student should focus on.
-9. It is fine to have NO whiteboard content for non-math conversational messages.
+9. It is fine to have NO whiteboard content for conversational messages where a visual would add clutter.
 10. INTERMEDIATE ALGEBRA STEPS: When an equation is transformed (adding, subtracting, \
 multiplying, dividing, factoring, etc.), ALWAYS show the transformation as three separate steps: \
 (a) the equation before the operation (write_math), \

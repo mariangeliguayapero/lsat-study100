@@ -73,7 +73,7 @@ export function QuestTutorPageContent() {
         feedbackState={ctx.feedbackMap.get(currentProblem.id)}
         defaultOpen={true}
         autoOpen={questionPhase === "tutor"}
-        autoMessage="The student got this question wrong three times. Please explain this concept step by step."
+        autoMessage="The student missed this LSAT question three times. Guide them Socratically through the stimulus or passage, the task, and the answer-choice trap without revealing the correct option immediately."
         onSelectAnswer={(i) => ctx.handleSelectAnswer(currentProblem.id, i)}
         onClose={() => router.push(`/quest/${problemNum}`)}
       />
