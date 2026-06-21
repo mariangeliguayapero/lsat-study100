@@ -15,6 +15,7 @@ export function RankCard({
 }) {
   const displayScore = Math.max(totalScore, 120);
   const { current, next, pct, pointsToNext } = getRankProgress(displayScore);
+  const CurrentIcon = current.icon;
 
   return (
     <motion.div
@@ -26,15 +27,15 @@ export function RankCard({
       {/* Top row: rank info + VIEW STORY */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center bg-primary/10">
-            {current.emoji}
+          <div className="flex h-10 w-10 items-center justify-center bg-primary/10 text-primary">
+            <CurrentIcon className="h-5 w-5" />
           </div>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-primary">
               {current.name}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Wielding: <span className="italic">{current.weapon}</span>
+              Focus: <span>{current.weapon}</span>
             </p>
           </div>
         </div>
@@ -42,7 +43,7 @@ export function RankCard({
           href="/profile"
           className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
         >
-          View Story <ArrowRight className="h-3 w-3" />
+          View Profile <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
 
@@ -63,13 +64,13 @@ export function RankCard({
       <div className="mt-5">
         <div className="mb-1.5 flex items-center justify-between text-xs font-medium">
           <span className="text-foreground">
-            {current.emoji} {current.name}
+            {current.name}
           </span>
           {next && (
             <>
               <ArrowRight className="h-3 w-3 text-muted-foreground" />
               <span className="text-muted-foreground">
-                {next.name} {next.emoji}
+                {next.name}
               </span>
             </>
           )}
@@ -83,21 +84,21 @@ export function RankCard({
           />
         </div>
         {next ? (
-          <p className="mt-2 text-xs italic text-muted-foreground">
-            {pointsToNext} points to unlock {next.emoji} {next.name} &mdash;{" "}
-            {next.weapon}
+          <p className="mt-2 text-xs text-muted-foreground">
+            {pointsToNext} points to {next.name} &mdash; {next.weapon}
           </p>
         ) : (
-          <p className="mt-2 text-xs italic text-muted-foreground">
-            {current.emoji} Maximum rank achieved
+          <p className="mt-2 text-xs text-muted-foreground">
+            Maximum LSAT tier achieved
           </p>
         )}
       </div>
 
-      {/* Weapon icons row */}
+      {/* Tier icons row */}
       <div className="mt-5 flex items-center gap-3 border-t pt-4">
         {RANKS.map((rank) => {
           const unlocked = displayScore >= rank.threshold;
+          const Icon = rank.icon;
           return (
             <div
               key={rank.name}
@@ -109,7 +110,7 @@ export function RankCard({
               )}
               title={`${rank.name} — ${rank.weapon}${unlocked ? " (Unlocked)" : ""}`}
             >
-              {rank.emoji}
+              <Icon className="h-4 w-4" />
             </div>
           );
         })}

@@ -39,8 +39,7 @@ export default function RootLayout({
           <ClarityIdentifier />
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
             disableTransitionOnChange
           >
             <QueryProvider>

@@ -9,7 +9,7 @@ export function WelcomeHeader({
   displayName: string | null;
   avatarUrl: string | null;
 }) {
-  const name = displayName?.split(" ")[0] || "Warrior";
+  const name = displayName?.split(" ")[0] || "Student";
 
   return (
     <div className="flex items-center gap-5 p-6">
@@ -33,7 +33,7 @@ export function WelcomeHeader({
           transition={{ duration: 0.3 }}
           className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground"
         >
-          Welcome back, hero
+          Welcome back
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 10 }}

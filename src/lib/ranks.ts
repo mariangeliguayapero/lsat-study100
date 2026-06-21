@@ -1,4 +1,14 @@
-import { Shield, Sword, Swords, Crown, Flame, Star, Zap, Sparkles } from "lucide-react";
+import {
+  Award,
+  BadgeCheck,
+  Brain,
+  Circle,
+  Flame,
+  Scale,
+  ShieldCheck,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type Rank = {
@@ -10,15 +20,15 @@ export type Rank = {
 };
 
 export const RANKS: Rank[] = [
-  { name: "Novice", threshold: 120, weapon: "Rock of Knowledge", icon: Sword, emoji: "🪨" },
-  { name: "Scout", threshold: 130, weapon: "Scouting Dagger", icon: Sword, emoji: "🗡" },
-  { name: "Warrior", threshold: 140, weapon: "Blade of Persistence", icon: Swords, emoji: "⚔" },
-  { name: "Knight", threshold: 150, weapon: "Shield of Focus", icon: Shield, emoji: "🛡" },
-  { name: "Champion", threshold: 155, weapon: "Bow of Precision", icon: Flame, emoji: "🏹" },
-  { name: "Master", threshold: 160, weapon: "Staff of Wisdom", icon: Star, emoji: "🔮" },
-  { name: "Legend", threshold: 165, weapon: "Crown of Glory", icon: Crown, emoji: "👑" },
-  { name: "Dragon Slayer", threshold: 170, weapon: "Dragon's Bane", icon: Zap, emoji: "🐉" },
-  { name: "Ascended", threshold: 180, weapon: "Celestial Glory", icon: Sparkles, emoji: "✨" },
+  { name: "Baseline", threshold: 120, weapon: "Diagnostic foundation", icon: Circle, emoji: "I" },
+  { name: "Foundation", threshold: 130, weapon: "Core accuracy", icon: Target, emoji: "II" },
+  { name: "Developing", threshold: 140, weapon: "Reasoning control", icon: Brain, emoji: "III" },
+  { name: "Proficient", threshold: 150, weapon: "Timed precision", icon: ShieldCheck, emoji: "IV" },
+  { name: "Advanced", threshold: 155, weapon: "Argument mastery", icon: BadgeCheck, emoji: "V" },
+  { name: "High Scorer", threshold: 160, weapon: "Section consistency", icon: Award, emoji: "VI" },
+  { name: "Elite", threshold: 165, weapon: "Top-tier pacing", icon: Flame, emoji: "VII" },
+  { name: "170+", threshold: 170, weapon: "Law-school ready", icon: Scale, emoji: "VIII" },
+  { name: "Perfect", threshold: 180, weapon: "180 mastery", icon: Sparkles, emoji: "IX" },
 ];
 
 export function getRank(score: number): Rank {

@@ -11,11 +11,12 @@ export function JourneyRanks({
   return (
     <div className="border bg-card p-5">
       <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        Journey
+        LSAT Tier Path
       </h2>
       <div className="space-y-0">
         {RANKS.map((rank) => {
           const unlocked = currentScore >= rank.threshold;
+          const Icon = rank.icon;
           return (
             <div
               key={rank.name}
@@ -25,7 +26,7 @@ export function JourneyRanks({
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg">{rank.emoji}</span>
+                <Icon className="h-4 w-4 text-primary" />
                 <span
                   className={cn(
                     "text-sm font-bold",

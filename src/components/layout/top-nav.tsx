@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { NavUser } from "@/components/layout/nav-user";
 
 const navItems = [
   { href: "/dashboard", label: "ATHENA" },
@@ -19,8 +19,8 @@ export function TopNav() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-center px-6">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-center px-6">
         <nav className="flex items-center gap-8">
           {navItems.map((item) => {
             const isActive =
@@ -47,7 +47,7 @@ export function TopNav() {
           })}
         </nav>
         <div className="absolute right-6">
-          <ThemeToggle />
+          <NavUser />
         </div>
       </div>
     </header>

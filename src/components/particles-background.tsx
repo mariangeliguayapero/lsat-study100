@@ -35,18 +35,18 @@ export function ParticlesBackground() {
     resize();
     window.addEventListener("resize", resize);
 
-    const count = Math.floor((window.innerWidth * window.innerHeight) / 14000);
+    const count = Math.floor((window.innerWidth * window.innerHeight) / 30000);
     const particles: Particle[] = [];
 
     for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 2.5 + 1,
-        speedX: (Math.random() - 0.5) * 0.25,
-        speedY: (Math.random() - 0.5) * 0.25,
-        opacity: Math.random() * 0.5 + 0.1,
-        opacitySpeed: (Math.random() - 0.5) * 0.004,
+        size: Math.random() * 1.3 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.12,
+        speedY: (Math.random() - 0.5) * 0.12,
+        opacity: Math.random() * 0.12 + 0.03,
+        opacitySpeed: (Math.random() - 0.5) * 0.0015,
         glowPhase: Math.random() * Math.PI * 2,
         glowSpeed: 0.008 + Math.random() * 0.015,
       });
@@ -57,10 +57,10 @@ export function ParticlesBackground() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const isDark = resolvedTheme === "dark";
-      // Light: navy glow | Dark: warm amber glow
-      const r = isDark ? 220 : 50;
-      const g = isDark ? 180 : 50;
-      const b = isDark ? 60 : 120;
+      // Subtle focus-field effect. Keep it quiet so the UI feels mature.
+      const r = isDark ? 96 : 50;
+      const g = isDark ? 190 : 50;
+      const b = isDark ? 180 : 120;
 
       for (const p of particles) {
         p.x += p.speedX;
@@ -71,7 +71,7 @@ export function ParticlesBackground() {
         const glowIntensity = 0.3 + 0.7 * ((Math.sin(p.glowPhase) + 1) / 2);
         p.opacity += p.opacitySpeed;
 
-        if (p.opacity <= 0.05 || p.opacity >= 0.6) {
+        if (p.opacity <= 0.02 || p.opacity >= 0.16) {
           p.opacitySpeed *= -1;
         }
 

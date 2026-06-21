@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Swords, Sparkles, CheckCircle2, Zap } from "lucide-react";
+import { CheckCircle2, Target, Zap } from "lucide-react";
 import { useTodaysQuest } from "@/hooks/use-daily-quest";
 
 export function DailyQuestCard() {
@@ -18,7 +18,7 @@ export function DailyQuestCard() {
   if (!quest) {
     return (
       <div className="relative border-2 border-muted-foreground/20 bg-gradient-to-b from-muted/50 to-transparent px-6 py-8 text-center rounded-lg">
-        <Swords className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+        <Target className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
         <p className="text-lg font-semibold text-muted-foreground">
           Daily LSAT quest coming soon
         </p>
@@ -78,8 +78,7 @@ export function DailyQuestCard() {
         whileTap={{ scale: 0.99 }}
         className="relative border-2 border-athena-amber/30 bg-gradient-to-b from-athena-amber/5 to-transparent px-6 py-8 cursor-pointer text-center rounded-lg"
       >
-        <Sparkles className="absolute right-4 top-4 h-4 w-4 text-athena-amber/30" />
-        <Swords className="mx-auto mb-3 h-8 w-8 text-primary" />
+        <Target className="mx-auto mb-3 h-8 w-8 text-primary" />
         <p className="text-lg font-semibold">Daily Quest</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {answered > 0

@@ -191,7 +191,7 @@ export default function ProfilePage() {
                   Quest started {formatDate(user.createdAt)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {rank.current.emoji} {rank.current.name} — {rank.current.weapon}
+                  Tier {rank.current.emoji} &middot; {rank.current.name} — {rank.current.weapon}
                 </p>
               </div>
             </motion.div>
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                 Current Tier
               </h3>
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-2xl">{rank.current.emoji}</span>
+                <span className="text-sm font-semibold text-primary">{rank.current.emoji}</span>
                 <div>
                   <p className="font-semibold">{rank.current.name}</p>
                   <p className="text-sm text-muted-foreground">
@@ -335,7 +335,7 @@ export default function ProfilePage() {
                         : "text-muted-foreground/50"
                     }`}
                   >
-                    <span className="text-base">{tier.emoji}</span>
+                    <span className="w-7 text-xs font-semibold text-primary/80">{tier.emoji}</span>
                     <span className="flex-1">{tier.name}</span>
                     <span className="tabular-nums">{tier.threshold}</span>
                   </div>
@@ -355,7 +355,7 @@ export default function ProfilePage() {
                   tier.active ? "opacity-100" : "opacity-30"
                 }`}
               >
-                <span className="text-2xl">{tier.emoji}</span>
+                <span className="text-xs font-semibold text-primary">{tier.emoji}</span>
               </div>
             ))}
           </div>
