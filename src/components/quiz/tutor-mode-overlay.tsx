@@ -1,17 +1,21 @@
 "use client";
 
+import { useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PresenceLayer } from "@/components/learning/observation/presence-layer";
 import { WhiteboardCanvas } from "@/components/whiteboard/whiteboard-canvas";
 import { WhiteboardToolbar } from "@/components/whiteboard/whiteboard-toolbar";
 import { WhiteboardTimeline } from "@/components/whiteboard/whiteboard-timeline";
+import { isDiagramStep, type OrbSpotlight, type StepFocus } from "@/components/whiteboard/pen-tip";
 import { TutorQuestionCard } from "@/components/quiz/tutor-question-card";
 import { TutorChatBar } from "@/components/quiz/tutor-chat-bar";
 import type { Problem } from "@/components/quiz/types";
 import type { FeedbackState } from "@/components/quiz/answer-panel";
 import type { WhiteboardStep, SelectedElement } from "@/types/whiteboard";
 import type { PlayerState, PlaybackSpeed } from "@/hooks/use-whiteboard-player";
+import type { OrbMode, OrbPoint } from "@/hooks/use-orb-presence";
 
 type Message = {
   role: "user" | "tutor";
@@ -111,6 +115,46 @@ export function TutorModeOverlay({
   const hasWhiteboard = whiteboardSteps.length > 0;
   // In practice phase keep the canvas visible (blank) even when no steps yet
   const showCanvas = isPractice || hasWhiteboard;
+  const cursorEnabled = showCanvas;
+  const penClientRef = useRef<OrbPoint | null>(null);
+  const stepFocusRef = useRef<StepFocus | null>(null);
+  const spotlightRef = useRef<OrbSpotlight | null>(null);
+
+  const handlePenTip = useCallback((clientPoint: OrbPoint | null) => {
+    penClientRef.current = clientPoint;
+  }, []);
+
+  const handleStepFocus = useCallback((focus: StepFocus | null) => {
+    stepFocusRef.current = focus;
+  }, []);
+
+  const handleOrbSpotlight = useCallback((spotlight: OrbSpotlight | null) => {
+    spotlightRef.current = spotlight;
+  }, []);
+
+  let latestTutorCaption: string | null = null;
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i].role === "tutor") {
+      latestTutorCaption = messages[i].content;
+      break;
+    }
+  }
+
+  const currentStep = whiteboardSteps[currentStepIndex];
+  const isDrawingStep = playerState === "playing" && isDiagramStep(currentStep);
+  const orbMode: OrbMode = isDrawingStep ? "draw" : "rest";
+  const orbState = isRecording ? "listening" : isSpeaking ? "speaking" : isProcessing ? "thinking" : "idle";
+  const shortTutorCaption =
+    latestTutorCaption && latestTutorCaption.length > 180
+      ? `${latestTutorCaption.slice(0, 177)}...`
+      : latestTutorCaption;
+  const orbCaption = isRecording
+    ? "Listening..."
+    : isProcessing
+      ? "Athena is thinking..."
+      : isSpeaking
+        ? shortTutorCaption
+        : null;
 
   return (
     <motion.div
@@ -137,6 +181,24 @@ export function TutorModeOverlay({
             onElementSelect={onElementSelect}
             onElementToggle={onElementToggle}
             onElementsSelect={onElementsSelect}
+            onPenTip={cursorEnabled ? handlePenTip : undefined}
+            onStepFocus={cursorEnabled ? handleStepFocus : undefined}
+            onOrbSpotlight={cursorEnabled ? handleOrbSpotlight : undefined}
+            sequentialDiagrams={cursorEnabled}
+          />
+        )}
+        {cursorEnabled && (
+          <PresenceLayer
+            mode={orbMode}
+            orbState={orbState}
+            amplitude={amplitude}
+            size={210}
+            penClientRef={penClientRef}
+            stepFocusRef={stepFocusRef}
+            spotlightRef={spotlightRef}
+            captionText={orbCaption}
+            suppressCaption={orbMode === "draw"}
+            restAnchor={{ x: 520, y: 175 }}
           />
         )}
       </motion.div>

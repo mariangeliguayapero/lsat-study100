@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { GeometryAction, LocalPoint } from "@/types/whiteboard";
+import { geometryFigureSchedule } from "../pen-tip";
 
 type WbGeometryProps = {
   action: GeometryAction;
@@ -11,6 +12,7 @@ type WbGeometryProps = {
   height: number;
   progress: number;
   isAnimating: boolean;
+  penDraw?: boolean;
 };
 
 /** Map LocalPoint (0-100) to SVG coords within bounding box. */
@@ -24,9 +26,16 @@ export function WbGeometry({
   y,
   width,
   height,
-  progress,
-  isAnimating,
+  progress: progressProp,
+  isAnimating: isAnimatingProp,
+  penDraw = false,
 }: WbGeometryProps) {
+  const schedule =
+    penDraw && isAnimatingProp
+      ? geometryFigureSchedule(action.figures ?? [], { x, y, width, height })
+      : null;
+  const revealDetails = !penDraw || !isAnimatingProp || progressProp >= 0.92;
+
   return (
     <motion.g
       initial={{ opacity: 0 }}
@@ -35,6 +44,13 @@ export function WbGeometry({
     >
       {/* Figures */}
       {action.figures.map((fig, i) => {
+        const segment = schedule?.[i];
+        const progress = segment
+          ? Math.max(0, Math.min(1, (progressProp - segment.start) / Math.max(0.0001, segment.end - segment.start)))
+          : progressProp;
+        const isAnimating = segment ? progressProp < segment.end : isAnimatingProp;
+        const fillOpacity = penDraw && progress < 1 ? 0 : 1;
+
         switch (fig.type) {
           case "polygon": {
             const svgPts = fig.vertices.map((v) => toSvg(v, x, y, width, height));
@@ -49,7 +65,11 @@ export function WbGeometry({
                 <motion.polygon
                   points={pointsStr}
                   fill={fig.style?.fillColor ?? "rgba(59,130,246,0.08)"}
-                  style={{ stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)" }}
+                  fillOpacity={fillOpacity}
+                  style={{
+                    stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)",
+                    transition: "fill-opacity 0.24s ease",
+                  }}
                   strokeWidth={fig.style?.strokeWidth ?? 2}
                   strokeLinejoin="round"
                   strokeDasharray={isAnimating ? perimeter : (fig.style?.dashed ? "6 4" : undefined)}
@@ -76,7 +96,11 @@ export function WbGeometry({
                       dominantBaseline="middle"
                       fontSize="14"
                       fontWeight="bold"
-                      style={{ fill: "var(--secondary-foreground)" }}
+                      opacity={fillOpacity}
+                      style={{
+                        fill: "var(--secondary-foreground)",
+                        transition: "opacity 0.24s ease",
+                      }}
                       fontFamily="system-ui, sans-serif"
                     >
                       {label}
@@ -99,7 +123,11 @@ export function WbGeometry({
                 cy={cy}
                 r={r}
                 fill={fig.style?.fillColor ?? "none"}
-                style={{ stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)" }}
+                fillOpacity={fillOpacity}
+                style={{
+                  stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)",
+                  transition: "fill-opacity 0.24s ease",
+                }}
                 strokeWidth={fig.style?.strokeWidth ?? 2}
                 strokeDasharray={isAnimating ? circumference : (fig.style?.dashed ? "6 4" : undefined)}
                 strokeDashoffset={isAnimating ? circumference * (1 - progress) : 0}
@@ -120,7 +148,11 @@ export function WbGeometry({
                 rx={erx}
                 ry={ery}
                 fill={fig.style?.fillColor ?? "none"}
-                style={{ stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)" }}
+                fillOpacity={fillOpacity}
+                style={{
+                  stroke: fig.style?.strokeColor ?? "var(--secondary-foreground)",
+                  transition: "fill-opacity 0.24s ease",
+                }}
                 strokeWidth={fig.style?.strokeWidth ?? 2}
                 strokeDasharray={isAnimating ? circumference : (fig.style?.dashed ? "6 4" : undefined)}
                 strokeDashoffset={isAnimating ? circumference * (1 - progress) : 0}
@@ -153,6 +185,7 @@ export function WbGeometry({
       })}
 
       {/* Annotations */}
+      <g opacity={revealDetails ? 1 : 0} style={{ transition: "opacity 0.24s ease" }}>
       {action.annotations?.map((ann, i) => {
         switch (ann.type) {
           case "right_angle": {
@@ -317,8 +350,10 @@ export function WbGeometry({
             return null;
         }
       })}
+      </g>
 
       {/* Labels */}
+      <g opacity={revealDetails ? 1 : 0} style={{ transition: "opacity 0.24s ease" }}>
       {action.labels?.map((lbl, i) => {
         const [lx, ly] = toSvg(lbl.position, x, y, width, height);
         return (
@@ -336,6 +371,7 @@ export function WbGeometry({
           </text>
         );
       })}
+      </g>
 
       {/* Shared marker defs for dimension arrows */}
       <defs>

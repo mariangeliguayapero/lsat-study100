@@ -113,6 +113,13 @@
   --wb-canvas:       oklch(0.99 0.015 90);
   --wb-hover-fill:   oklch(0.96 0.06 80);
   --wb-hover-stroke: oklch(0.82 0.14 75);
+
+  /* Floating tutor orb */
+  --obs-fg: var(--foreground);
+  --obs-surface: var(--card);
+  --obs-border: var(--border);
+  --obs-muted: color-mix(in oklch, var(--muted-foreground) 82%, transparent);
+  --obs-glow-mid: oklch(0.72 0.18 235);
 }
 
 .dark {
@@ -168,6 +175,12 @@
   --wb-canvas:       oklch(0.19 0.025 260);
   --wb-hover-fill:   oklch(0.25 0.04 75);
   --wb-hover-stroke: oklch(0.65 0.15 75);
+
+  --obs-fg: var(--foreground);
+  --obs-surface: var(--card);
+  --obs-border: var(--border);
+  --obs-muted: oklch(0.68 0.018 235);
+  --obs-glow-mid: oklch(0.72 0.20 235);
 }
 
 @layer base {
@@ -231,4 +244,37 @@
 @keyframes border-rotate {
   from { transform: rotate(0deg) scale(2.5); }
   to { transform: rotate(360deg) scale(2.5); }
+}
+
+@keyframes obs-ring-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes obs-ripple {
+  0% {
+    transform: scale(0.84);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+.obs-ripple {
+  animation: obs-ripple 1.6s ease-out infinite;
+}
+
+.obs-ripple-delay {
+  animation-delay: 0.45s;
+}
+
+.obs-serif {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  letter-spacing: 0;
 }

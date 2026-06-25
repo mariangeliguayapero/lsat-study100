@@ -37,6 +37,18 @@ type TopicPerformance = {
   accuracy: number;
 };
 
+type SubtopicPerformance = {
+  id: string;
+  name: string;
+  slug: string;
+  topicName: string;
+  topicSlug: string;
+  subject: string;
+  total: number;
+  correct: number;
+  accuracy: number;
+};
+
 type RecentSession = {
   id: string;
   subtopicName: string;
@@ -48,6 +60,7 @@ type RecentSession = {
 
 type ProgressData = {
   topicPerformance: TopicPerformance[];
+  subtopicPerformance?: SubtopicPerformance[];
   recentSessions: RecentSession[];
   overallStats: {
     totalQuestions: number;
@@ -66,12 +79,6 @@ const SUBJECTS = [
   { key: "logical-reasoning", label: "Logical Reasoning" },
   { key: "reading-comprehension", label: "Reading Comprehension" },
 ] as const;
-
-const subjectLabel: Record<string, string> = {
-  "logical-reasoning": "Logical Reasoning",
-  "reading-comprehension": "Reading Comprehension",
-  "analytical-reasoning": "Analytical Reasoning",
-};
 
 function formatSessionDate(value: string) {
   return new Intl.DateTimeFormat("en", {
@@ -147,14 +154,35 @@ export default function LearningPage() {
   }, [progress?.topicPerformance]);
 
   const weakAreas = useMemo(() => {
+    const subtopicWeakAreas = [...(progress?.subtopicPerformance ?? [])]
+      .filter((subtopic) => subtopic.total > 0)
+      .sort((a, b) => {
+        if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+        return b.total - a.total;
+      })
+      .slice(0, 4);
+
+    if (subtopicWeakAreas.length > 0) return subtopicWeakAreas;
+
     return [...(progress?.topicPerformance ?? [])]
       .filter((topic) => topic.total > 0)
       .sort((a, b) => {
         if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
         return b.total - a.total;
       })
-      .slice(0, 4);
-  }, [progress?.topicPerformance]);
+      .slice(0, 4)
+      .map((topic) => ({
+        id: topic.slug,
+        name: topic.name,
+        slug: "",
+        topicName: topic.name,
+        topicSlug: topic.slug,
+        subject: topic.subject,
+        total: topic.total,
+        correct: topic.correct,
+        accuracy: topic.accuracy,
+      }));
+  }, [progress?.subtopicPerformance, progress?.topicPerformance]);
 
   const nextFocus = weakAreas[0];
   const attemptedTopics =
@@ -229,7 +257,7 @@ export default function LearningPage() {
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             {nextFocus
-              ? `${nextFocus.correct}/${nextFocus.total} correct, ${nextFocus.accuracy}% accuracy`
+              ? `${nextFocus.topicName} - ${nextFocus.correct}/${nextFocus.total} correct, ${nextFocus.accuracy}% accuracy`
               : "Complete practice to unlock review targets"}
           </p>
         </div>
@@ -249,18 +277,21 @@ export default function LearningPage() {
 
           <div className="space-y-3">
             {weakAreas.map((area) => {
-              const topic = topics.find((t) => t.slug === area.slug);
+              const topic = topics.find((t) => t.slug === area.topicSlug);
+              const href = area.slug
+                ? `/learning/${area.topicSlug}/${area.slug}/micro-lesson`
+                : `/learning/${area.topicSlug}`;
               return (
                 <Link
-                  key={area.slug}
-                  href={`/learning/${area.slug}`}
+                  key={area.id}
+                  href={href}
                   className="block border bg-background/40 p-4 transition-colors hover:bg-accent/30"
                 >
                   <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold">{area.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {subjectLabel[area.subject] ?? area.subject}
+                        {area.topicName}
                       </p>
                     </div>
                     <span
@@ -278,7 +309,9 @@ export default function LearningPage() {
                       {area.correct}/{area.total} correct
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      Review {topic?.subtopics.length ?? 0} subtopics
+                      {area.slug
+                        ? "Open micro-lesson"
+                        : `Review ${topic?.subtopics.length ?? 0} subtopics`}
                       <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -355,14 +388,14 @@ export default function LearningPage() {
       </section>
 
       <section>
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-5 space-y-4">
           <div>
             <h2 className="text-lg font-semibold">Review Library</h2>
             <p className="text-sm text-muted-foreground">
               Open a section to drill lessons, quizzes, and micro-lessons.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {SUBJECTS.map((s) => (
               <button
                 key={s.key}

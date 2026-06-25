@@ -80,8 +80,11 @@ export default function TopicPage() {
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6">
-        <h1 className="text-lg font-bold">Learning</h1>
+      <div className="mb-6 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+          Review Library
+        </p>
+        <h1 className="text-lg font-bold">Choose A Review Area</h1>
       </div>
           <div className="flex gap-6">
             <TopicSidebar

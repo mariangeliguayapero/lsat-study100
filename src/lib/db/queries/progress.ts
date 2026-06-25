@@ -31,6 +31,15 @@ type TopicInfo = {
   order_index: number;
 };
 
+type SubtopicInfo = {
+  topic_id: string;
+  topic_slug: string;
+  topic_name: string;
+  subject: string;
+  name: string;
+  slug: string;
+};
+
 function getAnswerSubtopicId(
   answer: PracticeAnswer,
   sessionMap: Record<string, PracticeSession>
@@ -143,7 +152,7 @@ export async function getProgressData(userId: string) {
     subtopicIds.length > 0
       ? supabase
           .from("subtopics")
-          .select("id, topic_id, name")
+          .select("id, topic_id, name, slug")
           .in("id", subtopicIds)
       : Promise.resolve({ data: [] }),
     problemIds.length > 0
@@ -160,11 +169,6 @@ export async function getProgressData(userId: string) {
     problemDifficultyMap[p.id] = p.difficulty;
   }
 
-  const subtopicMap: Record<string, { topic_id: string; name: string }> = {};
-  for (const st of subtopics) {
-    subtopicMap[st.id] = { topic_id: st.topic_id, name: st.name };
-  }
-
   const topicMap: Record<string, TopicInfo> = {};
   for (const t of topics) {
     topicMap[t.id] = {
@@ -172,6 +176,20 @@ export async function getProgressData(userId: string) {
       slug: t.slug,
       subject: t.subject,
       order_index: t.order_index,
+    };
+  }
+
+  const subtopicMap: Record<string, SubtopicInfo> = {};
+  for (const st of subtopics) {
+    const topic = topicMap[st.topic_id];
+    if (!topic) continue;
+    subtopicMap[st.id] = {
+      topic_id: st.topic_id,
+      topic_slug: topic.slug,
+      topic_name: topic.name,
+      subject: topic.subject,
+      name: st.name,
+      slug: st.slug,
     };
   }
 
@@ -217,6 +235,7 @@ export async function getProgressData(userId: string) {
   );
 
   const topicPerfStats: Record<string, { total: number; correct: number }> = {};
+  const subtopicPerfStats: Record<string, { total: number; correct: number }> = {};
   for (const ans of answers) {
     const subtopicId = getAnswerSubtopicId(ans, sessionMap);
     if (!subtopicId) continue;
@@ -225,8 +244,13 @@ export async function getProgressData(userId: string) {
     const topicId = subtopic.topic_id;
     if (!topicMap[topicId]) continue;
     if (!topicPerfStats[topicId]) topicPerfStats[topicId] = { total: 0, correct: 0 };
+    if (!subtopicPerfStats[subtopicId]) {
+      subtopicPerfStats[subtopicId] = { total: 0, correct: 0 };
+    }
     topicPerfStats[topicId].total++;
+    subtopicPerfStats[subtopicId].total++;
     if (ans.is_correct) topicPerfStats[topicId].correct++;
+    if (ans.is_correct) subtopicPerfStats[subtopicId].correct++;
   }
 
   const allTopicPerformance = topics.map((t) => {
@@ -243,6 +267,27 @@ export async function getProgressData(userId: string) {
           : 0,
     };
   });
+
+  const subtopicPerformance = Object.entries(subtopicPerfStats)
+    .map(([subtopicId, perf]) => {
+      const subtopic = subtopicMap[subtopicId];
+      return {
+        id: subtopicId,
+        name: subtopic.name,
+        slug: subtopic.slug,
+        topicName: subtopic.topic_name,
+        topicSlug: subtopic.topic_slug,
+        subject: subtopic.subject,
+        total: perf.total,
+        correct: perf.correct,
+        accuracy:
+          perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0,
+      };
+    })
+    .sort((a, b) => {
+      if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+      return b.total - a.total;
+    });
 
   const recentSessions = [...sessions]
     .sort(
@@ -319,6 +364,7 @@ export async function getProgressData(userId: string) {
     scoreHistory: cumulativeScoreHistory,
     accuracyByDifficulty,
     topicPerformance: allTopicPerformance,
+    subtopicPerformance,
     recentSessions,
     overallStats: {
       totalQuestions: totalQ,

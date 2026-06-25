@@ -13,6 +13,9 @@ type Topic = {
 const SUBJECT_LABELS: Record<string, string> = {
   math: "Math",
   "reading-writing": "Reading & Writing",
+  "logical-reasoning": "Logical Reasoning",
+  "reading-comprehension": "Reading Comprehension",
+  "analytical-reasoning": "Analytical Reasoning",
 };
 
 export function TopicSidebar({

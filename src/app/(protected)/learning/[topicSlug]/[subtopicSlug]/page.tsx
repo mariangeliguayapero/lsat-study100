@@ -131,7 +131,7 @@ export default function SubtopicPage() {
       >
         <div className="inline-flex items-center gap-1.5 border border-primary/30 bg-primary/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
           <BookOpen className="h-2.5 w-2.5" />
-          Study Topic
+          Review Topic
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-3">{subtopic.name}</h1>
         <p className="text-muted-foreground leading-relaxed mb-2">
@@ -161,7 +161,7 @@ export default function SubtopicPage() {
               <Sparkles className="h-5 w-5 text-athena-amber" />
             </div>
             <p className="font-bold text-sm uppercase tracking-wide mb-1">Micro-Lesson</p>
-            <p className="text-xs text-muted-foreground mb-4">Interactive lesson with whiteboard</p>
+            <p className="text-xs text-muted-foreground mb-4">Targeted LSAT review with whiteboard</p>
             <div className="flex items-center gap-1 text-xs font-semibold text-athena-amber">
               Start <ArrowRight className="h-3 w-3" />
             </div>
@@ -179,7 +179,7 @@ export default function SubtopicPage() {
               <div className="mb-4 flex h-10 w-10 items-center justify-center bg-primary/15">
                 <ClipboardList className="h-5 w-5 text-primary" />
               </div>
-              <p className="font-bold text-sm uppercase tracking-wide mb-1">Take Quiz</p>
+              <p className="font-bold text-sm uppercase tracking-wide mb-1">Drill Questions</p>
               <p className="text-xs text-muted-foreground mb-4">{problems.length} questions - LSAT-style practice</p>
               <div className="flex items-center gap-1 text-xs font-semibold text-primary">
                 Enter <ArrowRight className="h-3 w-3" />

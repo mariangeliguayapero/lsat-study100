@@ -80,6 +80,7 @@ import { WbTable } from "./elements/wb-table";
 import { WbCallout } from "./elements/wb-callout";
 import { WbSectionHeading } from "./elements/wb-section-heading";
 import { WbWordProblem } from "./elements/wb-word-problem";
+import { boardToClient, isDiagramStep, penTipForStep, shapePartBoard, type OrbSpotlight, type StepFocus } from "./pen-tip";
 
 type SVGRect = { x: number; y: number; width: number; height: number };
 
@@ -354,6 +355,10 @@ type WhiteboardCanvasProps = {
   onElementSelect?: (el: SelectedElement | null) => void;
   onElementToggle?: (el: SelectedElement) => void;
   onElementsSelect?: (els: SelectedElement[]) => void;
+  onPenTip?: (clientPoint: { x: number; y: number } | null) => void;
+  onStepFocus?: (focus: StepFocus | null) => void;
+  onOrbSpotlight?: (spotlight: OrbSpotlight | null) => void;
+  sequentialDiagrams?: boolean;
 };
 
 const selKey = (el: SelectedElement) => `${el.stepId}:${el.content}`;
@@ -370,6 +375,10 @@ export function WhiteboardCanvas({
   onElementSelect,
   onElementToggle,
   onElementsSelect,
+  onPenTip,
+  onStepFocus,
+  onOrbSpotlight,
+  sequentialDiagrams = false,
 }: WhiteboardCanvasProps) {
   // Normalize legacy `substitutionAnimation` into `flyInSubstitution`
   // so existing DB-stored lessons get the new dramatic animation
@@ -670,6 +679,65 @@ export function WhiteboardCanvas({
   }, [layout]);
 
   const viewBoxHeight = useMemo(() => computeBoardHeight(layout), [layout]);
+
+  useEffect(() => {
+    if (!onPenTip) return;
+    const svg = svgRef.current;
+    const step = steps[currentStepIndex];
+    const box = step ? layoutMap.get(step.id) : null;
+
+    if (!svg || !step || !box || !sequentialDiagrams || !isDiagramStep(step)) {
+      onPenTip(null);
+      return;
+    }
+
+    const boardPoint = penTipForStep(step, stepProgress, box);
+    const clientPoint = boardPoint ? boardToClient(boardPoint, svg, contentWidth, viewBoxHeight) : null;
+    onPenTip(clientPoint);
+  }, [contentWidth, currentStepIndex, layoutMap, onPenTip, sequentialDiagrams, stepProgress, steps, viewBoxHeight]);
+
+  useEffect(() => {
+    if (!onStepFocus) return;
+    const svg = svgRef.current;
+    const step = steps[currentStepIndex];
+    const box = step ? layoutMap.get(step.id) : null;
+
+    if (!svg || !step || !box) {
+      onStepFocus(null);
+      return;
+    }
+
+    onStepFocus({ box, svg, viewBoxWidth: contentWidth, viewBoxHeight });
+  }, [contentWidth, currentStepIndex, layoutMap, onStepFocus, steps, viewBoxHeight]);
+
+  useEffect(() => {
+    if (!onOrbSpotlight) return;
+    const svg = svgRef.current;
+    const step = steps[currentStepIndex];
+    const focus = step?.orbFocus;
+
+    if (!svg || !step || !focus) {
+      onOrbSpotlight(null);
+      return;
+    }
+
+    const targetStep =
+      focus.refStepId !== undefined
+        ? steps.find((candidate) => candidate.id === focus.refStepId)
+        : [...steps.slice(0, currentStepIndex + 1)].reverse().find((candidate) => candidate.action.type === "geometry");
+    const box = targetStep ? layoutMap.get(targetStep.id) : null;
+    const spotlight =
+      targetStep?.action.type === "geometry" && box
+        ? shapePartBoard(targetStep.action, focus.part, box)
+        : null;
+
+    if (!spotlight) {
+      onOrbSpotlight(null);
+      return;
+    }
+
+    onOrbSpotlight({ ...spotlight, svg, viewBoxWidth: contentWidth, viewBoxHeight });
+  }, [contentWidth, currentStepIndex, layoutMap, onOrbSpotlight, steps, viewBoxHeight]);
 
   // [layout] diagnostic — log two signals:
   //   1. Any consecutive-visible-row gap > 40 units (canonical GAP=16;
@@ -1791,6 +1859,7 @@ export function WhiteboardCanvas({
                     height={l.height}
                     progress={progress}
                     isAnimating={animating}
+                    penDraw={sequentialDiagrams}
                   />
                 </g>
               );

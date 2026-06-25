@@ -457,6 +457,8 @@ export type WhiteboardStep = {
    * `substitutionAnimation` cross-fade behavior.
    */
   flyInSubstitution?: FlyInSubstitution;
+  /** Optional target used by the tutor orb to point at a geometry part. */
+  orbFocus?: { refStepId?: number; part: string };
   action: WhiteboardAction;
 };
 
