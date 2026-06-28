@@ -15,14 +15,14 @@ export function useFullSatStatus() {
     queryKey: ["full-sat"],
     queryFn: async () => {
       const res = await fetch("/api/full-sat");
-      if (!res.ok) throw new Error("Failed to fetch full SAT status");
+      if (!res.ok) throw new Error("Failed to fetch full LSAT status");
       return res.json();
     },
     staleTime: 60_000,
   });
 
   useEffect(() => {
-    if (isError) toast.error("Failed to load full SAT status");
+    if (isError) toast.error("Failed to load full LSAT status");
   }, [isError]);
 
   return { data, isLoading, isError, refetch };

@@ -18,7 +18,7 @@ export default function OnboardingPage() {
     }
 
     const step = data.onboarding?.currentStep ?? "plan";
-    if (step === "plan" || step === "gist") {
+    if (step === "plan") {
       router.replace("/onboarding/plan");
     } else if (step === "quiz") {
       router.replace("/onboarding/quiz");

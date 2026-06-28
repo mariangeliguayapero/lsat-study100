@@ -299,7 +299,7 @@ export async function getProgressData(userId: string) {
       id: s.id,
       subtopicName:
         s.kind === "daily-quest"
-          ? "Daily LSAT Quest"
+          ? "Daily LSAT Practice"
           : s.subtopic_id
             ? subtopicMap[s.subtopic_id]?.name ?? ""
             : "",

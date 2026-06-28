@@ -19,7 +19,7 @@ export function QuestStreak({
     <div className="border bg-card p-5">
       <div className="mb-4 flex items-center gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Quest Streak
+          Study Streak
         </h3>
         <span className="text-xs text-muted-foreground">&middot;</span>
         <span className="text-xs font-bold text-athena-amber">

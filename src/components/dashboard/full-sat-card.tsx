@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useFullSatStatus } from "@/hooks/use-full-sat";
+import { legacyCompositeToLsatScore } from "@/lib/lsat-score";
 import { FileText, Lock, ArrowRight, Trophy } from "lucide-react";
 
 function formatDaysUntil(dateString: string): string {
@@ -36,7 +37,7 @@ export function FullSatCard() {
             <FileText className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Full SAT In Progress</p>
+            <p className="text-sm font-semibold">Full LSAT In Progress</p>
             <p className="text-xs text-muted-foreground">
               Resume your practice test
             </p>
@@ -59,9 +60,9 @@ export function FullSatCard() {
             <Trophy className="h-5 w-5 text-amber-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Full SAT Practice</p>
+            <p className="text-sm font-semibold">Full LSAT Practice</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Last: {status.lastAttempt.totalScore}/1600</span>
+              <span>Last: {legacyCompositeToLsatScore(status.lastAttempt.totalScore)}/180</span>
               {!status.canTakeTest && status.nextAvailableDate && (
                 <>
                   <span className="text-muted-foreground/40">|</span>
@@ -91,9 +92,9 @@ export function FullSatCard() {
           <FileText className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">Full SAT Practice Test</p>
+          <p className="text-sm font-semibold">Full LSAT Practice Test</p>
           <p className="text-xs text-muted-foreground">
-            Take a complete 98-question practice test
+            Take a full timed LSAT-style practice set
           </p>
         </div>
         <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />

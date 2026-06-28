@@ -227,7 +227,7 @@ function MatrixField({
 
 /** Cinematic v2 whiteboard. A standalone renderer (not a wrapper around
  *  the v1 canvas) — owns its own visual language. Activated via
- *  ?debug=v2 on the SAT micro-lesson route. */
+ *  ?debug=v2 on the micro-lesson route. */
 export function WhiteboardCanvasNoir({
   steps,
   visibleStepIds,

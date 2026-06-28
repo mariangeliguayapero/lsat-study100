@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, BookOpen, Calculator, Clock, ArrowRight } from "lucide-react";
-import type { FullSatSubmitResponse } from "@/types/full-sat";
+import { Trophy, BookOpen, Brain, ArrowRight } from "lucide-react";
+import type { FullSatHistoryResponse, FullSatSubmitResponse } from "@/types/full-sat";
+import { legacyCompositeToLsatScore, percentCorrect } from "@/lib/lsat-score";
 
 export default function FullSatResultsPage() {
   const router = useRouter();
@@ -18,9 +19,9 @@ export default function FullSatResultsPage() {
       try {
         const res = await fetch("/api/full-sat/history");
         if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
+        const data = (await res.json()) as FullSatHistoryResponse;
         const attempt = data.attempts?.find(
-          (a: any) => a.id === params.attemptId
+          (a) => a.id === params.attemptId
         );
         if (attempt && attempt.status === "completed") {
           setResults({
@@ -56,16 +57,20 @@ export default function FullSatResultsPage() {
           onClick={() => router.push("/full-sat")}
           className="text-sm font-medium text-primary hover:underline"
         >
-          Back to Full SAT
+          Back to Full LSAT
         </button>
       </div>
     );
   }
 
+  const lsatScore = legacyCompositeToLsatScore(results.totalScore);
+  const readingAccuracy = percentCorrect(results.rwRawScore, 54);
+  const reasoningAccuracy = percentCorrect(results.mathRawScore, 44);
+
   const scoreColor =
-    results.totalScore >= 1200
+    lsatScore >= 165
       ? "text-green-500"
-      : results.totalScore >= 900
+      : lsatScore >= 150
         ? "text-amber-500"
         : "text-red-500";
 
@@ -84,7 +89,7 @@ export default function FullSatResultsPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            SAT Practice Test Complete
+            LSAT Practice Test Complete
           </h1>
         </motion.div>
 
@@ -96,12 +101,12 @@ export default function FullSatResultsPage() {
           className="mt-8 text-center"
         >
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
-            Total Score
+            Estimated LSAT Score
           </p>
           <p className={`text-6xl font-bold tabular-nums mt-2 ${scoreColor}`}>
-            {results.totalScore}
+            {lsatScore}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">out of 1600</p>
+          <p className="text-sm text-muted-foreground mt-1">out of 180</p>
         </motion.div>
 
         {/* Section breakdown */}
@@ -111,14 +116,14 @@ export default function FullSatResultsPage() {
           transition={{ delay: 0.4 }}
           className="mt-10 grid grid-cols-2 gap-4"
         >
-          {/* R&W */}
+          {/* Reading Comprehension */}
           <div className="rounded-lg border bg-card p-5 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-3">
               <BookOpen className="h-4 w-4" />
-              Reading &amp; Writing
+              Reading Comprehension
             </div>
             <p className="text-3xl font-bold tabular-nums">
-              {results.rwScaledScore}
+              {readingAccuracy}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {results.rwRawScore}/54 correct
@@ -126,19 +131,19 @@ export default function FullSatResultsPage() {
             <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full bg-blue-500 transition-all"
-                style={{ width: `${(results.rwScaledScore / 800) * 100}%` }}
+                style={{ width: `${readingAccuracy}%` }}
               />
             </div>
           </div>
 
-          {/* Math */}
+          {/* Logical Reasoning */}
           <div className="rounded-lg border bg-card p-5 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-3">
-              <Calculator className="h-4 w-4" />
-              Math
+              <Brain className="h-4 w-4" />
+              Logical Reasoning
             </div>
             <p className="text-3xl font-bold tabular-nums">
-              {results.mathScaledScore}
+              {reasoningAccuracy}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {results.mathRawScore}/44 correct
@@ -146,7 +151,7 @@ export default function FullSatResultsPage() {
             <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full bg-purple-500 transition-all"
-                style={{ width: `${(results.mathScaledScore / 800) * 100}%` }}
+                style={{ width: `${reasoningAccuracy}%` }}
               />
             </div>
           </div>
@@ -162,32 +167,20 @@ export default function FullSatResultsPage() {
           <h3 className="text-sm font-semibold mb-2">Score Breakdown</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex justify-between">
-              <span>R&amp;W Raw Score</span>
+              <span>Reading Comprehension Accuracy</span>
               <span className="font-medium text-foreground">
-                {results.rwRawScore} / 54
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>R&amp;W Scaled Score</span>
-              <span className="font-medium text-foreground">
-                {results.rwScaledScore} / 800
+                {results.rwRawScore} / 54 ({readingAccuracy}%)
               </span>
             </div>
             <div className="flex justify-between border-t pt-2">
-              <span>Math Raw Score</span>
+              <span>Logical Reasoning Accuracy</span>
               <span className="font-medium text-foreground">
-                {results.mathRawScore} / 44
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Math Scaled Score</span>
-              <span className="font-medium text-foreground">
-                {results.mathScaledScore} / 800
+                {results.mathRawScore} / 44 ({reasoningAccuracy}%)
               </span>
             </div>
             <div className="flex justify-between border-t pt-2 font-semibold text-foreground">
-              <span>Total</span>
-              <span>{results.totalScore} / 1600</span>
+              <span>Estimated LSAT</span>
+              <span>{lsatScore} / 180</span>
             </div>
           </div>
         </motion.div>
@@ -203,7 +196,7 @@ export default function FullSatResultsPage() {
             onClick={() => router.push("/full-sat")}
             className="flex-1 rounded-md border px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Back to Full SAT
+            Back to Full LSAT
           </button>
           <button
             onClick={() => router.push("/dashboard")}

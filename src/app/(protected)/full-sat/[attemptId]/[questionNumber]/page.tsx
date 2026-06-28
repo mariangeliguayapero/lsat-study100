@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import { useFullSatContext } from "@/components/full-sat/full-sat-context";
@@ -58,17 +58,17 @@ export default function FullSatQuestionPage() {
   };
 
   const isLow = ctx.timeLeft < 300; // 5 minutes warning
-  const isMathSection = ctx.currentSection === "math";
+  const isSecondSection = ctx.currentSection === "math";
 
   // Determine section boundaries for the bottom bar
-  // R&W: questions 1-54, Math: questions 55-98
-  const sectionStart = isMathSection ? 54 : 0;
-  const sectionEnd = isMathSection ? 98 : 54;
+  // Legacy storage keeps a two-section split: first 54, second 44.
+  const sectionStart = isSecondSection ? 54 : 0;
+  const sectionEnd = isSecondSection ? 98 : 54;
   const sectionTotal = sectionEnd - sectionStart;
   const sectionIndex = ctx.currentIndex - sectionStart;
 
   const handleSubmitOrFinishSection = () => {
-    if (isMathSection) {
+    if (isSecondSection) {
       ctx.submitTest();
     } else {
       ctx.finishSection();
@@ -87,8 +87,8 @@ export default function FullSatQuestionPage() {
         onClose={() => router.push("/full-sat")}
         hasAnswers={ctx.answeredCount > 0}
         subtopicName={`${ctx.sectionLabel} - ${ctx.moduleLabel}`}
-        showCalc={isMathSection}
-        title="Full SAT Practice Test"
+        showCalc={false}
+        title="Full LSAT Practice Test"
       />
 
       <SegmentProgressBar
@@ -154,7 +154,7 @@ export default function FullSatQuestionPage() {
       />
 
       <AnimatePresence>
-        {calcOpen && isMathSection && <Calculator />}
+        {calcOpen && isSecondSection && <Calculator />}
       </AnimatePresence>
     </div>
   );

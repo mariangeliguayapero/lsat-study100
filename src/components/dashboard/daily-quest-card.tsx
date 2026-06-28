@@ -20,7 +20,7 @@ export function DailyQuestCard() {
       <div className="relative border-2 border-muted-foreground/20 bg-gradient-to-b from-muted/50 to-transparent px-6 py-8 text-center rounded-lg">
         <Target className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
         <p className="text-lg font-semibold text-muted-foreground">
-          Daily LSAT quest coming soon
+          Daily LSAT practice coming soon
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Adaptive practice will unlock after the LSAT question bank is set up
@@ -50,7 +50,7 @@ export function DailyQuestCard() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-6 w-6 text-green-500" />
             <div>
-              <p className="font-semibold">Quest Complete!</p>
+              <p className="font-semibold">Practice Complete</p>
               <p className="text-sm text-muted-foreground">
                 {quest.correctCount}/{quest.totalQuestions} correct ({accuracy}%)
               </p>
@@ -79,7 +79,7 @@ export function DailyQuestCard() {
         className="relative border-2 border-athena-amber/30 bg-gradient-to-b from-athena-amber/5 to-transparent px-6 py-8 cursor-pointer text-center rounded-lg"
       >
         <Target className="mx-auto mb-3 h-8 w-8 text-primary" />
-        <p className="text-lg font-semibold">Daily Quest</p>
+        <p className="text-lg font-semibold">Daily Practice</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {answered > 0
             ? `${answered}/${quest.totalQuestions} answered · ${progress}% done`
@@ -94,7 +94,7 @@ export function DailyQuestCard() {
           </div>
         )}
         <p className="mt-3 text-sm font-medium text-muted-foreground">
-          {answered > 0 ? "Continue quest →" : "Begin quest →"}
+          {answered > 0 ? "Continue practice →" : "Begin practice →"}
         </p>
       </motion.div>
     </Link>

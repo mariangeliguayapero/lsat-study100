@@ -166,7 +166,7 @@ export default function ProfilePage() {
           variants={staggerItem}
           className="mb-8 text-2xl font-bold tracking-tight"
         >
-          Hero Profile
+          Prep Profile
         </motion.h1>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px]">
@@ -188,7 +188,7 @@ export default function ProfilePage() {
               <div className="min-w-0 flex-1">
                 <ProfileNameEditor displayName={user.displayName} />
                 <p className="text-sm text-muted-foreground">
-                  Quest started {formatDate(user.createdAt)}
+                  Prep started {formatDate(user.createdAt)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Tier {rank.current.emoji} &middot; {rank.current.name} — {rank.current.weapon}
@@ -205,7 +205,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-2xl font-bold">{questsDone}</p>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Quests Done
+                    Practice Sets
                   </p>
                 </div>
                 <div>

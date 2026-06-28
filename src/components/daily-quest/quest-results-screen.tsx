@@ -29,13 +29,13 @@ export function QuestResultsScreen() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Trophy className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">Quest Complete!</h1>
+          <h1 className="text-2xl font-bold">Practice Complete</h1>
           <p className="mt-1 text-muted-foreground">
             {accuracy >= 80
               ? "Outstanding performance!"
               : accuracy >= 60
                 ? "Good effort, keep pushing!"
-                : "Every quest makes you stronger."}
+                : "Every practice set gives us better data."}
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export function QuestResultsScreen() {
 
         {/* Bucket breakdown */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Performance by Focus</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">Performance by Focus Area</h3>
           {(["weak", "mid", "stretch"] as const).map((bucket) => {
             const bucketProblems = ctx.problems.filter((p) => p.bucket === bucket);
             if (bucketProblems.length === 0) return null;

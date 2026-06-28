@@ -27,7 +27,7 @@ function getModuleTimeLimit(section: FullSatSection, module: number): number {
 }
 
 function getSectionLabel(section: FullSatSection): string {
-  return section === "reading_writing" ? "Reading & Writing" : "Math";
+  return section === "reading_writing" ? "Reading Comprehension" : "Logical Reasoning";
 }
 
 export function FullSatProvider({
@@ -85,12 +85,10 @@ export function FullSatProvider({
   // Timer — countdown per module
   // Calculate used time per module from answered problems
   const [rwTimeUsed, setRwTimeUsed] = useState(attempt.rwTimeSeconds ?? 0);
-  const [mathTimeUsed, setMathTimeUsed] = useState(attempt.mathTimeSeconds ?? 0);
-
-  const moduleTimeLimit = getModuleTimeLimit(currentPos.section, currentPos.module);
+  const [mathTimeUsed] = useState(attempt.mathTimeSeconds ?? 0);
 
   // Track time spent in current section continuously
-  const sectionStartRef = useRef(Date.now());
+  const sectionStartRef = useRef(0);
   const [timeLeft, setTimeLeft] = useState(() => {
     const used = currentPos.section === "reading_writing" ? rwTimeUsed : mathTimeUsed;
     // Each section has 2 modules; used is for the whole section
@@ -124,17 +122,6 @@ export function FullSatProvider({
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [phase, currentPos.section]);
-
-  // Auto-advance when timer hits 0
-  useEffect(() => {
-    if (timeLeft === 0 && phase === "active") {
-      if (currentPos.section === "reading_writing") {
-        finishSection();
-      } else {
-        submitTest();
-      }
-    }
-  }, [timeLeft, phase, currentPos.section]);
 
   const displayTime = useMemo(() => {
     const m = Math.floor(timeLeft / 60);
@@ -182,7 +169,7 @@ export function FullSatProvider({
         module: problem.module,
         orderIndex: problem.orderIndex,
         selectedOption: optionIndex,
-        isCorrect: optionIndex === (problem as any).correctOption,
+        isCorrect: optionIndex === problem.correctOption,
         responseTimeMs: undefined,
       });
     },
@@ -191,7 +178,7 @@ export function FullSatProvider({
 
   // Section transition
   const finishSection = useCallback(() => {
-    // Record R&W time
+    // Record first-section time
     const elapsed = Math.round((Date.now() - sectionStartRef.current) / 1000);
     setRwTimeUsed((prev) => prev + elapsed);
 
@@ -199,20 +186,6 @@ export function FullSatProvider({
     setPhase("break");
     router.push(`/full-sat/${attempt.id}/break`);
   }, [attempt.id, router]);
-
-  // Called from break page to start math section
-  const startMathSection = useCallback(() => {
-    setPhase("active");
-    // Find first math problem
-    const mathStart = problems.findIndex((p) => p.section === "math");
-    if (mathStart >= 0) {
-      setCurrentIndex(mathStart);
-      // Reset timer for math section
-      const mathLimit = getModuleTimeLimit("math", 1) + getModuleTimeLimit("math", 2);
-      setTimeLeft(mathLimit);
-      sectionStartRef.current = Date.now();
-    }
-  }, [problems]);
 
   // Submit test
   const submitTest = useCallback(() => {
@@ -235,6 +208,21 @@ export function FullSatProvider({
       }
     );
   }, [attempt.id, rwTimeUsed, mathTimeUsed, submitMutation, router]);
+
+  // Auto-advance when timer hits 0
+  useEffect(() => {
+    if (timeLeft !== 0 || phase !== "active") return;
+
+    const timeout = window.setTimeout(() => {
+      if (currentPos.section === "reading_writing") {
+        finishSection();
+      } else {
+        submitTest();
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [timeLeft, phase, currentPos.section, finishSection, submitTest]);
 
   // Status helpers
   const getQuestionStatus = useCallback(

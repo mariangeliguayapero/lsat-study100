@@ -211,7 +211,7 @@ export default function LearningPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
           Review
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Battle Scars</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Review Plan</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
           Review missed patterns, rebuild weak areas, and turn recent practice
           into a tighter LSAT plan.
@@ -253,7 +253,7 @@ export default function LearningPage() {
             Current focus
           </div>
           <p className="line-clamp-1 text-xl font-semibold">
-            {nextFocus?.name ?? "Start with a daily quest"}
+            {nextFocus?.name ?? "Start with daily practice"}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             {nextFocus
@@ -321,7 +321,7 @@ export default function LearningPage() {
 
             {weakAreas.length === 0 && (
               <div className="border border-dashed p-6 text-sm text-muted-foreground">
-                No scars yet. Complete a daily quest or topic quiz, then this
+                No review data yet. Complete daily practice or a topic quiz, then this
                 panel will rank your review priorities.
               </div>
             )}
@@ -380,7 +380,7 @@ export default function LearningPage() {
             {(progress?.recentSessions ?? []).length === 0 && (
               <p className="text-sm text-muted-foreground">
                 Recent LSAT sessions will appear after your first quiz or daily
-                quest.
+                practice set.
               </p>
             )}
           </div>

@@ -62,6 +62,11 @@ type MicroLessonProps = {
 
 // ── Check-in question UI ──────────────────────────────────────────────
 
+function stableUnit(seed: number): number {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function CheckInConfetti() {
   const colors = [
     "hsl(var(--green))",
@@ -72,9 +77,12 @@ function CheckInConfetti() {
   ];
   const particles = Array.from({ length: 14 }, (_, i) => ({
     id: i,
-    x: Math.random() * 100,
-    delay: Math.random() * 0.4,
-    size: 3 + Math.random() * 3,
+    x: stableUnit(i + 1) * 100,
+    driftX: (stableUnit(i + 31) - 0.5) * 80,
+    travelY: -180 - stableUnit(i + 61) * 120,
+    delay: stableUnit(i + 91) * 0.4,
+    duration: 1.2 + stableUnit(i + 121) * 0.4,
+    size: 3 + stableUnit(i + 151) * 3,
     color: colors[i % colors.length],
   }));
   return (
@@ -92,12 +100,12 @@ function CheckInConfetti() {
           }}
           initial={{ y: 0, opacity: 1 }}
           animate={{
-            y: -180 - Math.random() * 120,
+            y: p.travelY,
             opacity: [1, 1, 0],
-            x: (Math.random() - 0.5) * 80,
+            x: p.driftX,
           }}
           transition={{
-            duration: 1.2 + Math.random() * 0.4,
+            duration: p.duration,
             delay: p.delay,
             ease: "easeOut",
           }}
@@ -503,7 +511,7 @@ function FillBlankCard({
       className="space-y-2"
     >
       <div className="text-sm font-medium text-foreground">
-        <MathContent content={fillBlank.prompt} />
+        <MathContent content={fillBlank.prompt ?? ""} />
       </div>
 
       {!isRevealed && (
@@ -894,7 +902,7 @@ export function MicroLesson({
     } else if (step.action.type === "predict") {
       narration = (step.action as PredictAction).question.trim();
     } else if (step.action.type === "fill_blank") {
-      narration = (step.action as FillBlankAction).prompt.trim();
+      narration = (step.action as FillBlankAction).prompt?.trim();
     } else {
       narration = step.narration?.trim();
     }

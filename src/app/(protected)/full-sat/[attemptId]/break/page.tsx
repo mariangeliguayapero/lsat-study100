@@ -22,7 +22,7 @@ export default function FullSatBreakPage() {
   };
 
   const handleContinue = () => {
-    // Navigate to first math question (question 55)
+    // Navigate to the first second-section question.
     router.push(`/full-sat/${params.attemptId}/55`);
   };
 
@@ -41,8 +41,8 @@ export default function FullSatBreakPage() {
 
         <h1 className="text-2xl font-bold tracking-tight">Section Break</h1>
         <p className="mt-2 text-muted-foreground">
-          You&apos;ve completed the Reading &amp; Writing section.
-          Take a moment to rest before starting Math.
+          You&apos;ve completed the Reading Comprehension section.
+          Take a moment to rest before starting Logical Reasoning.
         </p>
 
         <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -53,7 +53,7 @@ export default function FullSatBreakPage() {
         <div className="mt-4 rounded-lg border bg-card p-4">
           <p className="text-sm font-medium">Up Next</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Math Section: 44 questions, 70 minutes (Module 1 + Module 2)
+            Logical Reasoning: 44 questions, 70 minutes (Module 1 + Module 2)
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export default function FullSatBreakPage() {
           onClick={handleContinue}
           className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Continue to Math
+          Continue to Logical Reasoning
           <ArrowRight className="h-4 w-4" />
         </button>
       </motion.div>

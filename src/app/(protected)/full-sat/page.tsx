@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useFullSatStatus, useStartFullSat, useFullSatHistory } from "@/hooks/use-full-sat";
+import { legacyCompositeToLsatScore } from "@/lib/lsat-score";
 import { motion } from "framer-motion";
 import { Clock, Trophy, Lock, ArrowRight, ChevronLeft } from "lucide-react";
 
@@ -53,10 +54,10 @@ export default function FullSatLandingPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold tracking-tight">Full SAT Practice Test</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Full LSAT Practice Test</h1>
         <p className="mt-2 text-muted-foreground">
-          Take a complete SAT practice test with 98 questions across Reading &amp; Writing and Math.
-          Timed sections, real SAT scoring (400-1600).
+          Take a timed LSAT-style practice test across Logical Reasoning and Reading Comprehension.
+          Scores are shown on the LSAT 120-180 scale.
         </p>
       </motion.div>
 
@@ -127,7 +128,7 @@ export default function FullSatLandingPage() {
                       134 min
                     </span>
                     <span>98 questions</span>
-                    <span>R&amp;W + Math</span>
+                    <span>Logical Reasoning + Reading Comprehension</span>
                   </div>
                 </div>
                 <button
@@ -165,8 +166,8 @@ export default function FullSatLandingPage() {
                     })}
                   </p>
                   <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>R&amp;W: {attempt.rwScaledScore}</span>
-                    <span>Math: {attempt.mathScaledScore}</span>
+                    <span>LSAT: {legacyCompositeToLsatScore(attempt.totalScore)}</span>
+                    <span>LR/RC sections</span>
                     <span>
                       Time: {Math.round(attempt.totalTimeSeconds / 60)}m
                     </span>

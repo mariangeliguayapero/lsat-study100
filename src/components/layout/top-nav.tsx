@@ -9,7 +9,7 @@ const navItems = [
   { href: "/dashboard", label: "ATHENA" },
   { href: "/queue", label: "PROGRESS" },
   { href: "/learning", label: "REVIEW" },
-  // { href: "/full-sat", label: "SAT TEST" },
+  // { href: "/full-sat", label: "LSAT TEST" },
   { href: "/mentor", label: "MENTOR" },
   { href: "/profile", label: "PROFILE" },
   { href: "/my-learning", label: "LEARN" },
