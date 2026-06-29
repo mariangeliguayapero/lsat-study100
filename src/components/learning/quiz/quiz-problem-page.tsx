@@ -10,7 +10,6 @@ import { SegmentProgressBar } from "@/components/quiz/segment-progress-bar";
 import { QuestionPanel } from "@/components/quiz/question-panel";
 import { AnswerPanel } from "@/components/quiz/answer-panel";
 import { BottomBar } from "@/components/quiz/bottom-bar";
-import { Calculator } from "@/components/quiz/calculator";
 import { ResultsScreen } from "@/components/quiz/results-screen";
 import { PostLessonPractice } from "@/components/learning/post-lesson-practice";
 import { StuckModal } from "@/components/quiz/stuck-modal";
@@ -38,7 +37,6 @@ export function QuizProblemPageContent() {
     markStuckModalShown,
   } = useQuizRouteContext();
 
-  const [calcOpen, setCalcOpen] = useState(false);
   const [showPractice, setShowPractice] = useState(false);
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showStuckModal, setShowStuckModal] = useState(false);
@@ -163,11 +161,12 @@ export function QuizProblemPageContent() {
         isLow={timer.isLow}
         timerHidden={timer.hidden}
         onToggleTimer={timer.toggleHidden}
-        calcOpen={calcOpen}
-        onToggleCalc={() => setCalcOpen((o) => !o)}
+        calcOpen={false}
+        onToggleCalc={() => {}}
         onClose={() => router.push(basePath)}
         hasAnswers={quiz.answers.size > 0}
         subtopicName={subtopicName}
+        showCalc={false}
       />
       <SegmentProgressBar
         total={problems.length}
@@ -221,10 +220,6 @@ export function QuizProblemPageContent() {
         sequential={true}
         nextDisabled={!canAdvance}
       />
-
-      <AnimatePresence>
-        {calcOpen && quiz.phase === "active" && <Calculator />}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showStuckModal && (

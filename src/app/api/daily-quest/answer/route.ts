@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     if (subtopicData) {
       const topic = subtopicData.topics as unknown as { subject: string };
       const sectionCategory: SectionCategory =
-        topic?.subject === "math" ? "Math" : "ReadingWriting";
+        topic?.subject === "reading-comprehension" ? "ReadingWriting" : "Math";
 
       const skill = await getSubsectionSkill(user.id, subtopicId);
       if (skill) {

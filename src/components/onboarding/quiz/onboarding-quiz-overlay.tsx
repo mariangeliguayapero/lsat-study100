@@ -5,14 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AnimatePresence } from "framer-motion";
 import { Toolbar } from "@/components/quiz/toolbar";
 import { SegmentProgressBar } from "@/components/quiz/segment-progress-bar";
 import { QuestionPanel } from "@/components/quiz/question-panel";
 import { AnswerPanel } from "@/components/quiz/answer-panel";
 import type { FeedbackState } from "@/components/quiz/answer-panel";
 import { BottomBar } from "@/components/quiz/bottom-bar";
-import { Calculator } from "@/components/quiz/calculator";
 import type { Problem, QuestionStatus } from "@/components/quiz/types";
 import { ExplanationPanel } from "./explanation-panel";
 import { LessonPreferenceModal } from "./lesson-preference-modal";
@@ -62,7 +60,6 @@ function questionToProblem(q: Question): Problem {
 export function OnboardingQuizOverlay() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [calcOpen, setCalcOpen] = useState(false);
   const prevIndexRef = useRef(0);
 
   // Quiz data
@@ -140,7 +137,6 @@ export function OnboardingQuizOverlay() {
     ) {
       handleComplete();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, questions.length, currentIndex, completion]);
 
   // Reset timer on new question
@@ -265,7 +261,6 @@ export function OnboardingQuizOverlay() {
       setCurrentIndex((i) => i + 1);
       setAnswerState({ type: "unanswered" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, questions.length]);
 
   const handleComplete = async () => {
@@ -364,13 +359,13 @@ export function OnboardingQuizOverlay() {
         isLow={false}
         timerHidden={true}
         onToggleTimer={() => {}}
-        calcOpen={calcOpen}
-        onToggleCalc={() => setCalcOpen((o) => !o)}
+        calcOpen={false}
+        onToggleCalc={() => {}}
         onClose={handleClose}
         hasAnswers={answeredSet.size > 0}
         subtopicName=""
         showTimer={false}
-        showCalc={true}
+        showCalc={false}
         title="Diagnostic Quiz"
         onSkip={handleSkip}
         skipLabel="Skip quiz"
@@ -423,10 +418,6 @@ export function OnboardingQuizOverlay() {
         nextDisabled={answerState.type === "unanswered" || submitting}
         onFinish={handleNext}
       />
-
-      <AnimatePresence>
-        {calcOpen && <Calculator />}
-      </AnimatePresence>
 
       <LessonPreferenceModal
         open={showPreferenceModal}

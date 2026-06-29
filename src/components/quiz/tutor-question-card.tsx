@@ -33,7 +33,7 @@ export function TutorQuestionCard({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.1 }}
-      className="fixed top-20 left-6 z-[61]"
+      className="fixed left-3 right-3 top-16 z-[61] sm:left-6 sm:right-auto sm:top-20"
     >
       <AnimatePresence initial={false} mode="wait">
         {collapsed ? (
@@ -55,7 +55,7 @@ export function TutorQuestionCard({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="w-[320px]"
+            className="w-full sm:w-[320px]"
           >
             <div className="rounded-xl bg-card/95 backdrop-blur-sm shadow-lg border overflow-hidden max-h-[calc(100vh-200px)] overflow-y-auto">
               {/* Header */}

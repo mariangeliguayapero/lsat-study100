@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export function TutorPracticeCard({
   onNeedsMicroLesson,
   onCurrentProblemChange,
 }: TutorPracticeCardProps) {
-  const sessionKey = useRef(Date.now()).current;
+  const [sessionKey] = useState(() => Date.now());
   const [problemIndex, setProblemIndex] = useState(0);
 
   const { data, isLoading, isError } = useQuery({
@@ -65,9 +65,9 @@ export function TutorPracticeCard({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.1 }}
-      className="fixed top-20 left-6 z-[61]"
+      className="fixed left-3 right-3 top-16 z-[61] sm:left-6 sm:right-auto sm:top-20"
     >
-      <div className="w-[360px] rounded-xl bg-card/95 backdrop-blur-sm shadow-lg border overflow-hidden max-h-[calc(100vh-200px)] overflow-y-auto">
+      <div className="w-full rounded-xl bg-card/95 backdrop-blur-sm shadow-lg border overflow-hidden max-h-[calc(100vh-200px)] overflow-y-auto sm:w-[360px]">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b">
           <span className="text-xs font-medium text-muted-foreground">

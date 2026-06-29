@@ -86,7 +86,7 @@ export default function TopicPage() {
         </p>
         <h1 className="text-lg font-bold">Choose A Review Area</h1>
       </div>
-          <div className="flex gap-6">
+          <div className="flex flex-col gap-6 lg:flex-row">
             <TopicSidebar
               topics={topics}
               activeSlug={activeTopic.slug}

@@ -11,8 +11,8 @@ type Topic = {
 };
 
 const SUBJECT_LABELS: Record<string, string> = {
-  math: "Math",
-  "reading-writing": "Reading & Writing",
+  math: "Logical Reasoning",
+  "reading-writing": "Reading Comprehension",
   "logical-reasoning": "Logical Reasoning",
   "reading-comprehension": "Reading Comprehension",
   "analytical-reasoning": "Analytical Reasoning",
@@ -28,7 +28,7 @@ export function TopicSidebar({
   const subjects = [...new Set(topics.map((t) => t.subject))];
 
   return (
-    <nav className="w-56 shrink-0 space-y-4">
+    <nav className="w-full shrink-0 space-y-4 lg:w-56">
       {subjects.map((subject) => (
         <div key={subject}>
           <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

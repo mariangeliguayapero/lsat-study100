@@ -192,7 +192,7 @@ export function DailyTimeSelector() {
         className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-muted py-4 text-base font-semibold text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
       >
         <Swords className="h-5 w-5" />
-        {submitting ? "Saving..." : "Start Your Quest"}
+        {submitting ? "Saving..." : "Start Daily Practice"}
       </button>
 
       {/* Skip button */}

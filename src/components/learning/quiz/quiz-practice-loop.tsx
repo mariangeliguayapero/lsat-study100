@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
@@ -23,7 +23,7 @@ export function QuizPracticeLoop({
   onComplete,
   onNeedsMicroLesson,
 }: QuizPracticeLoopProps) {
-  const sessionKey = useRef(Date.now()).current;
+  const [sessionKey] = useState(() => Date.now());
   const [problemIndex, setProblemIndex] = useState(0);
 
   const { data, isLoading, isError } = useQuery({

@@ -119,15 +119,15 @@ export default function FullSatLandingPage() {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-lg border bg-card p-5"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="font-semibold">{test.name}</h3>
-                  <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
                       134 min
                     </span>
-                    <span>98 questions</span>
+                    <span>Timed LSAT-style set</span>
                     <span>Logical Reasoning + Reading Comprehension</span>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function FullSatLandingPage() {
             .map((attempt) => (
               <div
                 key={attempt.id}
-                className="rounded-lg border bg-card p-4 flex items-center justify-between"
+                className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm font-medium">
@@ -165,7 +165,7 @@ export default function FullSatLandingPage() {
                       year: "numeric",
                     })}
                   </p>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>LSAT: {legacyCompositeToLsatScore(attempt.totalScore)}</span>
                     <span>LR/RC sections</span>
                     <span>
@@ -176,7 +176,7 @@ export default function FullSatLandingPage() {
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-amber-500" />
                   <span className="text-lg font-bold tabular-nums">
-                    {attempt.totalScore}
+                    {legacyCompositeToLsatScore(attempt.totalScore)}
                   </span>
                 </div>
               </div>

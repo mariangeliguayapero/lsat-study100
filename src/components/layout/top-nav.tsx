@@ -20,8 +20,8 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-center px-6">
-        <nav className="flex items-center gap-8">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-start px-4 pr-16 md:justify-center md:px-6">
+        <nav className="flex max-w-full items-center gap-5 overflow-x-auto md:gap-8">
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"

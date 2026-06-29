@@ -43,16 +43,12 @@ export async function POST(req: Request) {
 
   // Count correct per section
   let rwCorrect = 0;
-  let rwTotal = 0;
   let mathCorrect = 0;
-  let mathTotal = 0;
 
   for (const a of answers) {
     if (a.section === "reading_writing") {
-      rwTotal++;
       if (a.isCorrect) rwCorrect++;
     } else {
-      mathTotal++;
       if (a.isCorrect) mathCorrect++;
     }
   }
@@ -75,7 +71,7 @@ export async function POST(req: Request) {
   // Update subsection skills for adaptive tracking
   try {
     // Get the test's problem data for subtopic mapping
-    const { data: attemptRow } = await (supabase as any)
+    const { data: attemptRow } = await supabase
       .from("full_sat_attempts")
       .select("test_id")
       .eq("id", attemptId)
@@ -119,7 +115,7 @@ export async function POST(req: Request) {
 
         const topic = subtopicData.topics as unknown as { subject: string };
         const sectionCategory: SectionCategory =
-          topic?.subject === "math" ? "Math" : "ReadingWriting";
+          topic?.subject === "reading-comprehension" ? "ReadingWriting" : "Math";
 
         let skill = await getSubsectionSkill(user.id, subtopicId);
         if (!skill) {

@@ -80,10 +80,10 @@ export default function MyLearningPage() {
   const topics = data?.topics ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col lg:h-[calc(100vh-3.5rem)] lg:flex-row">
 
       {/* Left sidebar — previously explored */}
-      <aside className="w-64 shrink-0 border-r border-border flex flex-col py-6 px-4 overflow-y-auto">
+      <aside className="max-h-56 w-full shrink-0 border-b border-border px-4 py-5 lg:max-h-none lg:w-64 lg:border-b-0 lg:border-r lg:py-6 lg:overflow-y-auto">
         <div className="flex items-center gap-2 mb-5 px-1">
           <BookOpen className="h-4 w-4 text-muted-foreground" />
           <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -146,7 +146,7 @@ export default function MyLearningPage() {
                 if (e.key === "Enter") handleSubmit(topic);
               }}
               disabled={isGenerating}
-              className="w-full rounded-2xl border border-border bg-card pl-11 pr-32 py-3.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              className="w-full rounded-2xl border border-border bg-card py-3.5 pl-11 pr-28 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 sm:pr-32"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <Button

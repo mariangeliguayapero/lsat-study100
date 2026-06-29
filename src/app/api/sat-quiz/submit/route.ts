@@ -104,11 +104,11 @@ export async function POST(req: Request) {
     if (subtopicData) {
       const topic = subtopicData.topics as unknown as { subject: string };
       const sectionCategory: SectionCategory =
-        topic?.subject === "math" ? "Math" : "ReadingWriting";
+        topic?.subject === "reading-comprehension" ? "ReadingWriting" : "Math";
 
       // Look up difficulty_level for each problem
       const problemIds = answers.map((a) => a.problemId);
-      const { data: problems } = await (supabase as any)
+      const { data: problems } = await supabase
         .from("problems")
         .select("id, difficulty_level")
         .in("id", problemIds) as { data: { id: string; difficulty_level: number }[] | null };

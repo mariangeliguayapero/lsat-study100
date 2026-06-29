@@ -2,14 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
 import { useFullSatContext } from "@/components/full-sat/full-sat-context";
 import { Toolbar } from "@/components/quiz/toolbar";
 import { SegmentProgressBar } from "@/components/quiz/segment-progress-bar";
 import { QuestionPanel } from "@/components/quiz/question-panel";
 import { AnswerPanel } from "@/components/quiz/answer-panel";
 import { BottomBar } from "@/components/quiz/bottom-bar";
-import { Calculator } from "@/components/quiz/calculator";
 
 export default function FullSatQuestionPage() {
   const router = useRouter();
@@ -17,7 +15,6 @@ export default function FullSatQuestionPage() {
   const questionNum = Math.max(1, parseInt(params.questionNumber, 10) || 1);
   const ctx = useFullSatContext();
 
-  const [calcOpen, setCalcOpen] = useState(false);
   const [timerHidden, setTimerHidden] = useState(false);
 
   // Sync URL <-> currentIndex
@@ -82,8 +79,8 @@ export default function FullSatQuestionPage() {
         isLow={isLow}
         timerHidden={timerHidden}
         onToggleTimer={() => setTimerHidden((h) => !h)}
-        calcOpen={calcOpen}
-        onToggleCalc={() => setCalcOpen((o) => !o)}
+        calcOpen={false}
+        onToggleCalc={() => {}}
         onClose={() => router.push("/full-sat")}
         hasAnswers={ctx.answeredCount > 0}
         subtopicName={`${ctx.sectionLabel} - ${ctx.moduleLabel}`}
@@ -152,10 +149,6 @@ export default function FullSatQuestionPage() {
         sequential={false}
         nextDisabled={false}
       />
-
-      <AnimatePresence>
-        {calcOpen && isSecondSection && <Calculator />}
-      </AnimatePresence>
     </div>
   );
 }
