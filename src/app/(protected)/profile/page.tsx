@@ -5,20 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, Clock, Target, TrendingUp } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { AnimatedSprite } from "@/components/pixel-art/animated-sprite";
 import { ProfileNameEditor } from "@/components/profile/profile-name-editor";
-import { ProfileStreak } from "@/components/profile/profile-streak";
 import { SatScoreHistory } from "@/components/profile/sat-score-history";
 import { ScheduleEditor } from "@/components/profile/schedule-editor";
-
-type TierInfo = {
-  name: string;
-  threshold: number;
-  weapon: string;
-  emoji: string;
-  active: boolean;
-};
 
 type SatAttempt = {
   id: string;
@@ -28,7 +20,7 @@ type SatAttempt = {
   completedAt: string | null;
 };
 
-type StreakDay = {
+type ConsistencyDay = {
   day: string;
   completed: boolean;
   isPast: boolean;
@@ -40,23 +32,13 @@ type ProfileData = {
     avatarUrl: string | null;
     createdAt: string;
     targetScore: number | null;
-    bestStreak: number;
   } | null;
   totalScore: number;
   questsDone: number;
   totalTimeSeconds: number;
   accuracy: number;
-  streak: number;
-  bestStreak: number;
   latestSatAttempt: SatAttempt | null;
-  weeklyStreakDays: StreakDay[];
-  rank: {
-    current: { name: string; weapon: string; emoji: string; threshold: number };
-    next: { name: string; weapon: string; emoji: string; threshold: number } | null;
-    pct: number;
-    pointsToNext: number;
-  };
-  tiers: TierInfo[];
+  weeklyStreakDays: ConsistencyDay[];
 };
 
 const staggerContainer = {
@@ -82,6 +64,90 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function estimatePercentile(score: number): string {
+  if (score >= 175) return "99th+";
+  if (score >= 170) return "96th-98th";
+  if (score >= 165) return "90th-95th";
+  if (score >= 160) return "80th-89th";
+  if (score >= 155) return "65th-79th";
+  if (score >= 150) return "45th-64th";
+  if (score >= 145) return "30th-44th";
+  if (score >= 140) return "18th-29th";
+  return "Below 18th";
+}
+
+function scoreBand(score: number): string {
+  if (score >= 170) return "Law school ready";
+  if (score >= 165) return "Competitive";
+  if (score >= 160) return "Strong foundation";
+  if (score >= 150) return "Developing";
+  return "Baseline";
+}
+
+function MetricCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  detail?: string;
+  icon: typeof Target;
+}) {
+  return (
+    <div className="border border-border/70 bg-card/80 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          {label}
+        </p>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <p className="mt-5 text-3xl font-bold tabular-nums">{value}</p>
+      {detail && <p className="mt-2 text-sm text-muted-foreground">{detail}</p>}
+    </div>
+  );
+}
+
+function PracticeConsistency({ days }: { days: ConsistencyDay[] }) {
+  const completed = days.filter((day) => day.completed).length;
+
+  return (
+    <div className="border border-border/70 bg-card/80 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Practice Consistency
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {completed} of {days.length} scheduled days completed this week.
+          </p>
+        </div>
+        <p className="text-2xl font-bold tabular-nums">{completed}/{days.length}</p>
+      </div>
+      <div className="mt-5 grid grid-cols-7 gap-2">
+        {days.map((day, index) => (
+          <div key={`${day.day}-${index}`} className="space-y-2">
+            <div
+              className={[
+                "h-2.5 border",
+                day.completed
+                  ? "border-primary bg-primary"
+                  : day.isPast
+                    ? "border-border bg-muted"
+                    : "border-dashed border-border bg-transparent",
+              ].join(" ")}
+            />
+            <p className="text-center text-[10px] uppercase tracking-wide text-muted-foreground">
+              {day.day}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function ProfilePage() {
@@ -120,23 +186,21 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl p-6">
-        <div className="h-8 w-48 bg-muted animate-pulse" />
-        <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px]">
-          <div className="space-y-8">
-            <div className="h-20 bg-muted animate-pulse" />
-            <div className="h-px bg-border" />
-            <div className="grid grid-cols-2 gap-x-16 gap-y-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-14 bg-muted animate-pulse" />
+      <div className="mx-auto max-w-6xl p-6">
+        <div className="h-8 w-48 animate-pulse bg-muted" />
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-6">
+            <div className="h-28 animate-pulse bg-muted" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-32 animate-pulse bg-muted" />
               ))}
             </div>
-            <div className="h-px bg-border" />
-            <div className="h-20 bg-muted animate-pulse" />
+            <div className="h-36 animate-pulse bg-muted" />
           </div>
-          <div className="space-y-6">
-            <div className="h-20 bg-muted animate-pulse" />
-            <div className="h-64 bg-muted animate-pulse" />
+          <div className="space-y-4">
+            <div className="h-36 animate-pulse bg-muted" />
+            <div className="h-44 animate-pulse bg-muted" />
           </div>
         </div>
       </div>
@@ -145,221 +209,173 @@ export default function ProfilePage() {
 
   if (!data || !data.user) return null;
 
-  const { user, questsDone, totalTimeSeconds, accuracy, rank, tiers } = data;
-  const totalScore = Math.max(data.totalScore, 120);
+  const { user, questsDone, totalTimeSeconds, accuracy } = data;
+  const currentScore = Math.max(data.totalScore, 120);
   const targetScore =
     user.targetScore != null && user.targetScore >= 120 && user.targetScore <= 180
       ? user.targetScore
-      : null;
-  const bestStreak = Math.max(data.bestStreak, data.streak);
+      : 170;
+  const gap = Math.max(targetScore - currentScore, 0);
+  const targetProgress = Math.min(
+    Math.max(Math.round(((currentScore - 120) / (targetScore - 120)) * 100), 0),
+    100
+  );
 
   return (
-    <div className="relative z-10 p-6">
+    <div className="relative z-10 p-4 pb-16 md:p-6">
       <motion.div
-        className="mx-auto max-w-5xl"
+        className="mx-auto max-w-6xl"
         variants={staggerContainer}
         initial="hidden"
         animate="show"
       >
-        {/* Page title */}
-        <motion.h1
-          variants={staggerItem}
-          className="mb-8 text-2xl font-bold tracking-tight"
-        >
-          Prep Profile
-        </motion.h1>
+        <motion.div variants={staggerItem} className="mb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
+            LSAT Profile
+          </p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight">Study Profile</h1>
+        </motion.div>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px]">
-          {/* Left column — main content */}
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="show"
-          >
-            {/* Hero header */}
-            <motion.div variants={staggerItem} className="flex items-start gap-4">
-              <AnimatedSprite
-                src="/images/pixel-art/profile-avatar.png"
-                alt="Avatar"
-                width={64}
-                height={64}
-              />
-
-              <div className="min-w-0 flex-1">
-                <ProfileNameEditor displayName={user.displayName} />
-                <p className="text-sm text-muted-foreground">
-                  Prep started {formatDate(user.createdAt)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Tier {rank.current.emoji} &middot; {rank.current.name} — {rank.current.weapon}
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Divider */}
-            <div className="my-8 border-b" />
-
-            {/* Stats grid */}
-            <motion.div variants={staggerItem}>
-              <div className="grid grid-cols-2 gap-x-16 gap-y-8">
-                <div>
-                  <p className="text-2xl font-bold">{questsDone}</p>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Practice Sets
-                  </p>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-6">
+            <motion.div
+              variants={staggerItem}
+              className="border border-border/70 bg-card/80 p-5"
+            >
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <AnimatedSprite
+                    src="/images/pixel-art/profile-avatar.png"
+                    alt="Profile avatar"
+                    width={64}
+                    height={64}
+                  />
+                  <div className="min-w-0">
+                    <ProfileNameEditor displayName={user.displayName} />
+                    <p className="text-sm text-muted-foreground">
+                      Prep started {formatDate(user.createdAt)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {scoreBand(currentScore)} · Estimated {estimatePercentile(currentScore)} percentile
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatTime(totalTimeSeconds)}</p>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Total Time
+                <div className="text-left sm:text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Estimated LSAT
                   </p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{bestStreak} days</p>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Best Streak
-                  </p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{accuracy}%</p>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Accuracy
-                  </p>
+                  <p className="mt-1 text-5xl font-bold tabular-nums">{currentScore}</p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Divider */}
-            <div className="my-8 border-b" />
-
-            {/* Streak section */}
-            <motion.div variants={staggerItem}>
-              <ProfileStreak
-                streak={data.streak}
-                bestStreak={bestStreak}
-                weeklyStreakDays={data.weeklyStreakDays}
+            <motion.div
+              variants={staggerItem}
+              className="grid grid-cols-1 gap-4 md:grid-cols-3"
+            >
+              <MetricCard
+                label="Target Score"
+                value={targetScore}
+                detail={gap === 0 ? "Target reached" : `${gap} point gap`}
+                icon={Target}
+              />
+              <MetricCard
+                label="Overall Accuracy"
+                value={`${accuracy}%`}
+                detail={`${questsDone} completed practice sets`}
+                icon={TrendingUp}
+              />
+              <MetricCard
+                label="Study Time"
+                value={formatTime(totalTimeSeconds)}
+                detail="Tracked across practice work"
+                icon={Clock}
               />
             </motion.div>
 
-            {/* Divider */}
-            <div className="my-8 border-b" />
-
-            {/* LSAT Score History */}
-            <motion.div variants={staggerItem}>
-              <SatScoreHistory latestAttempt={data.latestSatAttempt} />
-            </motion.div>
-
-            {/* Divider */}
-            <div className="my-8 border-b" />
-
-            {/* Progress to goal */}
-            <motion.div variants={staggerItem}>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Progress to Goal
-              </h3>
-              <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-2xl font-bold">
-                  {targetScore ?? rank.next?.threshold ?? totalScore}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  Currently {totalScore}
-                </span>
+            <motion.div
+              variants={staggerItem}
+              className="border border-border/70 bg-card/80 p-5"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Target Progress
+                  </h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Estimated score movement toward the current LSAT goal.
+                  </p>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Currently <span className="text-foreground">{currentScore}</span>
+                </p>
+              </div>
+              <div className="mt-5 flex items-baseline justify-between">
+                <p className="text-3xl font-bold tabular-nums">{targetScore}</p>
+                <p className="text-sm text-muted-foreground">
+                  {gap === 0 ? "At target" : `${gap} points remaining`}
+                </p>
               </div>
               <div className="mt-3 h-2 w-full overflow-hidden bg-muted">
                 <motion.div
-                  className="h-full bg-foreground"
+                  className="h-full bg-primary"
                   initial={{ width: 0 }}
-                  animate={{
-                    width: `${
-                      targetScore && targetScore > 120
-                        ? Math.min(Math.max(Math.round(((totalScore - 120) / (targetScore - 120)) * 100), 0), 100)
-                        : rank.pct
-                    }%`,
-                  }}
+                  animate={{ width: `${targetProgress}%` }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               </div>
-              {rank.next && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {rank.pointsToNext} points to {rank.next.name}
-                </p>
-              )}
             </motion.div>
-          </motion.div>
 
-          {/* Right column — sidebar */}
+            <motion.div variants={staggerItem}>
+              <PracticeConsistency days={data.weeklyStreakDays} />
+            </motion.div>
+
+            <motion.div variants={staggerItem}>
+              <SatScoreHistory latestAttempt={data.latestSatAttempt} />
+            </motion.div>
+          </div>
+
           <motion.div
+            className="space-y-4"
             variants={staggerContainer}
             initial="hidden"
             animate="show"
           >
-            {/* Schedule editor */}
             <motion.div variants={staggerItem}>
               <ScheduleEditor />
             </motion.div>
 
-            {/* Current tier card */}
             <motion.div
               variants={staggerItem}
-              className="mt-4 border bg-card p-4"
+              className="border border-border/70 bg-card/80 p-5"
             >
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Current Tier
-              </h3>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="text-sm font-semibold text-primary">{rank.current.emoji}</span>
-                <div>
-                  <p className="font-semibold">{rank.current.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {rank.current.weapon}
-                  </p>
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Score Context
+                </h3>
+              </div>
+              <dl className="mt-5 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-sm text-muted-foreground">Score band</dt>
+                  <dd className="text-sm font-medium">{scoreBand(currentScore)}</dd>
                 </div>
-              </div>
-            </motion.div>
-
-            {/* All tiers list */}
-            <motion.div
-              variants={staggerItem}
-              className="mt-4 border bg-card p-4"
-            >
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                All Tiers
-              </h3>
-              <div className="mt-3 space-y-1">
-                {tiers.map((tier) => (
-                  <div
-                    key={tier.name}
-                    className={`flex items-center gap-2.5 py-1.5 text-sm ${
-                      tier.active
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground/50"
-                    }`}
-                  >
-                    <span className="w-7 text-xs font-semibold text-primary/80">{tier.emoji}</span>
-                    <span className="flex-1">{tier.name}</span>
-                    <span className="tabular-nums">{tier.threshold}</span>
-                  </div>
-                ))}
-              </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-sm text-muted-foreground">Estimated percentile</dt>
+                  <dd className="text-sm font-medium">{estimatePercentile(currentScore)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-sm text-muted-foreground">Score gap</dt>
+                  <dd className="text-sm font-medium">{gap} points</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-sm text-muted-foreground">Practice sets</dt>
+                  <dd className="text-sm font-medium">{questsDone}</dd>
+                </div>
+              </dl>
             </motion.div>
           </motion.div>
         </div>
-
-        {/* Journey section — full width */}
-        <motion.div variants={staggerItem} className="mt-10">
-          <div className="flex gap-6 overflow-x-auto pb-2">
-            {tiers.map((tier) => (
-              <div
-                key={tier.name}
-                className={`flex shrink-0 flex-col items-center gap-1 ${
-                  tier.active ? "opacity-100" : "opacity-30"
-                }`}
-              >
-                <span className="text-xs font-semibold text-primary">{tier.emoji}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   );
