@@ -7,13 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowRight,
+  BookOpen,
   BookOpenCheck,
   Brain,
   Clock,
+  PlayCircle,
   Target,
   TrendingUp,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { getTopicIcon } from "@/lib/topic-icons";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +59,20 @@ type RecentSession = {
   date: string;
 };
 
+type SectionScore = {
+  subject: string;
+  total: number;
+  correct: number;
+  accuracy: number;
+  scaledScore: number;
+};
+
 type ProgressData = {
+  user: {
+    targetScore: number | null;
+    skillScore: number | null;
+  };
+  targetScore: number | null;
   topicPerformance: TopicPerformance[];
   subtopicPerformance?: SubtopicPerformance[];
   recentSessions: RecentSession[];
@@ -67,7 +81,16 @@ type ProgressData = {
     accuracy: number;
     sessionCount: number;
   };
+  sectionScores: {
+    readingWriting: SectionScore;
+    math: SectionScore;
+  };
   topicMastery: {
+    items: {
+      name: string;
+      mastered: boolean;
+      attempted: boolean;
+    }[];
     masteredCount: number;
     totalCount: number;
   };
@@ -87,6 +110,26 @@ function formatSessionDate(value: string) {
   }).format(new Date(value));
 }
 
+function estimatePercentile(score: number): string {
+  if (score >= 175) return "99th+";
+  if (score >= 170) return "96th-98th";
+  if (score >= 165) return "90th-95th";
+  if (score >= 160) return "80th-89th";
+  if (score >= 155) return "65th-79th";
+  if (score >= 150) return "45th-64th";
+  if (score >= 145) return "30th-44th";
+  if (score >= 140) return "18th-29th";
+  return "Below 18th";
+}
+
+function scoreBand(score: number): string {
+  if (score >= 170) return "Law school ready";
+  if (score >= 165) return "Competitive";
+  if (score >= 160) return "Strong foundation";
+  if (score >= 150) return "Developing";
+  return "Baseline";
+}
+
 function accuracyTone(accuracy: number, total: number) {
   if (total === 0) return "text-muted-foreground";
   if (accuracy < 50) return "text-red-400";
@@ -97,18 +140,24 @@ function accuracyTone(accuracy: number, total: number) {
 function weakAreaGuidance(slug: string | null | undefined) {
   switch (slug) {
     case "flaw-questions":
-      return "Review the exact reasoning gap: conclusion, evidence, then the assumption the author smuggles in.";
+      return "Flaw questions are high-leverage because they train you to name exactly why an argument fails before answer choices distract you.";
     case "assumption-questions":
-      return "Practice identifying the missing bridge. For necessary assumptions, negate the answer and check whether the argument breaks.";
+      return "Assumption work builds the core LR habit: finding the missing bridge between evidence and conclusion.";
     case "strengthen-weaken":
-      return "Focus on the pressure point. The right answer must change how well the evidence supports the conclusion.";
+      return "Strengthen and weaken questions reward pressure-point thinking, which transfers directly into most LR families.";
     case "main-point-structure":
-      return "Summarize each paragraph by role, then choose an answer broad enough to cover the author’s central move.";
+      return "Main point and structure work improves passage mapping, timing, and answer elimination on Reading Comprehension.";
     case "inference-detail":
-      return "Stay conservative. The supported answer should follow from the passage without adding a stronger claim.";
+      return "Inference/detail practice keeps RC answers grounded in the passage instead of tempting stronger outside claims.";
     default:
-      return "Open the focused lesson, then drill a small set of similar questions before returning to mixed practice.";
+      return "This is the best current review target based on completed practice. Start with a short lesson, then drill a focused set.";
   }
+}
+
+function recommendedNextStep(area: SubtopicPerformance | undefined) {
+  if (!area) return "Complete a daily practice set to unlock a personalized review plan.";
+  if (area.accuracy < 60) return "Open the lesson, then complete a focused practice set.";
+  return "Run a focused practice set and review every missed answer.";
 }
 
 function AccuracyBar({ value }: { value: number }) {
@@ -118,6 +167,31 @@ function AccuracyBar({ value }: { value: number }) {
         className="h-full bg-primary transition-[width]"
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
+    </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+  icon: typeof Target;
+}) {
+  return (
+    <div className="border border-border/70 bg-card/80 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          {label}
+        </p>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <p className="mt-5 text-2xl font-bold tabular-nums">{value}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
     </div>
   );
 }
@@ -202,99 +276,183 @@ export default function LearningPage() {
   }, [progress?.subtopicPerformance, progress?.topicPerformance]);
 
   const nextFocus = weakAreas[0];
-  const attemptedTopics =
-    progress?.topicPerformance.filter((topic) => topic.total > 0).length ?? 0;
-  const masteredCount = progress?.topicMastery.masteredCount ?? 0;
-  const totalTopics = progress?.topicMastery.totalCount ?? 0;
+  const averageAccuracy = progress
+    ? (progress.sectionScores.readingWriting.accuracy +
+        progress.sectionScores.math.accuracy) /
+      2
+    : 0;
+  const estimatedScore = Math.round(120 + (averageAccuracy / 100) * 60);
+  const masteredTopics =
+    progress?.topicMastery.items.filter((topic) => topic.mastered) ?? [];
+  const recentSessions = progress?.recentSessions.slice(0, 3) ?? [];
+
+  const focusLessonHref = nextFocus?.slug
+    ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/micro-lesson`
+    : nextFocus
+      ? `/learning/${nextFocus.topicSlug}`
+      : "/quest";
+  const focusPracticeHref = nextFocus?.slug
+    ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/quiz`
+    : nextFocus
+      ? `/learning/${nextFocus.topicSlug}`
+      : "/quest";
 
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl p-6">
         <div className="mb-8 space-y-3">
-          <div className="h-4 w-28 rounded bg-muted animate-pulse" />
-          <div className="h-9 w-64 rounded bg-muted animate-pulse" />
+          <div className="h-4 w-28 animate-pulse bg-muted" />
+          <div className="h-9 w-64 animate-pulse bg-muted" />
         </div>
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="h-72 rounded-lg bg-muted animate-pulse" />
-          <div className="h-72 rounded-lg bg-muted animate-pulse" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="h-32 animate-pulse bg-muted" />
+          ))}
+        </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="h-80 animate-pulse bg-muted" />
+          <div className="h-80 animate-pulse bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
-      <section className="mb-8 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-          Review
+    <div className="mx-auto max-w-6xl p-4 pb-16 md:p-6">
+      <section className="mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
+          LSAT Review
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Review Plan</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Review missed patterns, rebuild weak areas, and turn recent practice
-          into a tighter LSAT plan.
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Review Plan</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Turn recent misses into a clear next action: isolate the pattern, study the concept, then drill a small focused set.
         </p>
       </section>
 
-      <section className="mb-8 grid gap-4 md:grid-cols-3">
-        <div className="border bg-card/70 p-5">
-          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="h-4 w-4" />
-            Overall accuracy
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="Estimated Score"
+          value={estimatedScore}
+          detail={`${scoreBand(estimatedScore)} · ${estimatePercentile(estimatedScore)} percentile`}
+          icon={TrendingUp}
+        />
+        <SummaryCard
+          label="Score Context"
+          value={scoreBand(estimatedScore)}
+          detail={`Estimated percentile: ${estimatePercentile(estimatedScore)}`}
+          icon={Target}
+        />
+        <SummaryCard
+          label="Weakest Area"
+          value={nextFocus?.name ?? "No data yet"}
+          detail={nextFocus ? `${nextFocus.accuracy}% in ${nextFocus.topicName}` : "Complete practice to identify one"}
+          icon={AlertTriangle}
+        />
+        <SummaryCard
+          label="Recommended Step"
+          value={nextFocus ? "Focused review" : "Start practice"}
+          detail={recommendedNextStep(nextFocus)}
+          icon={PlayCircle}
+        />
+      </section>
+
+      <section className="mb-8 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="border border-primary/35 bg-card/90 p-6 shadow-[0_0_40px_rgba(20,184,166,0.08)]">
+          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                Current Focus
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold">
+                {nextFocus?.name ?? "Build your first review target"}
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {nextFocus
+                  ? `${nextFocus.topicName} · ${nextFocus.subject === "logical-reasoning" ? "Logical Reasoning" : "Reading Comprehension"}`
+                  : "Complete a daily practice set or topic quiz to activate your review plan."}
+              </p>
+            </div>
+            {nextFocus && (
+              <div className="min-w-36 border border-border/70 bg-background/40 p-4 text-right">
+                <p className={cn("text-3xl font-bold tabular-nums", accuracyTone(nextFocus.accuracy, nextFocus.total))}>
+                  {nextFocus.accuracy}%
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {nextFocus.correct}/{nextFocus.total} correct
+                </p>
+              </div>
+            )}
           </div>
-          <p className="text-4xl font-semibold">
-            {progress?.overallStats.accuracy ?? 0}
-            <span className="text-base text-muted-foreground">%</span>
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {progress?.overallStats.totalQuestions ?? 0} questions attempted
-          </p>
+
+          <div className="mt-6 border-t border-border/70 pt-5">
+            <p className="text-sm font-medium">Why this matters</p>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {weakAreaGuidance(nextFocus?.slug)}
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href={focusPracticeHref}
+              className="inline-flex h-11 items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            >
+              <PlayCircle className="h-4 w-4" />
+              Start focused practice
+            </Link>
+            <Link
+              href={focusLessonHref}
+              className="inline-flex h-11 items-center justify-center gap-2 border border-border bg-background/50 px-5 text-sm font-semibold text-foreground transition hover:bg-muted"
+            >
+              <BookOpen className="h-4 w-4" />
+              Open lesson
+            </Link>
+          </div>
         </div>
-        <div className="border bg-card/70 p-5">
-          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <TrendingUp className="h-4 w-4" />
-            Mastered topics
+
+        <div className="border border-border/70 bg-card/80 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold">Mastered Topics</h2>
+              <p className="text-sm text-muted-foreground">
+                Topics where recent accuracy is at or above mastery threshold.
+              </p>
+            </div>
+            <Brain className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-4xl font-semibold">
-            {masteredCount}
-            <span className="text-base text-muted-foreground">
-              /{totalTopics}
-            </span>
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {attemptedTopics} topic{attemptedTopics === 1 ? "" : "s"} with data
-          </p>
-        </div>
-        <div className="border bg-card/70 p-5">
-          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="h-4 w-4" />
-            Current focus
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {masteredTopics.length > 0 ? (
+              masteredTopics.map((topic) => (
+                <span
+                  key={topic.name}
+                  className="border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
+                >
+                  {topic.name}
+                </span>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No mastered topics yet. Keep completing focused sets to establish reliable strengths.
+              </p>
+            )}
           </div>
-          <p className="line-clamp-1 text-xl font-semibold">
-            {nextFocus?.name ?? "Start with daily practice"}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {nextFocus
-              ? `${nextFocus.topicName} - ${nextFocus.correct}/${nextFocus.total} correct, ${nextFocus.accuracy}% accuracy`
-              : "Complete practice to unlock review targets"}
-          </p>
         </div>
       </section>
 
-      <section className="mb-10 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="border bg-card/70 p-5">
+      <section className="mb-8 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="border border-border/70 bg-card/80 p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Review Priorities</h2>
               <p className="text-sm text-muted-foreground">
-                Your lowest-accuracy LSAT question types, ranked by what to fix first.
+                Lowest-accuracy question types ranked by what to review first.
               </p>
             </div>
-            <Brain className="h-5 w-5 text-muted-foreground" />
+            <AlertTriangle className="h-5 w-5 text-primary" />
           </div>
 
           <div className="space-y-3">
             {weakAreas.map((area) => {
-              const topic = topics.find((t) => t.slug === area.topicSlug);
               const href = area.slug
                 ? `/learning/${area.topicSlug}/${area.slug}/micro-lesson`
                 : `/learning/${area.topicSlug}`;
@@ -302,7 +460,7 @@ export default function LearningPage() {
                 <Link
                   key={area.id}
                   href={href}
-                  className="block border bg-background/40 p-4 transition-colors hover:bg-accent/30"
+                  className="block border border-border/70 bg-background/35 p-4 transition-colors hover:bg-muted/40"
                 >
                   <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
@@ -321,17 +479,12 @@ export default function LearningPage() {
                     </span>
                   </div>
                   <AccuracyBar value={area.accuracy} />
-                  <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                    {weakAreaGuidance(area.slug)}
-                  </p>
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {area.correct}/{area.total} correct
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      {area.slug
-                        ? "Open focused lesson"
-                        : `Review ${topic?.subtopics.length ?? 0} question types`}
+                      Open micro-lesson
                       <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -340,27 +493,26 @@ export default function LearningPage() {
             })}
 
             {weakAreas.length === 0 && (
-              <div className="border border-dashed p-6 text-sm text-muted-foreground">
-                No review data yet. Complete daily practice or a topic quiz, then this
-                panel will rank your review priorities.
+              <div className="border border-dashed border-border p-6 text-sm text-muted-foreground">
+                No review data yet. Complete daily practice or a topic quiz, then this panel will rank your review priorities.
               </div>
             )}
           </div>
         </div>
 
-        <div className="border bg-card/70 p-5">
+        <div className="border border-border/70 bg-card/80 p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Recent Practice</h2>
               <p className="text-sm text-muted-foreground">
-                Latest sessions feeding your review plan.
+                Latest attempts that shaped this review plan.
               </p>
             </div>
-            <BookOpenCheck className="h-5 w-5 text-muted-foreground" />
+            <BookOpenCheck className="h-5 w-5 text-primary" />
           </div>
 
           <div className="space-y-3">
-            {(progress?.recentSessions ?? []).slice(0, 5).map((session) => {
+            {recentSessions.map((session) => {
               const accuracy =
                 session.totalQuestions > 0
                   ? Math.round((session.score / session.totalQuestions) * 100)
@@ -368,7 +520,7 @@ export default function LearningPage() {
               return (
                 <div
                   key={session.id}
-                  className="border-b pb-3 last:border-b-0 last:pb-0"
+                  className="border-b border-border/60 pb-3 last:border-b-0 last:pb-0"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -397,10 +549,9 @@ export default function LearningPage() {
               );
             })}
 
-            {(progress?.recentSessions ?? []).length === 0 && (
+            {recentSessions.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Recent LSAT sessions will appear after your first quiz or daily
-                practice set.
+                Recent LSAT sessions will appear after your first quiz or daily practice set.
               </p>
             )}
           </div>
@@ -408,23 +559,23 @@ export default function LearningPage() {
       </section>
 
       <section>
-        <div className="mb-5 space-y-4">
+        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Review Library</h2>
+            <h2 className="text-lg font-semibold">Focused Study Library</h2>
             <p className="text-sm text-muted-foreground">
-              Open a section to drill lessons, quizzes, and micro-lessons.
+              Use this only when you want to choose a section manually instead of following the current focus.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="inline-flex h-10 shrink-0 items-center gap-1 border border-border/70 bg-card/80 p-1">
             {SUBJECTS.map((s) => (
               <button
                 key={s.key}
                 onClick={() => setActiveSubject(s.key)}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                  "inline-flex h-8 items-center justify-center whitespace-nowrap px-3 text-xs font-medium transition md:px-4",
                   activeSubject === s.key
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 {s.label}
@@ -433,32 +584,38 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {filteredTopics.map((topic) => {
             const Icon = getTopicIcon(topic.slug);
             const perf = topicPerfBySlug.get(topic.slug);
             return (
-              <Link key={topic.id} href={`/learning/${topic.slug}`}>
-                <Card className="h-full transition-colors hover:bg-accent/30">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-muted">
-                        <Icon className="h-5 w-5 text-foreground" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold">
-                          {topic.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {topic.subtopics.length} subtopic
-                          {topic.subtopics.length !== 1 ? "s" : ""}
+              <Link
+                key={topic.id}
+                href={`/learning/${topic.slug}`}
+                className="border border-border/70 bg-card/80 p-4 transition-colors hover:bg-muted/40"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-muted">
+                    <Icon className="h-5 w-5 text-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold">{topic.name}</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {topic.subtopics.length} question type{topic.subtopics.length !== 1 ? "s" : ""}
                         </p>
                       </div>
+                      {perf && perf.total > 0 && (
+                        <span className={cn("text-sm font-semibold", accuracyTone(perf.accuracy, perf.total))}>
+                          {perf.accuracy}%
+                        </span>
+                      )}
                     </div>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">
+                    <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                       {topic.overview}
                     </p>
-                    <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {topic.estimatedTotalMinutes} min
@@ -468,30 +625,8 @@ export default function LearningPage() {
                         {topic.satRelevance.percentageOfTest}% of LSAT
                       </span>
                     </div>
-                    {perf && perf.total > 0 ? (
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            Accuracy
-                          </span>
-                          <span
-                            className={cn(
-                              "font-medium",
-                              accuracyTone(perf.accuracy, perf.total)
-                            )}
-                          >
-                            {perf.accuracy}%
-                          </span>
-                        </div>
-                        <AccuracyBar value={perf.accuracy} />
-                      </div>
-                    ) : (
-                      <p className="pt-1 text-xs text-muted-foreground">
-                        Not practiced yet
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </Link>
             );
           })}
