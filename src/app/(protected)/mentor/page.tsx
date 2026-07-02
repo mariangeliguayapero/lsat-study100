@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, Keyboard, GraduationCap } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Keyboard,
+  Mic,
+  Send,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMentorConversation } from "@/hooks/use-mentor-conversation";
 import { MessageBubble } from "@/components/lessons/message-bubble";
@@ -14,15 +25,96 @@ import { WhiteboardTimeline } from "@/components/whiteboard/whiteboard-timeline"
 import { useWhiteboardPlayer } from "@/hooks/use-whiteboard-player";
 import type { SelectedElement } from "@/types/whiteboard";
 
-const SUGGESTIONS = [
-  "How am I doing overall?",
-  "What should I focus on this week?",
-  "Help me make a study plan",
-  "I'm stuck on Logical Reasoning",
+type ProgressData = {
+  user: {
+    targetScore: number | null;
+  };
+  targetScore: number | null;
+  topicPerformance: {
+    name: string;
+    subject: string;
+    total: number;
+    correct: number;
+    accuracy: number;
+  }[];
+  subtopicPerformance?: {
+    name: string;
+    topicName: string;
+    subject: string;
+    total: number;
+    correct: number;
+    accuracy: number;
+  }[];
+  overallStats: {
+    totalQuestions: number;
+    accuracy: number;
+    sessionCount: number;
+  };
+  sectionScores: {
+    readingWriting: { accuracy: number };
+    math: { accuracy: number };
+  };
+};
+
+const STARTER_PROMPTS = [
+  "Build a 7-day Logical Reasoning plan",
+  "Explain my weakest area",
+  "What should I review before timed practice?",
+  "How do I improve Reading Comprehension?",
 ];
 
+const MENTOR_MODES = [
+  {
+    title: "Ask Mentor",
+    description: "Get a direct answer about LSAT strategy, timing, or a concept.",
+    prompt: "How should I think about my current LSAT prep?",
+    icon: Brain,
+  },
+  {
+    title: "Build Study Plan",
+    description: "Turn your target score and recent accuracy into a weekly plan.",
+    prompt: "Build a study plan for this week based on my current progress.",
+    icon: Target,
+  },
+  {
+    title: "Explore Weak Areas",
+    description: "Identify what to review next and how to practice it.",
+    prompt: "Explain my weakest area and give me the next three steps.",
+    icon: BarChart3,
+  },
+];
+
+function estimateScore(progress?: ProgressData) {
+  if (!progress) return 120;
+  const averageAccuracy =
+    (progress.sectionScores.readingWriting.accuracy +
+      progress.sectionScores.math.accuracy) /
+    2;
+  return Math.round(120 + (averageAccuracy / 100) * 60);
+}
+
+function scoreBand(score: number): string {
+  if (score >= 170) return "Law school ready";
+  if (score >= 165) return "Competitive";
+  if (score >= 160) return "Strong foundation";
+  if (score >= 150) return "Developing";
+  return "Baseline";
+}
+
+function weakestArea(progress?: ProgressData) {
+  const subtopics = [...(progress?.subtopicPerformance ?? [])]
+    .filter((item) => item.total > 0)
+    .sort((a, b) => a.accuracy - b.accuracy);
+  if (subtopics[0]) return subtopics[0];
+
+  return [...(progress?.topicPerformance ?? [])]
+    .filter((item) => item.total > 0)
+    .sort((a, b) => a.accuracy - b.accuracy)[0];
+}
+
 export default function MentorPage() {
-  const [input, setInput] = useState("");
+  const searchParams = useSearchParams();
+  const [input, setInput] = useState(() => searchParams.get("prompt") ?? "");
   const [selections, setSelections] = useState<SelectedElement[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -43,6 +135,16 @@ export default function MentorPage() {
     toggleMode,
   } = useMentorConversation();
 
+  const { data: progress } = useQuery<ProgressData>({
+    queryKey: ["mentor-progress-context"],
+    queryFn: () =>
+      fetch("/api/progress").then((r) => {
+        if (!r.ok) throw new Error("Failed to load progress");
+        return r.json();
+      }),
+    staleTime: 60_000,
+  });
+
   const {
     currentStepIndex,
     stepProgress,
@@ -57,6 +159,10 @@ export default function MentorPage() {
   } = useWhiteboardPlayer(whiteboardSteps, isWhiteboardStreaming);
 
   const hasWhiteboard = whiteboardSteps.length > 0;
+  const score = estimateScore(progress);
+  const targetScore = progress?.user.targetScore ?? progress?.targetScore ?? 170;
+  const scoreGap = Math.max(targetScore - score, 0);
+  const currentWeakestArea = weakestArea(progress);
 
   const checkNearBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -158,40 +264,194 @@ export default function MentorPage() {
       {/* Chat column */}
       <div
         className={`flex flex-col transition-all duration-300 ${
-          hasWhiteboard ? "w-1/2 border-r" : "mx-auto w-full max-w-2xl"
+          hasWhiteboard ? "w-1/2 border-r" : "w-full"
         }`}
       >
         {/* Scrollable messages area */}
         <div
           ref={scrollRef}
           onScroll={checkNearBottom}
-          className="flex-1 overflow-y-auto p-4 space-y-3"
+          className="flex-1 space-y-3 overflow-y-auto p-4 md:p-6 lg:p-8"
         >
           {/* Welcome state */}
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                <GraduationCap className="h-8 w-8 text-primary" />
+            <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+              <div className="space-y-5">
+                <div className="border border-border/70 bg-card/80 p-6">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="max-w-2xl">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
+                        LSAT Study Planning Hub
+                      </p>
+                      <h1 className="mt-3 text-4xl font-semibold tracking-tight">
+                        Mentor
+                      </h1>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        Use Athena to connect your Learn topics, Review priorities, and practice results into a concrete LSAT plan. Ask a question, build a schedule, or dig into the area costing you the most points.
+                      </p>
+                    </div>
+                    <div className="border border-border/70 bg-background/40 p-4 lg:min-w-48">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        Estimated LSAT
+                      </p>
+                      <p className="mt-2 text-4xl font-bold tabular-nums">{score}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {scoreBand(score)} · {scoreGap === 0 ? "target reached" : `${scoreGap} points to ${targetScore}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  {MENTOR_MODES.map((item) => (
+                    <button
+                      key={item.title}
+                      type="button"
+                      onClick={() => setInput(item.prompt)}
+                      className="min-h-44 border border-border/70 bg-card/80 p-5 text-left transition-colors hover:bg-muted/40"
+                    >
+                      <item.icon className="h-5 w-5 text-primary" />
+                      <p className="mt-5 font-semibold">{item.title}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="text-center space-y-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                  LSAT Prep Mentor
-                </h1>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  I&apos;m your personal LSAT coach. I know your progress, your
-                  strengths, and where you can improve. Ask me anything.
-                </p>
+
+              <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
+                <div className="border border-border/70 bg-card/80 p-5">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
+                      Study Context
+                    </p>
+                  </div>
+                  <dl className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-muted-foreground">Target score</dt>
+                      <dd className="text-sm font-medium">{targetScore}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-muted-foreground">Score gap</dt>
+                      <dd className="text-sm font-medium">{scoreGap} points</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-muted-foreground">Recent accuracy</dt>
+                      <dd className="text-sm font-medium">{progress?.overallStats.accuracy ?? 0}%</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-muted-foreground">Weakest area</dt>
+                      <dd className="max-w-40 truncate text-right text-sm font-medium">
+                        {currentWeakestArea?.name ?? "Not enough data"}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div className="border border-border/70 bg-card/80 p-5">
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-semibold">Starter Prompts</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Start from a practical LSAT planning question.
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="grid gap-2">
+                    {STARTER_PROMPTS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleSuggestion(s)}
+                        className="border border-border/70 bg-background/35 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap justify-center gap-2 mt-4 max-w-md">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => handleSuggestion(s)}
-                    className="rounded-full border bg-card px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
+
+              <div className="border border-border/70 bg-card/80 p-4 xl:col-span-2">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">Ask Mentor</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Start with a question, or choose a mode/prompt above and refine it here.
+                    </p>
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                    LSAT planning chat
+                  </p>
+                </div>
+                {mode === "text" ? (
+                  <form onSubmit={handleSubmit} className="flex items-end gap-2 border border-border/70 bg-background/45 p-2">
+                    <textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Ask your mentor anything..."
+                      className="min-h-[38px] max-h-[120px] flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+                      rows={1}
+                      disabled={isProcessing}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-9 w-9 shrink-0"
+                      onClick={toggleMode}
+                      title="Switch to voice mode"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                    <motion.div
+                      whileTap={{ scale: 0.9, rotate: -12 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                    >
+                      <Button
+                        type="submit"
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 shrink-0"
+                        disabled={!input.trim() || isProcessing}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </form>
+                ) : (
+                  <div className="flex flex-col items-center gap-4 border border-border/70 bg-background/45 p-5">
+                    <VoiceOrb
+                      state={voiceOrbState}
+                      amplitude={amplitude}
+                      onTap={isRecording ? stopRecording : startRecording}
+                      disabled={isProcessing && !isRecording}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {isRecording
+                        ? "Listening... tap to stop"
+                        : isProcessing
+                          ? "Processing..."
+                          : isSpeaking
+                            ? "Speaking..."
+                            : "Tap to speak"}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="gap-1.5 text-xs"
+                      onClick={toggleMode}
+                    >
+                      <Keyboard className="h-3.5 w-3.5" />
+                      Switch to text
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -235,46 +495,51 @@ export default function MentorPage() {
 
         {/* Input area */}
         {mode === "text" ? (
+          messages.length > 0 && (
           <form
             onSubmit={handleSubmit}
-            className="flex items-end gap-2 border-t p-3"
+            className="border-t bg-background/80 p-3 md:px-6 lg:px-8"
           >
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask your mentor anything..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground resize-none min-h-[36px] max-h-[120px] py-2"
-              rows={1}
-              disabled={isProcessing}
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={toggleMode}
-              title="Switch to voice mode"
-            >
-              <Mic className="h-4 w-4" />
-            </Button>
-            <motion.div
-              whileTap={{ scale: 0.9, rotate: -12 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            >
+            <div className={hasWhiteboard ? "flex items-end gap-2" : "mx-auto flex w-full max-w-7xl items-end gap-2 border border-border/70 bg-card/80 p-2"}>
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask your mentor anything..."
+                className="min-h-[36px] max-h-[120px] flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+                rows={1}
+                disabled={isProcessing}
+              />
               <Button
-                type="submit"
+                type="button"
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8 shrink-0"
-                disabled={!input.trim() || isProcessing}
+                onClick={toggleMode}
+                title="Switch to voice mode"
               >
-                <Send className="h-4 w-4" />
+                <Mic className="h-4 w-4" />
               </Button>
-            </motion.div>
+              <motion.div
+                whileTap={{ scale: 0.9, rotate: -12 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              >
+                <Button
+                  type="submit"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0"
+                  disabled={!input.trim() || isProcessing}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </div>
           </form>
+          )
         ) : (
+          messages.length > 0 && (
           <div className="flex flex-col items-center gap-4 border-t p-6">
             <VoiceOrb
               state={voiceOrbState}
@@ -302,6 +567,7 @@ export default function MentorPage() {
               Switch to text
             </Button>
           </div>
+          )
         )}
       </div>
 
