@@ -3,38 +3,63 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, BookOpen, GraduationCap } from "lucide-react";
+import { NavUser } from "@/components/layout/nav-user";
+import {
+  BarChart3,
+  BookOpen,
+  Brain,
+  ClipboardList,
+  GraduationCap,
+  LayoutDashboard,
+  Scale,
+  UserRound,
+} from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/queue", label: "My Queue", icon: BookOpen },
-  { href: "/learning", label: "Learning", icon: GraduationCap },
+  { href: "/queue", label: "Progress", icon: BarChart3 },
+  { href: "/learning", label: "Review", icon: ClipboardList },
+  { href: "/mentor", label: "Mentor", icon: Brain },
+  { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/my-learning", label: "Learn", icon: BookOpen },
+  { href: "/full-sat", label: "Full LSAT", icon: GraduationCap },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r bg-sidebar md:block">
-      <div className="flex h-14 items-center px-5">
-        <Link href="/dashboard">
-          <span className="text-lg font-bold tracking-tight text-athena-navy dark:text-athena-amber">
-            Athena
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar/95 md:flex md:flex-col">
+      <div className="border-b px-5 py-5">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center border bg-primary/10 text-primary">
+            <Scale className="h-5 w-5" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold uppercase tracking-[0.28em] text-foreground">
+              Athena
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              LSAT prep workspace
+            </span>
           </span>
         </Link>
       </div>
-      <nav className="space-y-1 px-3 py-2">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 border border-transparent px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/62 hover:border-sidebar-border hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -43,6 +68,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="border-t px-4 py-4">
+        <NavUser />
+      </div>
     </aside>
   );
 }

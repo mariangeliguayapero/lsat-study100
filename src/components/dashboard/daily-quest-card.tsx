@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, Target, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, Target } from "lucide-react";
 import { useTodaysQuest } from "@/hooks/use-daily-quest";
 
 export function DailyQuestCard() {
   const { data, isLoading } = useTodaysQuest();
 
   if (isLoading) {
-    return <div className="h-32 bg-muted animate-pulse rounded-lg" />;
+    return <div className="h-44 animate-pulse border bg-card" />;
   }
 
   const quest = data?.quest;
@@ -17,13 +17,18 @@ export function DailyQuestCard() {
   // Quest unavailable until LSAT content/adaptive generation is ready.
   if (!quest) {
     return (
-      <div className="relative border-2 border-muted-foreground/20 bg-gradient-to-b from-muted/50 to-transparent px-6 py-8 text-center rounded-lg">
-        <Target className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="text-lg font-semibold text-muted-foreground">
-          Daily LSAT practice coming soon
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Adaptive practice will unlock after the LSAT question bank is set up
+      <div className="border bg-card/80 p-6">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Daily Practice
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">Adaptive set unavailable</h2>
+          </div>
+          <Target className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Adaptive practice will unlock after the LSAT question bank is ready.
         </p>
       </div>
     );
@@ -36,30 +41,23 @@ export function DailyQuestCard() {
       : 0;
 
     return (
-      <div className="group relative overflow-hidden p-[3px] border border-green-500/20 transition-shadow duration-300 hover:shadow-[0_0_12px_0_rgba(34,197,94,0.15)]">
-        {/* Rotating conic gradient — hidden by default, visible on hover */}
-        <div
-          className="pointer-events-none absolute inset-0 animate-[border-rotate_4s_linear_infinite] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background:
-              "conic-gradient(from 0deg, rgba(34,197,94,0.06), rgba(34,197,94,0.3), rgba(74,222,128,0.55), rgba(34,197,94,0.3), rgba(34,197,94,0.06), rgba(34,197,94,0.04), rgba(34,197,94,0.04), rgba(34,197,94,0.04), rgba(34,197,94,0.06))",
-          }}
-        />
-        {/* Inner content */}
-        <div className="relative bg-card px-6 py-6">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-6 w-6 text-green-500" />
-            <div>
-              <p className="font-semibold">Practice Complete</p>
-              <p className="text-sm text-muted-foreground">
-                {quest.correctCount}/{quest.totalQuestions} correct ({accuracy}%)
-              </p>
-            </div>
-            <div className="ml-auto flex items-center gap-1 text-athena-amber">
-              <Zap className="h-4 w-4" />
-              <span className="font-bold">+{quest.xpEarned} XP</span>
-            </div>
+      <div className="border border-emerald-500/25 bg-card/85 p-6">
+        <div className="flex items-start gap-4">
+          <span className="flex h-10 w-10 items-center justify-center bg-emerald-500/10 text-emerald-300">
+            <CheckCircle2 className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Daily Practice
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">Practice set complete</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {quest.correctCount}/{quest.totalQuestions} correct ({accuracy}% accuracy)
+            </p>
           </div>
+          <p className="text-right text-sm font-semibold text-emerald-300">
+            Logged
+          </p>
         </div>
       </div>
     );
@@ -76,25 +74,37 @@ export function DailyQuestCard() {
       <motion.div
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
-        className="relative border-2 border-athena-amber/30 bg-gradient-to-b from-athena-amber/5 to-transparent px-6 py-8 cursor-pointer text-center rounded-lg"
+        className="group cursor-pointer border bg-card/85 p-6 transition-colors hover:border-primary/50"
       >
-        <Target className="mx-auto mb-3 h-8 w-8 text-primary" />
-        <p className="text-lg font-semibold">Daily Practice</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {answered > 0
-            ? `${answered}/${quest.totalQuestions} answered · ${progress}% done`
-            : `${quest.totalQuestions} adaptive questions tailored to you`}
-        </p>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Adaptive Practice Set
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">
+              {answered > 0 ? "Continue today's set" : "Start today's set"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {answered > 0
+                ? `${answered}/${quest.totalQuestions} answered, ${progress}% complete`
+                : `${quest.totalQuestions} LSAT questions selected from your current profile`}
+            </p>
+          </div>
+          <span className="flex h-10 w-10 items-center justify-center bg-primary/10 text-primary">
+            <ClipboardList className="h-5 w-5" />
+          </span>
+        </div>
         {answered > 0 && (
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-1.5 w-full overflow-hidden bg-muted">
             <div
-              className="h-full rounded-full bg-primary transition-all"
+              className="h-full bg-primary transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
-        <p className="mt-3 text-sm font-medium text-muted-foreground">
-          {answered > 0 ? "Continue practice →" : "Begin practice →"}
+        <p className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-primary">
+          {answered > 0 ? "Resume practice" : "Begin practice"}
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </p>
       </motion.div>
     </Link>

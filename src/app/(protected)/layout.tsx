@@ -1,14 +1,9 @@
-import { TopNavWrapper } from "@/components/layout/top-nav-wrapper";
+import { ProtectedShell } from "@/components/layout/protected-shell";
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen">
-      <TopNavWrapper />
-      <main>{children}</main>
-    </div>
-  );
+  return <ProtectedShell>{children}</ProtectedShell>;
 }
