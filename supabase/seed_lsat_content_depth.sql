@@ -1,0 +1,592 @@
+-- LSAT content depth seed.
+-- All questions are original practice-style placeholders. Do not use official
+-- LSAT/LSAC passages or released questions here.
+-- Internal source remains 'sat' for compatibility with existing routes/tables.
+
+BEGIN;
+
+UPDATE topics
+SET
+  overview = 'Build LSAT argument discipline: identify conclusions, separate evidence from background, expose assumptions, and evaluate how new facts affect the reasoning.',
+  learning_objectives = jsonb_build_array(
+    'Identify conclusions, premises, context, and intermediate conclusions',
+    'Name common flaw families without forcing a label too early',
+    'Use assumption, strengthen, and weaken answers to test the argument''s pressure point',
+    'Avoid attractive choices that are true but do not affect the reasoning'
+  ),
+  sat_relevance = jsonb_build_object(
+    'percentageOfTest', 50,
+    'description', 'Logical Reasoning is a major LSAT driver. These drills emphasize argument structure, answer-choice precision, causal reasoning, and conditional logic.'
+  ),
+  key_concepts = jsonb_build_array(
+    'Conclusion vs evidence',
+    'Assumption bridge',
+    'Causal alternatives',
+    'Necessary vs sufficient conditions',
+    'Scope and strength of answer choices'
+  ),
+  pro_tips = jsonb_build_array(
+    'Before reading answers, say what job the correct answer must do.',
+    'For causal claims, test alternate causes, reverse cause, and bad comparisons.',
+    'For assumption questions, connect the exact evidence to the exact conclusion.',
+    'Eliminate answers that discuss the topic but leave the reasoning unchanged.'
+  )
+WHERE slug = 'logical-reasoning';
+
+UPDATE topics
+SET
+  overview = 'Train LSAT Reading Comprehension at the passage level: track viewpoints, paragraph roles, author attitude, and line-level support without overreading.',
+  learning_objectives = jsonb_build_array(
+    'State the author''s main point in one sentence',
+    'Map each paragraph by function rather than by topic alone',
+    'Choose supported inferences with conservative wording',
+    'Recognize contrast, concession, qualification, and comparative structure'
+  ),
+  sat_relevance = jsonb_build_object(
+    'percentageOfTest', 50,
+    'description', 'Reading Comprehension rewards structure tracking, precise support, inference discipline, and sensitivity to author viewpoint.'
+  ),
+  key_concepts = jsonb_build_array(
+    'Main point',
+    'Paragraph function',
+    'Author attitude',
+    'Supported inference',
+    'Comparative passage relationships'
+  ),
+  pro_tips = jsonb_build_array(
+    'Read for the author''s purpose, not for memorizing every detail.',
+    'Mark contrast words because they often signal the passage''s real turn.',
+    'For inference questions, prefer modest answers supported by exact text.',
+    'For structure questions, describe what a paragraph does to the argument.'
+  )
+WHERE slug = 'reading-comprehension';
+
+WITH subtopic_updates(slug, description, objectives, mistakes, tips, overview) AS (
+  VALUES
+  (
+    'flaw-questions',
+    'Find the precise reasoning error that keeps an argument from proving its conclusion.',
+    jsonb_build_array(
+      'Separate the author''s conclusion from supporting evidence',
+      'Identify the missing assumption or invalid move',
+      'Match the answer to the flaw actually committed, not a flaw that merely could occur'
+    ),
+    jsonb_build_array(
+      jsonb_build_object('mistake', 'Choosing a true criticism of the topic', 'correction', 'Choose the answer that describes the reasoning gap.', 'why', 'Flaw answers are about argument structure, not whether the subject sounds plausible.'),
+      jsonb_build_object('mistake', 'Forcing a memorized flaw label', 'correction', 'Read the argument first, then name the pattern.', 'why', 'The LSAT often disguises familiar flaws with unusual wording.'),
+      jsonb_build_object('mistake', 'Missing a scope shift', 'correction', 'Compare the exact evidence to the exact conclusion.', 'why', 'Many flaw questions turn on a subtle shift from some to most, likely to certain, or one group to another.')
+    ),
+    jsonb_build_array(
+      'Underline the conclusion before evaluating the answer choices.',
+      'Ask: what would need to be true for this conclusion to follow?',
+      'Reject choices that attack a different conclusion than the author actually makes.'
+    ),
+    jsonb_build_object(
+      'definition', 'A flaw is the specific invalid move between evidence and conclusion.',
+      'realWorldExample', 'A city claims a new park reduced traffic because congestion fell after the park opened, while ignoring a new subway line that opened the same week.',
+      'satContext', 'On the LSAT, flaw questions reward naming the exact logical gap, especially causal jumps, sampling problems, and necessary/sufficient confusion.'
+    )
+  ),
+  (
+    'assumption-questions',
+    'Identify the unstated bridge an argument needs, whether the task asks for a necessary or sufficient assumption.',
+    jsonb_build_array(
+      'Find the missing link between stated evidence and conclusion',
+      'Use the negation test for necessary assumptions',
+      'Recognize when an answer is strong enough to guarantee the conclusion'
+    ),
+    jsonb_build_array(
+      jsonb_build_object('mistake', 'Picking an answer that merely sounds helpful', 'correction', 'Check whether the argument actually depends on it.', 'why', 'Necessary assumptions can be modest and easy to overlook.'),
+      jsonb_build_object('mistake', 'Over-strengthening a necessary assumption', 'correction', 'Prefer the minimum claim the argument needs.', 'why', 'Extreme language is often too much for a necessary assumption.'),
+      jsonb_build_object('mistake', 'Ignoring the conclusion''s exact scope', 'correction', 'Match the assumption to the conclusion''s group, time frame, and recommendation.', 'why', 'Assumption questions often punish broad answers that solve a different problem.')
+    ),
+    jsonb_build_array(
+      'For necessary assumptions, negate the answer and ask whether the argument collapses.',
+      'For sufficient assumptions, look for the answer that closes the whole gap.',
+      'Watch for missing links between evidence about one group and conclusions about another.'
+    ),
+    jsonb_build_object(
+      'definition', 'An assumption is an unstated claim the argument relies on to move from evidence to conclusion.',
+      'realWorldExample', 'A company assumes survey interest will translate into actual purchases before launching a product.',
+      'satContext', 'Assumption questions are central LSAT argument-structure drills because they expose the hidden bridge behind the author''s reasoning.'
+    )
+  ),
+  (
+    'strengthen-weaken',
+    'Evaluate how new information makes an argument more or less convincing by targeting its assumption.',
+    jsonb_build_array(
+      'Identify the argument''s pressure point before reading answers',
+      'Recognize control groups, alternate causes, and representative evidence',
+      'Distinguish relevant impact from interesting background information'
+    ),
+    jsonb_build_array(
+      jsonb_build_object('mistake', 'Choosing an answer about the topic only', 'correction', 'Choose the answer that changes support for the conclusion.', 'why', 'A fact can be interesting and still leave the reasoning untouched.'),
+      jsonb_build_object('mistake', 'Missing alternative explanations', 'correction', 'For causal arguments, ask what else could explain the result.', 'why', 'Most causal strengthen/weaken questions revolve around ruling alternatives in or out.'),
+      jsonb_build_object('mistake', 'Overvaluing extreme answers', 'correction', 'Prefer answers that directly affect the link, even if moderate.', 'why', 'The LSAT often uses dramatic but irrelevant facts as traps.')
+    ),
+    jsonb_build_array(
+      'Prephrase whether you need a control, a bridge, or an alternate cause.',
+      'A strengthen answer does not have to prove the conclusion, only support it.',
+      'A weaken answer does not have to disprove the conclusion, only reduce support.'
+    ),
+    jsonb_build_object(
+      'definition', 'Strengthen/weaken answers affect the support relationship between evidence and conclusion.',
+      'realWorldExample', 'A tutoring claim is strengthened by a comparable non-tutored group improving less, and weakened by an easier test being introduced.',
+      'satContext', 'These questions test whether you can locate and manipulate the argument''s central assumption.'
+    )
+  ),
+  (
+    'main-point-structure',
+    'Identify the author''s central claim and explain how each paragraph contributes to the passage.',
+    jsonb_build_array(
+      'Distinguish topic from thesis',
+      'Track paragraph function using role language',
+      'Avoid main-point answers that are too narrow, too broad, or from another viewpoint'
+    ),
+    jsonb_build_array(
+      jsonb_build_object('mistake', 'Choosing a detail that appears often', 'correction', 'Choose the answer that captures the author''s overall purpose.', 'why', 'Repeated details can support the thesis without being the thesis.'),
+      jsonb_build_object('mistake', 'Ignoring concession words', 'correction', 'Track shifts such as however, although, and yet.', 'why', 'The author''s real position often appears after a concession.'),
+      jsonb_build_object('mistake', 'Confusing a described view with the author''s view', 'correction', 'Label each viewpoint as author, critic, scholar, or background.', 'why', 'RC passages often present a view to qualify or challenge it.')
+    ),
+    jsonb_build_array(
+      'Write a 3-5 word role summary for each paragraph.',
+      'Main point answers should include the author''s action: argues, qualifies, challenges, reconciles.',
+      'If an answer ignores the passage''s final turn, treat it with suspicion.'
+    ),
+    jsonb_build_object(
+      'definition', 'Main point and structure questions ask what the passage is doing as a whole and how its parts fit.',
+      'realWorldExample', 'An article may present a popular interpretation, introduce new evidence, then argue for a narrower version of that interpretation.',
+      'satContext', 'On LSAT RC, structure questions reward role tracking more than memorization.'
+    )
+  ),
+  (
+    'inference-detail',
+    'Choose answers that are directly supported by the passage and avoid claims that go beyond the text.',
+    jsonb_build_array(
+      'Locate the relevant textual support',
+      'Draw modest inferences from qualified language',
+      'Reject answers with unsupported scope, certainty, or comparison'
+    ),
+    jsonb_build_array(
+      jsonb_build_object('mistake', 'Treating a possibility as proven', 'correction', 'Match the passage''s level of certainty.', 'why', 'Words like may, some, and often matter.'),
+      jsonb_build_object('mistake', 'Importing outside knowledge', 'correction', 'Use only what the passage states or strongly implies.', 'why', 'Correct answers are text-supported, not real-world plausible.'),
+      jsonb_build_object('mistake', 'Missing one unsupported word', 'correction', 'Check every adjective, comparison, and quantifier.', 'why', 'A mostly right answer can be wrong because of one overbroad term.')
+    ),
+    jsonb_build_array(
+      'Find the line or sentence that proves the answer.',
+      'Prefer conservative wording when the passage is cautious.',
+      'For detail questions, answer what was asked before rereading the whole passage.'
+    ),
+    jsonb_build_object(
+      'definition', 'Inference and detail questions ask what the passage says, implies, or most strongly supports.',
+      'realWorldExample', 'If a researcher calls a method promising but incomplete, the safe inference is balanced, not dismissive.',
+      'satContext', 'The LSAT often rewards the answer that is narrower and more carefully supported than the tempting alternative.'
+    )
+  )
+)
+UPDATE subtopics st
+SET
+  description = u.description,
+  learning_objectives = u.objectives,
+  common_mistakes = u.mistakes,
+  tips_and_tricks = u.tips,
+  conceptual_overview = u.overview
+FROM subtopic_updates u
+WHERE st.slug = u.slug;
+
+WITH problem_rows(topic_slug, subtopic_slug, order_index, difficulty, difficulty_level, question_text, options, correct_option, explanation, hint, detailed_hint, tags) AS (
+  VALUES
+  ('logical-reasoning', 'flaw-questions', 1, 'easy', 2,
+   'A bakery reports that sales increased in the month after it changed its logo. The owner concludes that the new logo caused the increase. Which answer best describes the flaw?',
+   jsonb_build_array('It assumes that because one event followed another, the first event caused the second.', 'It assumes customers always notice bakery logos.', 'It ignores whether the bakery sells bread or pastries.', 'It concludes that logos are never important to sales.'),
+   0,
+   'The evidence only shows sequence: logo change, then higher sales. The conclusion makes a causal claim without ruling out other explanations, such as seasonal demand, advertising, or a nearby competitor closing.',
+   'Ask whether the timing alone proves causation.',
+   'Separate chronology from causation. A cause claim needs more than “after this, therefore because of this”; it needs a reason to rule out competing causes.',
+   jsonb_build_array('flaw', 'causal reasoning', 'after therefore because')),
+  ('logical-reasoning', 'flaw-questions', 2, 'medium', 4,
+   'All successful fellowship applicants submit research proposals. Nia submitted a research proposal. Therefore, Nia will be a successful fellowship applicant. The reasoning is flawed because it',
+   jsonb_build_array('treats a condition required for success as though it were enough to guarantee success.', 'assumes no applicant can submit more than one proposal.', 'draws a conclusion about all applicants from one applicant.', 'rejects evidence about unsuccessful applicants.'),
+   0,
+   'Submitting a proposal may be necessary for success, but the argument treats it as sufficient. Many applicants could submit proposals and still be rejected.',
+   'Translate the relationship into if/then terms.',
+   'The evidence supports: successful -> submitted proposal. The conclusion requires: submitted proposal -> successful. That reverses the relationship.',
+   jsonb_build_array('flaw', 'necessary sufficient', 'conditional logic')),
+  ('logical-reasoning', 'flaw-questions', 3, 'medium', 6,
+   'A critic argues that a documentary cannot be insightful because several viewers found it difficult to follow. What is the main flaw?',
+   jsonb_build_array('It assumes that difficulty for some viewers shows the documentary lacks insight.', 'It assumes every documentary has the same audience.', 'It overlooks whether the viewers watched the trailer.', 'It treats insight and entertainment as identical.'),
+   0,
+   'The argument moves from “some viewers found it hard to follow” to “it is not insightful.” That requires an unsupported standard connecting accessibility for some viewers with lack of insight.',
+   'Find the hidden standard the critic relies on.',
+   'Ask what the author must believe about confusing material. The correct answer names that hidden belief rather than debating the documentary itself.',
+   jsonb_build_array('flaw', 'unsupported standard', 'scope')),
+  ('logical-reasoning', 'flaw-questions', 4, 'hard', 8,
+   'A public-health report finds that neighborhoods with more parks have lower asthma rates. It concludes that building more parks will reduce asthma rates. The argument is most vulnerable because it',
+   jsonb_build_array('fails to rule out that another factor explains both park access and lower asthma rates.', 'assumes parks are less expensive than clinics.', 'does not specify the exact number of trees in each park.', 'compares asthma with unrelated illnesses.'),
+   0,
+   'The argument infers causation from correlation. A third factor, such as income, pollution levels, or housing quality, could explain both park access and asthma rates.',
+   'For causal arguments, test for third variables.',
+   'Look for an answer that weakens the causal bridge, not one that discusses whether parks are good policy in general.',
+   jsonb_build_array('flaw', 'correlation causation', 'third variable')),
+  ('logical-reasoning', 'flaw-questions', 5, 'medium', 5,
+   'Every article in the journal is carefully edited. This article was carefully edited, so it must have appeared in the journal. The flaw is that the argument',
+   jsonb_build_array('mistakes a feature shared by journal articles for proof that anything with that feature appeared in the journal.', 'assumes editors never make mistakes.', 'uses one example to criticize the entire journal.', 'concludes that the article was not edited.'),
+   0,
+   'Careful editing may be true of all articles in the journal, but other articles can also be carefully edited. The argument incorrectly reverses the conditional relationship.',
+   'Ask whether the shared feature is unique to the group.',
+   'This is a membership flaw: all A have feature B does not mean all things with feature B are A.',
+   jsonb_build_array('flaw', 'conditional reversal')),
+  ('logical-reasoning', 'flaw-questions', 6, 'hard', 7,
+   'A survey of commuters at a downtown train station found that most prefer rail to buses. The city concludes that most city residents prefer rail to buses. What is the flaw?',
+   jsonb_build_array('The sample may not represent city residents as a whole.', 'The survey asks about transportation.', 'Some residents may use both trains and buses.', 'The city has more than one train station.'),
+   0,
+   'The survey sampled people already at a train station, a group likely more favorable toward rail than the broader city population.',
+   'Check whether the evidence comes from a representative group.',
+   'Sampling flaws often hide in who was asked. Here, the sample is biased toward train users.',
+   jsonb_build_array('flaw', 'sampling', 'representativeness')),
+  ('logical-reasoning', 'flaw-questions', 7, 'hard', 8,
+   'A researcher claims a plant supplement improves memory because participants who took it remembered more words than the general population average. What is the weakness?',
+   jsonb_build_array('The comparison group may differ from the participants in relevant ways.', 'The study involved words rather than numbers.', 'The supplement came from a plant.', 'Memory can be tested in many ways.'),
+   0,
+   'The argument compares study participants to a broad population average rather than to a comparable control group.',
+   'Ask whether the comparison is controlled.',
+   'A stronger design would compare similar participants who did not take the supplement.',
+   jsonb_build_array('flaw', 'bad comparison', 'causal reasoning')),
+  ('logical-reasoning', 'flaw-questions', 8, 'hard', 9,
+   'A policy analyst argues that because a traffic camera program generated revenue, it should be judged successful. Which flaw is most apparent?',
+   jsonb_build_array('It assumes revenue is an adequate measure of success for a traffic-safety program.', 'It assumes cameras cannot record traffic violations.', 'It concludes that all public programs should generate revenue.', 'It overlooks the cost of printing citations.'),
+   0,
+   'The argument uses one metric, revenue, as if it establishes success, without connecting that metric to the program''s likely purpose: safety.',
+   'Identify the standard of success being assumed.',
+   'The flaw is not that revenue is irrelevant in every context; it is that the argument never justifies using revenue as the decisive standard here.',
+   jsonb_build_array('flaw', 'criterion', 'unsupported standard')),
+
+  ('logical-reasoning', 'assumption-questions', 1, 'easy', 2,
+   'A council should extend library hours because many residents say they want evening study spaces. Which assumption is required?',
+   jsonb_build_array('Residents who want evening study spaces would use the library during extended hours.', 'Libraries should be open all night.', 'The council has already approved the budget.', 'Residents prefer libraries to parks.'),
+   0,
+   'The recommendation depends on the idea that extended library hours would actually serve the residents who want evening study spaces.',
+   'Negate the answer and see whether the recommendation loses support.',
+   'If residents would not use the library during later hours, the evidence no longer supports extending library hours.',
+   jsonb_build_array('necessary assumption', 'recommendation')),
+  ('logical-reasoning', 'assumption-questions', 2, 'medium', 4,
+   'A museum should digitize its archive because doing so will make the collection accessible worldwide. The argument assumes that',
+   jsonb_build_array('people outside the museum''s region would be able to access the digital archive.', 'all museums have identical archives.', 'physical archives are always unreliable.', 'digitizing an archive requires no staff time.'),
+   0,
+   'The claimed benefit is worldwide accessibility. The argument needs the assumption that people worldwide can actually access the digital archive.',
+   'Connect the plan to the claimed benefit.',
+   'The answer does not need to say everyone will use the archive, only that the archive can be accessed beyond the region.',
+   jsonb_build_array('necessary assumption', 'plan benefit')),
+  ('logical-reasoning', 'assumption-questions', 3, 'medium', 6,
+   'A pilot training program improved employee retention. The company should adopt the program companywide. Which assumption most helps justify the conclusion?',
+   jsonb_build_array('The pilot group''s results are a reliable guide to how the program would work companywide.', 'No employee dislikes training.', 'Retention is the company''s only goal.', 'The pilot program was shorter than the full program.'),
+   0,
+   'The recommendation generalizes from the pilot to the whole company. It assumes the pilot results are representative.',
+   'Ask what connects the limited evidence to the broad recommendation.',
+   'This bridge is especially important when evidence comes from a trial, pilot, sample, or test group.',
+   jsonb_build_array('assumption', 'representativeness')),
+  ('logical-reasoning', 'assumption-questions', 4, 'hard', 8,
+   'A city should not build the tunnel because any project that exceeds its budget should be rejected, and the tunnel is likely to exceed its budget. Which assumption is needed?',
+   jsonb_build_array('A project likely to exceed its budget should be treated as a project that exceeds its budget for purposes of rejection.', 'The tunnel would not reduce traffic.', 'Every city project exceeds its budget.', 'Budget estimates are always accurate.'),
+   0,
+   'The rule concerns projects that exceed budget, but the evidence concerns a project likely to exceed budget. The assumption bridges likely and actual for this decision.',
+   'Watch for shifts between probability and certainty.',
+   'If likely over-budget projects should not be treated like over-budget projects, the stated rule does not clearly apply.',
+   jsonb_build_array('necessary assumption', 'scope shift')),
+  ('logical-reasoning', 'assumption-questions', 5, 'medium', 5,
+   'A restaurant should add online ordering because several nearby restaurants gained customers after doing so. Which assumption is required?',
+   jsonb_build_array('The nearby restaurants'' customer gains were at least partly due to online ordering.', 'The restaurant currently has no customers.', 'Every customer prefers ordering online.', 'Nearby restaurants serve identical food.'),
+   0,
+   'The evidence only matters if online ordering helped cause the nearby restaurants'' gains.',
+   'Ask what must be true about the comparison cases.',
+   'The argument does not need identical restaurants, but it does need the cited change to be relevant to the gains.',
+   jsonb_build_array('necessary assumption', 'analogy', 'causal')),
+  ('logical-reasoning', 'assumption-questions', 6, 'hard', 7,
+   'A law firm should use shorter client updates because clients complain that the current updates are difficult to understand. What assumption is required?',
+   jsonb_build_array('Making the updates shorter would make them easier for clients to understand.', 'Clients dislike all written communication.', 'The current updates are inaccurate.', 'Law firms should never use technical terms.'),
+   0,
+   'The recommendation assumes that shorter updates address the problem of understandability.',
+   'Connect the proposed fix to the stated problem.',
+   'A common assumption pattern is problem -> proposed solution. The answer must show the solution would help the problem.',
+   jsonb_build_array('necessary assumption', 'solution')),
+  ('logical-reasoning', 'assumption-questions', 7, 'hard', 8,
+   'A city should replace parking minimums with bike parking requirements because more bike parking will encourage cycling. Which assumption is needed?',
+   jsonb_build_array('Lack of bike parking currently discourages at least some people from cycling.', 'Everyone who owns a bike lives in the city.', 'Parking minimums are always unpopular.', 'Cycling is faster than driving in every neighborhood.'),
+   0,
+   'The argument needs a reason to think the proposed change will influence behavior; bike parking must be a current barrier for some potential cyclists.',
+   'Ask what makes the plan capable of producing the claimed effect.',
+   'The correct assumption is modest: it only says some people are affected by bike parking availability.',
+   jsonb_build_array('necessary assumption', 'policy')),
+  ('logical-reasoning', 'assumption-questions', 8, 'hard', 9,
+   'If the archive contains no duplicate records, then each search result represents a distinct case. The archive manager concludes each result is distinct because the archive software flags no duplicates. Which assumption is needed?',
+   jsonb_build_array('The software would flag any duplicate records present in the archive.', 'Every distinct case appears only once in all archives.', 'Search results are always relevant.', 'The archive contains more than one case.'),
+   0,
+   'The conclusion relies on treating the software''s failure to flag duplicates as reliable evidence that no duplicates exist.',
+   'Look for the assumption that makes the evidence trustworthy.',
+   'Without reliable detection, “no duplicates flagged” does not prove “no duplicates present.”',
+   jsonb_build_array('necessary assumption', 'evidence reliability')),
+
+  ('logical-reasoning', 'strengthen-weaken', 1, 'easy', 2,
+   'A school claims its new tutoring program improved test scores because participants improved after eight weeks. Which fact most strengthens the claim?',
+   jsonb_build_array('Students with similar starting scores who did not join the program improved much less.', 'Some students enjoyed the tutors.', 'The program met twice a week.', 'The school advertised the program online.'),
+   0,
+   'A comparable nonparticipant group helps rule out the possibility that scores would have improved anyway.',
+   'Look for evidence that controls for alternative explanations.',
+   'The answer strengthens by adding a control group, which makes the tutoring program a more plausible cause of the improvement.',
+   jsonb_build_array('strengthen', 'causal reasoning', 'control group')),
+  ('logical-reasoning', 'strengthen-weaken', 2, 'medium', 4,
+   'A company says remote work caused productivity to rise because output increased after remote work began. Which fact most weakens the claim?',
+   jsonb_build_array('The company also replaced its slow project software at the same time.', 'Employees saved commuting time.', 'Some managers prefer office work.', 'Output is measured weekly.'),
+   0,
+   'The software replacement offers another plausible cause of the productivity increase.',
+   'Find a fact that makes the proposed cause less certain.',
+   'A weaken answer does not need to prove remote work had no effect; it only needs to reduce confidence in the causal explanation.',
+   jsonb_build_array('weaken', 'alternative cause')),
+  ('logical-reasoning', 'strengthen-weaken', 3, 'medium', 6,
+   'A nutritionist argues that a new breakfast plan improves concentration because students using it reported better focus. Which answer most weakens the argument?',
+   jsonb_build_array('Students chose whether to use the plan, and those who chose it were already more motivated.', 'The plan includes fruit.', 'Some students ate breakfast before the study.', 'The nutritionist works at a school.'),
+   0,
+   'Self-selection creates an alternate explanation: motivation, not the breakfast plan, may explain better focus.',
+   'Consider whether the groups were comparable before the change.',
+   'Selection bias weakens causal claims because the treatment group may differ before the treatment begins.',
+   jsonb_build_array('weaken', 'selection bias')),
+  ('logical-reasoning', 'strengthen-weaken', 4, 'hard', 8,
+   'A historian argues that a newly found letter was written by Author X because it uses a phrase common in X''s published work. Which fact most weakens the argument?',
+   jsonb_build_array('The phrase was widely used by many writers in the same region during that period.', 'Author X wrote many letters.', 'The letter is stored in a university archive.', 'Some of Author X''s works were published anonymously.'),
+   0,
+   'If many writers used the phrase, the phrase is weak evidence that Author X wrote the letter.',
+   'Ask whether the evidence uniquely supports the conclusion.',
+   'The answer weakens by showing the cited phrase does not distinguish Author X from other possible authors.',
+   jsonb_build_array('weaken', 'evidence strength')),
+  ('logical-reasoning', 'strengthen-weaken', 5, 'medium', 5,
+   'A city argues that adding protected bike lanes reduced downtown crashes because crashes fell after the lanes were installed. Which answer most strengthens the argument?',
+   jsonb_build_array('Nearby districts without protected bike lanes did not experience a similar crash reduction during the same period.', 'The bike lanes are painted green.', 'Some drivers dislike lane reductions.', 'The city published a map of the bike lanes.'),
+   0,
+   'A comparison with nearby districts helps rule out a general trend unrelated to the bike lanes.',
+   'Look for a control or comparison group.',
+   'This strengthens by making the timing less likely to be coincidence or citywide trend.',
+   jsonb_build_array('strengthen', 'control group', 'policy')),
+  ('logical-reasoning', 'strengthen-weaken', 6, 'hard', 7,
+   'A publisher claims that a new cover design increased a book''s sales because sales rose after the redesign. Which fact most weakens the claim?',
+   jsonb_build_array('The author appeared on a popular podcast the week the redesigned cover was released.', 'The redesigned cover uses blue lettering.', 'The book is sold online and in stores.', 'The publisher has redesigned covers before.'),
+   0,
+   'The podcast appearance is an alternative cause of the sales increase.',
+   'Find another event that could explain the result.',
+   'The correct answer attacks the causal link between redesign and sales, not the quality of the cover.',
+   jsonb_build_array('weaken', 'alternative cause')),
+  ('logical-reasoning', 'strengthen-weaken', 7, 'hard', 8,
+   'A hospital claims that a new checklist reduced medication errors because error reports declined after the checklist was introduced. Which answer most strengthens the claim?',
+   jsonb_build_array('Audits showed that actual medication errors declined, not merely that fewer errors were reported.', 'The checklist is printed on bright paper.', 'Some nurses helped design the checklist.', 'Medication errors are a serious issue.'),
+   0,
+   'The answer rules out the possibility that reporting changed while actual errors stayed the same.',
+   'Check whether the measurement reflects the real outcome.',
+   'This strengthens by improving the reliability of the evidence used to support the conclusion.',
+   jsonb_build_array('strengthen', 'measurement', 'causal')),
+  ('logical-reasoning', 'strengthen-weaken', 8, 'hard', 9,
+   'An economist argues that a small tax on vacant apartments will increase rental availability because owners will prefer renting units to paying the tax. Which answer most weakens the argument?',
+   jsonb_build_array('Many vacant units are unavailable because they require major repairs before anyone can legally live in them.', 'The tax would be collected yearly.', 'Some owners own more than one apartment.', 'Rental availability is tracked by neighborhood.'),
+   0,
+   'If many units cannot legally be rented without repairs, the tax may not lead owners to rent them out.',
+   'Ask whether the plan can actually produce the predicted behavior.',
+   'The answer weakens by attacking the assumed link between tax pressure and rental availability.',
+   jsonb_build_array('weaken', 'policy', 'feasibility')),
+
+  ('reading-comprehension', 'main-point-structure', 1, 'easy', 2,
+   'A passage argues that urban tree planting should be evaluated not only by number of trees planted, but by long-term survival, shade coverage, and equitable distribution. What is the main point?',
+   jsonb_build_array('Tree-planting programs require broader success measures than planting totals alone.', 'Cities should stop planting trees.', 'Shade coverage is impossible to measure.', 'Only wealthy neighborhoods need trees.'),
+   0,
+   'The passage centers on broader evaluation criteria: survival, shade, and equitable distribution, not just planting totals.',
+   'Choose the answer broad enough to cover all major parts of the passage.',
+   'A main point answer should include the author''s recommendation about how to evaluate the program.',
+   jsonb_build_array('main point', 'structure')),
+  ('reading-comprehension', 'main-point-structure', 2, 'medium', 4,
+   'A passage first presents a theory about language change, then describes evidence that limits where the theory applies. The second part primarily functions to',
+   jsonb_build_array('qualify the scope of the theory.', 'prove that language never changes.', 'introduce a biography of the theorist.', 'summarize an unrelated debate.'),
+   0,
+   'Evidence that limits applicability qualifies the original theory rather than rejecting it entirely.',
+   'Describe what the later paragraph does to the earlier claim.',
+   'Function answers should use role language: qualifies, supports, contrasts, extends, challenges.',
+   jsonb_build_array('function', 'passage structure')),
+  ('reading-comprehension', 'main-point-structure', 3, 'medium', 6,
+   'A passage describes a legal reform, notes its intended benefits, and then discusses implementation problems. The passage is best described as',
+   jsonb_build_array('a balanced assessment of a reform with both goals and practical challenges.', 'a rejection of all legal reform.', 'a chronological biography of a judge.', 'a technical manual for lawyers.'),
+   0,
+   'The passage weighs benefits and implementation problems, so the best description is balanced rather than extreme.',
+   'Avoid answers that overstate the author''s attitude.',
+   'Correct structure answers usually capture the whole arc, not just the final paragraph.',
+   jsonb_build_array('main point', 'author attitude')),
+  ('reading-comprehension', 'main-point-structure', 4, 'hard', 8,
+   'A passage introduces a dominant explanation for a scientific pattern, then argues that the explanation overlooks regional variation. The author''s main purpose is to',
+   jsonb_build_array('challenge an explanation by showing that it fails to account for important variation.', 'catalog every regional example of the pattern.', 'argue that scientific explanations are useless.', 'describe the author''s fieldwork methods only.'),
+   0,
+   'The author challenges the dominant explanation by pointing to a limitation: it overlooks regional variation.',
+   'Main purpose answers should capture both the target and the author''s action.',
+   'The right answer is neither a list of details nor a sweeping rejection of all explanation.',
+   jsonb_build_array('main purpose', 'critique')),
+  ('reading-comprehension', 'main-point-structure', 5, 'medium', 5,
+   'A passage opens by describing enthusiasm for courtroom algorithms, then argues that such tools should be used cautiously because their predictions can obscure value judgments. The main point is that',
+   jsonb_build_array('algorithmic tools in courts may be useful but require caution because they can hide normative choices.', 'courtroom algorithms should be banned in every case.', 'judges never rely on predictions.', 'enthusiasm for technology is always misplaced.'),
+   0,
+   'The author is not rejecting the tools outright; the passage argues for caution because predictions can conceal value judgments.',
+   'Track the contrast between initial enthusiasm and the author''s qualification.',
+   'A strong main point answer preserves both sides of a nuanced thesis.',
+   jsonb_build_array('main point', 'qualification', 'law')),
+  ('reading-comprehension', 'main-point-structure', 6, 'hard', 7,
+   'A passage describes an old interpretation of a painter''s work, presents archival evidence that complicates it, and concludes that the painter was more politically engaged than previously thought. The passage structure is best described as',
+   jsonb_build_array('reconsidering an established interpretation in light of new evidence.', 'defending an old interpretation against all criticism.', 'listing paintings in chronological order.', 'arguing that archival evidence is unreliable.'),
+   0,
+   'The passage uses new evidence to revise an established interpretation.',
+   'Name what the new evidence does to the old view.',
+   'Structure questions often ask for the passage''s movement from old view to revised view.',
+   jsonb_build_array('structure', 'new evidence', 'humanities')),
+  ('reading-comprehension', 'main-point-structure', 7, 'hard', 8,
+   'A passage compares two scholars: one treats oral histories as unreliable memory, while the other argues that their variations reveal community priorities. The author ultimately favors the second view. The passage primarily',
+   jsonb_build_array('contrasts two approaches and endorses the one that treats variation as meaningful evidence.', 'argues that oral histories should never be used.', 'shows that both scholars agree on every major issue.', 'summarizes a debate without indicating any preference.'),
+   0,
+   'The passage contrasts two views and signals preference for the second.',
+   'Track viewpoint ownership and the author''s final position.',
+   'Comparative structure often turns on who believes what and where the author lands.',
+   jsonb_build_array('structure', 'viewpoint', 'comparative')),
+  ('reading-comprehension', 'main-point-structure', 8, 'hard', 9,
+   'A passage argues that conservation policies focused only on preserving untouched wilderness overlook ecosystems shaped by long-standing human stewardship. The author''s main purpose is to',
+   jsonb_build_array('criticize a narrow conservation model and argue for recognizing human-shaped ecosystems.', 'claim that wilderness has no ecological value.', 'describe every method of human land management.', 'prove that all conservation policies have failed.'),
+   0,
+   'The author challenges a narrow preservation model by emphasizing ecosystems shaped by human stewardship.',
+   'Avoid answers that turn a critique of one model into a rejection of conservation generally.',
+   'The best answer captures both the criticized view and the author''s proposed broader frame.',
+   jsonb_build_array('main purpose', 'environmental policy', 'qualification')),
+
+  ('reading-comprehension', 'inference-detail', 1, 'easy', 2,
+   'A passage says that a transit policy reduced commute times in central districts but had little effect in outer districts. Which inference is best supported?',
+   jsonb_build_array('The policy''s effects varied by location.', 'The policy failed everywhere.', 'Outer districts had no commuters.', 'Central districts opposed the policy.'),
+   0,
+   'The passage directly supports that the policy affected central and outer districts differently.',
+   'Keep the inference modest and text-based.',
+   'Do not turn “little effect in outer districts” into “failed everywhere.”',
+   jsonb_build_array('inference', 'detail')),
+  ('reading-comprehension', 'inference-detail', 2, 'medium', 4,
+   'A passage states that early reviews praised a composer''s originality, while later critics emphasized the composer''s debt to earlier traditions. What can be inferred?',
+   jsonb_build_array('Critical views of the composer changed in emphasis over time.', 'Later critics denied the composer had any originality.', 'Early reviewers knew nothing about music.', 'The composer rejected all earlier traditions.'),
+   0,
+   'The passage supports a shift in emphasis, not an absolute rejection of originality.',
+   'Watch for answers that make the passage more extreme.',
+   'Supported inference answers often preserve the passage''s qualifiers.',
+   jsonb_build_array('inference', 'author claims')),
+  ('reading-comprehension', 'inference-detail', 3, 'medium', 6,
+   'A passage says researchers welcomed a new dataset but cautioned that it excluded informal transactions. Which statement is most supported?',
+   jsonb_build_array('The dataset is useful but incomplete for some research questions.', 'The dataset has no scholarly value.', 'Informal transactions are easier to measure than formal ones.', 'Researchers rejected the dataset.'),
+   0,
+   'The researchers welcomed the dataset while identifying a limitation, so the supported answer is balanced.',
+   'Combine both sides of the author''s statement.',
+   'When a passage says “useful but limited,” avoid answers that choose only one side.',
+   jsonb_build_array('inference', 'qualification')),
+  ('reading-comprehension', 'inference-detail', 4, 'hard', 8,
+   'A passage argues that a court decision was narrow because it resolved the case without addressing the broader constitutional question. Which detail would best support that description?',
+   jsonb_build_array('The decision applied a procedural rule and explicitly declined to decide the constitutional issue.', 'The decision was reported in several newspapers.', 'The court heard oral argument for two hours.', 'One justice previously taught constitutional law.'),
+   0,
+   'A procedural ruling that avoids the constitutional issue directly supports calling the decision narrow.',
+   'Support answers must connect to the exact description in the question.',
+   'The right detail proves narrowness by showing the court avoided the broader issue.',
+   jsonb_build_array('detail', 'support', 'law')),
+  ('reading-comprehension', 'inference-detail', 5, 'medium', 5,
+   'A passage says an archaeologist values satellite imagery because it can reveal settlement patterns, but warns that ground surveys remain necessary to confirm site details. Which inference is supported?',
+   jsonb_build_array('Satellite imagery is useful for identifying patterns but cannot by itself establish every site-specific detail.', 'Ground surveys are obsolete.', 'Satellite imagery is useful only in desert regions.', 'The archaeologist distrusts all remote technology.'),
+   0,
+   'The passage praises satellite imagery while preserving a role for ground surveys.',
+   'Choose the answer that keeps both the benefit and the limitation.',
+   'The supported inference is moderate, not anti-technology or technology-only.',
+   jsonb_build_array('inference', 'qualification', 'science')),
+  ('reading-comprehension', 'inference-detail', 6, 'hard', 7,
+   'A passage notes that a novelist''s private letters show admiration for a movement she publicly criticized. Which inference is most supported?',
+   jsonb_build_array('The novelist''s public criticism did not necessarily reflect complete rejection of the movement.', 'The novelist secretly led the movement.', 'Private letters are always more truthful than public essays.', 'The movement had no influence on literature.'),
+   0,
+   'Admiration in private letters suggests her public criticism was not total rejection.',
+   'Avoid answers that overstate what private letters prove.',
+   'The passage supports a limited inference about complexity, not a sweeping claim about secret leadership.',
+   jsonb_build_array('inference', 'author attitude', 'humanities')),
+  ('reading-comprehension', 'inference-detail', 7, 'hard', 8,
+   'A passage states that a climate model accurately predicts long-term temperature trends but is less reliable for year-to-year regional rainfall. Which claim is best supported?',
+   jsonb_build_array('The model''s reliability depends on the type and scale of prediction being made.', 'The model is useless for climate research.', 'Regional rainfall is easier to predict than temperature trends.', 'Long-term temperature trends are unrelated to climate.'),
+   0,
+   'The passage distinguishes between reliable long-term temperature predictions and less reliable short-term regional rainfall predictions.',
+   'Track both the prediction type and the scale.',
+   'The supported answer generalizes carefully from the two examples without becoming extreme.',
+   jsonb_build_array('inference', 'scope', 'science')),
+  ('reading-comprehension', 'inference-detail', 8, 'hard', 9,
+   'A passage says a historian criticizes tax records as incomplete but still uses them when combined with diaries and court files. What is most strongly supported?',
+   jsonb_build_array('The historian believes tax records can be valuable when interpreted alongside other sources.', 'The historian believes tax records are always accurate.', 'Diaries and court files contain no errors.', 'Incomplete records should never be used.'),
+   0,
+   'The historian criticizes tax records but still uses them in combination with other evidence, showing conditional value.',
+   'Look for the answer that reflects both criticism and use.',
+   'The passage supports a nuanced evidence rule: incomplete sources can still matter when corroborated.',
+   jsonb_build_array('inference', 'evidence', 'history'))
+)
+INSERT INTO problems (
+  source,
+  subtopic_id,
+  topic_slug,
+  subtopic_slug,
+  order_index,
+  difficulty,
+  difficulty_level,
+  question_text,
+  options,
+  correct_option,
+  explanation,
+  solution_steps,
+  concept_tags,
+  common_errors,
+  hint,
+  detailed_hint,
+  time_recommendation_seconds,
+  sat_frequency
+)
+SELECT
+  'sat'::problem_source,
+  st.id,
+  p.topic_slug,
+  p.subtopic_slug,
+  p.order_index,
+  p.difficulty,
+  p.difficulty_level,
+  p.question_text,
+  p.options,
+  p.correct_option,
+  p.explanation,
+  jsonb_build_array(
+    'Identify the task and conclusion.',
+    'Separate support from background.',
+    'Predict the answer''s job before reading choices.',
+    'Eliminate choices that are true but do not perform that job.'
+  ),
+  p.tags,
+  jsonb_build_array(
+    'Choosing a topical answer instead of a reasoning answer',
+    'Ignoring scope or strength words',
+    'Overlooking an alternate explanation or unsupported bridge'
+  ),
+  p.hint,
+  p.detailed_hint,
+  95,
+  'core'
+FROM problem_rows p
+JOIN topics t ON t.slug = p.topic_slug
+JOIN subtopics st ON st.topic_id = t.id AND st.slug = p.subtopic_slug
+ON CONFLICT (subtopic_id, order_index) WHERE source = 'sat' DO UPDATE SET
+  topic_slug = EXCLUDED.topic_slug,
+  subtopic_slug = EXCLUDED.subtopic_slug,
+  difficulty = EXCLUDED.difficulty,
+  difficulty_level = EXCLUDED.difficulty_level,
+  question_text = EXCLUDED.question_text,
+  options = EXCLUDED.options,
+  correct_option = EXCLUDED.correct_option,
+  explanation = EXCLUDED.explanation,
+  solution_steps = EXCLUDED.solution_steps,
+  concept_tags = EXCLUDED.concept_tags,
+  common_errors = EXCLUDED.common_errors,
+  hint = EXCLUDED.hint,
+  detailed_hint = EXCLUDED.detailed_hint,
+  time_recommendation_seconds = EXCLUDED.time_recommendation_seconds,
+  sat_frequency = EXCLUDED.sat_frequency;
+
+COMMIT;

@@ -186,7 +186,7 @@ const LSAT_STARTER_LESSONS: Record<
       },
     ],
   },
-  "strengthen-and-weaken": {
+  "strengthen-weaken": {
     lessonContent:
       "Strengthen and weaken questions ask you to affect the link between evidence and conclusion. Do not debate the topic generally; target the author's reasoning.",
     whiteboardSteps: [

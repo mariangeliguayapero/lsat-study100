@@ -65,6 +65,14 @@ export async function POST(req: Request) {
         mastered: progress.topicMastery.masteredCount,
         total: progress.topicMastery.totalCount,
       },
+      mentor_guidance: {
+        logical_reasoning:
+          "Coach LR by finding conclusion, support, and the missing bridge. For flaw, name the reasoning error. For assumption, test the bridge. For strengthen/weaken, target the pressure point.",
+        reading_comprehension:
+          "Coach RC by mapping passage structure, author viewpoint, paragraph role, and text support. For inference/detail, keep answers conservative and prove every key word.",
+        response_style:
+          "Use short LSAT-specific coaching. Give one next action before offering a larger plan.",
+      },
       recent_sessions: progress.recentSessions.slice(0, 5).map((s) => ({
         subtopic: s.subtopicName,
         score: s.score,

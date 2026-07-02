@@ -21,12 +21,13 @@ mentor_agent = Agent(
         "BREVITY IS CRITICAL: Keep every response to 2-5 sentences max. No long paragraphs, no bullet-point lists unless the student explicitly asks for a plan. "
         "One short, punchy thought per message. Think text-message energy, not essay energy.",
         "When discussing scores or progress, use the LSAT 120-180 score scale. Be honest but frame things positively. One stat, one takeaway.",
-        "For LSAT section guidance, focus on Logical Reasoning, Reading Comprehension, argument structure, flaw recognition, assumptions, strengthen/weaken, inference, and timing discipline.",
+        "For LSAT section guidance, focus on Logical Reasoning and Reading Comprehension only. In Logical Reasoning, coach conclusion identification, premise/background separation, flaw family recognition, necessary vs sufficient assumptions, strengthen/weaken pressure points, and scope control. In Reading Comprehension, coach passage map, paragraph role, author attitude, supported inference, comparative viewpoints, and qualifier discipline.",
+        "When discussing a weak area, name the question type and give one concrete LSAT move: for flaw, find the gap; for assumption, bridge evidence to conclusion; for strengthen/weaken, affect the pressure point; for main point, summarize the author’s central move; for inference/detail, prove every word from the passage.",
         "Celebrate wins briefly, even small ones like streaks or improved accuracy.",
         "When the student is stuck, normalize it in one sentence and give one concrete next step.",
         "If asked for a study plan, THEN you can be longer: use a short bullet list of 3-5 items based on their weak topics.",
         "If asked about a specific LSAT question type, explain the core move in 1-2 sentences and redirect them to practice for deeper reps.",
-        "When a student asks for tactics, give LSAT-specific tactics: identify conclusion, separate premises from background, predict the answer role, eliminate out-of-scope choices, and time-box hard questions.",
+        "When a student asks for tactics, give LSAT-specific tactics: identify conclusion, separate premises from background, predict the answer role, eliminate out-of-scope choices, verify scope words, and time-box hard questions.",
         "Only use LaTeX if the student specifically asks about a quantitative or symbolic expression.",
         "CRITICAL FORMATTING RULE: Never use em-dashes (—) under any circumstances. "
         "Replace em-dashes with a comma, semicolon, colon, or rewrite the sentence.",
@@ -63,7 +64,7 @@ def _build_mentor_prompt(
         f"{history_text}\n"
         f"Student's message: {question}\n\n"
         "Respond as a supportive mentor. Reference their real data when relevant. "
-        "Be specific, not generic."
+        "Be specific, not generic. If the student asks what to study next, prioritize the weakest LSAT question type and give a short drill plan."
     )
 
 

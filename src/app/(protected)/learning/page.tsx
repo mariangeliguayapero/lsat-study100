@@ -94,6 +94,23 @@ function accuracyTone(accuracy: number, total: number) {
   return "text-emerald-300";
 }
 
+function weakAreaGuidance(slug: string | null | undefined) {
+  switch (slug) {
+    case "flaw-questions":
+      return "Review the exact reasoning gap: conclusion, evidence, then the assumption the author smuggles in.";
+    case "assumption-questions":
+      return "Practice identifying the missing bridge. For necessary assumptions, negate the answer and check whether the argument breaks.";
+    case "strengthen-weaken":
+      return "Focus on the pressure point. The right answer must change how well the evidence supports the conclusion.";
+    case "main-point-structure":
+      return "Summarize each paragraph by role, then choose an answer broad enough to cover the author’s central move.";
+    case "inference-detail":
+      return "Stay conservative. The supported answer should follow from the passage without adding a stronger claim.";
+    default:
+      return "Open the focused lesson, then drill a small set of similar questions before returning to mixed practice.";
+  }
+}
+
 function AccuracyBar({ value }: { value: number }) {
   return (
     <div className="h-1.5 overflow-hidden bg-muted">
@@ -267,9 +284,9 @@ export default function LearningPage() {
         <div className="border bg-card/70 p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold">Work On Weaknesses</h2>
+              <h2 className="text-lg font-semibold">Review Priorities</h2>
               <p className="text-sm text-muted-foreground">
-                Your lowest-accuracy LSAT areas appear here after practice.
+                Your lowest-accuracy LSAT question types, ranked by what to fix first.
               </p>
             </div>
             <Brain className="h-5 w-5 text-muted-foreground" />
@@ -304,14 +321,17 @@ export default function LearningPage() {
                     </span>
                   </div>
                   <AccuracyBar value={area.accuracy} />
+                  <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                    {weakAreaGuidance(area.slug)}
+                  </p>
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {area.correct}/{area.total} correct
                     </span>
                     <span className="inline-flex items-center gap-1">
                       {area.slug
-                        ? "Open micro-lesson"
-                        : `Review ${topic?.subtopics.length ?? 0} subtopics`}
+                        ? "Open focused lesson"
+                        : `Review ${topic?.subtopics.length ?? 0} question types`}
                       <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
