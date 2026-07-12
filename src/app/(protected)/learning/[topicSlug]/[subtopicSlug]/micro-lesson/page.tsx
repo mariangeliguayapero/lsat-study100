@@ -7,8 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MicroLesson } from "@/components/learning/micro-lesson";
 import type { Problem } from "@/components/quiz/types";
 import type { WhiteboardStep } from "@/types/whiteboard";
-import { WhiteboardSkeleton } from "@/components/whiteboard/whiteboard-skeleton";
-import { GenerationProgress } from "@/components/lessons/generation-progress";
+import { LearningWorkspaceState } from "@/components/whiteboard/learning-workspace-state";
 
 const HARDCODED_PROBLEMS: Problem[] = [
   {
@@ -318,7 +317,7 @@ const LSAT_STARTER_LESSONS: Record<
   },
   "inference-detail": {
     lessonContent:
-      "Inference and detail questions reward disciplined reading. The correct answer must be supported by the passage; it should not require outside knowledge or a leap beyond the text.",
+      "Inference and detail questions depend on disciplined reading. The correct answer must be supported by the passage; it should not require outside knowledge or a leap beyond the text.",
     whiteboardSteps: [
       {
         id: 1,
@@ -432,9 +431,12 @@ export default function MicroLessonPage() {
 
   if (metaLoading || lessonLoading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-      </div>
+      <LearningWorkspaceState
+        variant="loading"
+        title="Loading your micro-lesson"
+        description="Preparing the LSAT concept overview and guided practice workspace."
+        className="h-[calc(100vh-4rem)] border-0"
+      />
     );
   }
 
@@ -447,14 +449,12 @@ export default function MicroLessonPage() {
     !starterLesson
   ) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        <div className="flex items-center justify-center py-6">
-          <GenerationProgress />
-        </div>
-        <div className="flex-1 min-h-0">
-          <WhiteboardSkeleton className="h-full" />
-        </div>
-      </div>
+      <LearningWorkspaceState
+        variant="loading"
+        title="Generating your micro-lesson"
+        description="Athena is building the concept breakdown, LSAT reasoning pattern, and focused examples."
+        className="h-[calc(100vh-4rem)] border-0"
+      />
     );
   }
 

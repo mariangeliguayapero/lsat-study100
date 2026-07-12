@@ -10,6 +10,7 @@ import {
   Brain,
   ClipboardList,
   GraduationCap,
+  LibraryBig,
   LayoutDashboard,
   Scale,
   UserRound,
@@ -19,17 +20,20 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/queue", label: "Progress", icon: BarChart3 },
   { href: "/learning", label: "Review", icon: ClipboardList },
+  { href: "/study-library", label: "Study Library", icon: LibraryBig },
   { href: "/mentor", label: "Mentor", icon: Brain },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/my-learning", label: "Learn", icon: BookOpen },
   { href: "/full-sat", label: "Full LSAT", icon: GraduationCap },
 ];
 
+export { navItems as protectedNavItems };
+
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar/95 md:flex md:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar/95 shadow-[4px_0_24px_rgba(20,32,51,0.035)] md:flex md:flex-col">
       <div className="border-b px-5 py-5">
         <Link href="/dashboard" className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center border bg-primary/10 text-primary">
@@ -56,9 +60,9 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 border border-transparent px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  ? "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                   : "text-sidebar-foreground/62 hover:border-sidebar-border hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
               )}
             >

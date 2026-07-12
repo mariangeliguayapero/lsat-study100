@@ -29,6 +29,8 @@ type BottomBarProps = {
   nextDisabled?: boolean;
   /** Called on last question instead of onSubmit for onboarding completion flow */
   onFinish?: () => void;
+  submitTitle?: string;
+  submitDescription?: string;
 };
 
 export function BottomBar({
@@ -43,6 +45,8 @@ export function BottomBar({
   sequential = false,
   nextDisabled,
   onFinish,
+  submitTitle = "Submit Practice Set?",
+  submitDescription,
 }: BottomBarProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
@@ -126,11 +130,11 @@ export function BottomBar({
         <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Submit Quiz?</DialogTitle>
+              <DialogTitle>{submitTitle}</DialogTitle>
               <DialogDescription>
                 {unansweredCount > 0
-                  ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? "s" : ""}. Are you sure you want to submit?`
-                  : "Are you sure you want to submit your answers?"}
+                  ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? "s" : ""}. ${submitDescription ?? "Are you sure you want to submit?"}`
+                  : submitDescription ?? "Are you sure you want to submit your answers?"}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

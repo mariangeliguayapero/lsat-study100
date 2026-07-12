@@ -53,10 +53,9 @@ const DIR_THRESHOLD = 0.8;
 const CLAMP_MARGIN = 112;
 const SIDE_PERIOD = 11000;
 const DOCK_GAP = 64;
-const STEP_SIDE_GAP = 124;
+const STEP_SIDE_GAP = 140;
 const LEFT_UI_CLEARANCE = 390;
 const STEP_TOP_CLEARANCE = 118;
-const MAX_STEP_W = 480;
 const MAX_STEP_H = 260;
 
 function clamp(value: number, min: number, max: number): number {
@@ -85,7 +84,11 @@ function cursorForce(anchor: OrbPoint, cursor: OrbPoint | null | undefined): Orb
   return anchor;
 }
 
-function stepSideAnchor(focus: StepFocus, layerRect: DOMRect, onLeft: boolean): OrbPoint | null {
+function stepSideAnchor(
+  focus: StepFocus,
+  layerRect: DOMRect,
+  preferLeft: boolean,
+): { point: OrbPoint; side: "left" | "right" } | null {
   const topLeft = boardToClient({ x: focus.box.x, y: focus.box.y }, focus.svg, focus.viewBoxWidth, focus.viewBoxHeight);
   const bottomRight = boardToClient(
     { x: focus.box.x + focus.box.width, y: focus.box.y + focus.box.height },
@@ -95,16 +98,41 @@ function stepSideAnchor(focus: StepFocus, layerRect: DOMRect, onLeft: boolean): 
   );
   const left = topLeft.x - layerRect.left;
   const top = topLeft.y - layerRect.top;
-  const right = Math.min(bottomRight.x - layerRect.left, left + MAX_STEP_W);
+  const right = bottomRight.x - layerRect.left;
   const bottom = Math.min(bottomRight.y - layerRect.top, top + MAX_STEP_H);
   const canUseLeft = left - STEP_SIDE_GAP > LEFT_UI_CLEARANCE;
-  const side = onLeft && canUseLeft ? "left" : "right";
+  const canUseRight = right + STEP_SIDE_GAP < layerRect.width - 16;
+  const side = preferLeft && canUseLeft
+    ? "left"
+    : canUseRight
+      ? "right"
+      : canUseLeft
+        ? "left"
+        : null;
   const stepHeight = Math.max(1, bottom - top);
-  const y = clamp(top + Math.min(stepHeight * 0.42, 86), STEP_TOP_CLEARANCE, layerRect.height - CLAMP_MARGIN);
+  const focusY = top + Math.min(stepHeight * 0.42, 86);
+
+  if (!side) {
+    const belowY = bottom + CLAMP_MARGIN + 20;
+    const aboveY = top - CLAMP_MARGIN - 20;
+    const y = belowY < layerRect.height - CLAMP_MARGIN
+      ? belowY
+      : clamp(aboveY, STEP_TOP_CLEARANCE, layerRect.height - CLAMP_MARGIN);
+    return {
+      point: {
+        x: clamp(right - CLAMP_MARGIN, LEFT_UI_CLEARANCE + CLAMP_MARGIN, layerRect.width - CLAMP_MARGIN),
+        y,
+      },
+      side: "right",
+    };
+  }
 
   return {
-    x: side === "left" ? left - STEP_SIDE_GAP : right + STEP_SIDE_GAP,
-    y,
+    point: {
+      x: side === "left" ? left - STEP_SIDE_GAP : right + STEP_SIDE_GAP,
+      y: clamp(focusY, STEP_TOP_CLEARANCE, layerRect.height - CLAMP_MARGIN),
+    },
+    side,
   };
 }
 
@@ -212,8 +240,8 @@ export function useOrbPresence(args: UseOrbPresenceArgs): OrbPresence {
       const onLeft = phase % 2 === 0;
       const beside = stepSideAnchor(focus, layerRect, onLeft);
       if (beside) {
-        restAnchor = beside;
-        capAbove = onLeft;
+        restAnchor = beside.point;
+        capAbove = beside.side === "right";
       }
     }
 

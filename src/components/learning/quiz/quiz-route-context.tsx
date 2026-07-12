@@ -23,6 +23,7 @@ export type QuizRouteContextValue = {
   setFeedbackMap: React.Dispatch<React.SetStateAction<Map<string, FeedbackState>>>;
   setLockedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   handleSelectAnswer: (problemId: string, optionIndex: number) => void;
+  handleGoNext: () => void;
   stuckModalShownIds: Set<string>;
   markStuckModalShown: (problemId: string) => void;
   practiceEntryModalShownIds: Set<string>;

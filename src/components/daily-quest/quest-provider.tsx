@@ -34,10 +34,14 @@ export function QuestProvider({ quest, problems, children }: Props) {
     return set;
   });
   const [feedbackMap, setFeedbackMap] = useState<Map<string, FeedbackState>>(new Map());
+  const [direction, setDirection] = useState(1);
   const [phase, setPhase] = useState<"active" | "completed">(
     quest.status === "completed" ? "completed" : "active"
   );
   const [xpEarned, setXpEarned] = useState(quest.xpEarned);
+  const pendingAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeProblemIdRef = useRef(problems[currentIndex]?.id);
+  const isAdvancingRef = useRef(false);
 
   // Wrong-answer tracking & question phases
   const [wrongCounts, setWrongCounts] = useState<Map<string, number>>(new Map());
@@ -61,12 +65,41 @@ export function QuestProvider({ quest, problems, children }: Props) {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  // Direction tracking
-  const prevIndexRef = useRef(currentIndex);
-  const direction = currentIndex >= prevIndexRef.current ? 1 : -1;
+  const cancelPendingAdvance = useCallback(() => {
+    if (pendingAdvanceRef.current) {
+      clearTimeout(pendingAdvanceRef.current);
+      pendingAdvanceRef.current = null;
+    }
+  }, []);
+
+  const advanceFromProblem = useCallback(
+    (problemId: string) => {
+      if (isAdvancingRef.current || activeProblemIdRef.current !== problemId) return;
+
+      isAdvancingRef.current = true;
+      cancelPendingAdvance();
+      setFeedbackMap((prev) => {
+        const next = new Map(prev);
+        next.delete(problemId);
+        return next;
+      });
+      setDirection(1);
+      setCurrentIndex((index) => Math.min(index + 1, problems.length - 1));
+    },
+    [cancelPendingAdvance, problems.length]
+  );
+
   useEffect(() => {
-    prevIndexRef.current = currentIndex;
-  }, [currentIndex]);
+    activeProblemIdRef.current = problems[currentIndex]?.id;
+    isAdvancingRef.current = false;
+    cancelPendingAdvance();
+  }, [cancelPendingAdvance, currentIndex, problems]);
+
+  useEffect(() => {
+    if (phase !== "active") cancelPendingAdvance();
+  }, [cancelPendingAdvance, phase]);
+
+  useEffect(() => cancelPendingAdvance, [cancelPendingAdvance]);
 
   // Mutations
   const answerMutation = useAnswerQuestProblem();
@@ -126,13 +159,10 @@ export function QuestProvider({ quest, problems, children }: Props) {
         // Auto-advance only if NOT in tutor phase (tutor page handles its own navigation)
         const currentPhase = questionPhases.get(problemId) ?? "question";
         if (currentPhase !== "tutor") {
-          setTimeout(() => {
-            setFeedbackMap((prev) => {
-              const n = new Map(prev);
-              n.delete(problemId);
-              return n;
-            });
-            setCurrentIndex((i) => Math.min(i + 1, problems.length - 1));
+          cancelPendingAdvance();
+          pendingAdvanceRef.current = setTimeout(() => {
+            pendingAdvanceRef.current = null;
+            advanceFromProblem(problemId);
           }, 1200);
         }
       } else {
@@ -171,30 +201,38 @@ export function QuestProvider({ quest, problems, children }: Props) {
         }, 2000);
       }
     },
-    [lockedIds, phase, problems, quest.id, answerMutation, wrongCounts, questionPhases]
+    [advanceFromProblem, cancelPendingAdvance, lockedIds, phase, problems, quest.id, answerMutation, wrongCounts, questionPhases]
   );
 
   const handleComplete = useCallback(() => {
     if (phase !== "active") return;
+    cancelPendingAdvance();
     setPhase("completed");
     clearInterval(timerRef.current!);
     completeMutation.mutate({
       questId: quest.id,
       timeElapsedSeconds: elapsed,
     });
-  }, [phase, quest.id, elapsed, completeMutation]);
+  }, [cancelPendingAdvance, phase, quest.id, elapsed, completeMutation]);
 
   const goNext = useCallback(() => {
-    setCurrentIndex((i) => Math.min(i + 1, problems.length - 1));
-  }, [problems.length]);
+    const problemId = problems[currentIndex]?.id;
+    if (problemId) advanceFromProblem(problemId);
+  }, [advanceFromProblem, currentIndex, problems]);
 
   const goBack = useCallback(() => {
+    cancelPendingAdvance();
+    setDirection(-1);
     setCurrentIndex((i) => Math.max(i - 1, 0));
-  }, []);
+  }, [cancelPendingAdvance]);
 
   const goTo = useCallback((index: number) => {
-    if (index >= 0 && index < problems.length) setCurrentIndex(index);
-  }, [problems.length]);
+    if (index >= 0 && index < problems.length) {
+      cancelPendingAdvance();
+      setDirection(index >= currentIndex ? 1 : -1);
+      setCurrentIndex(index);
+    }
+  }, [cancelPendingAdvance, currentIndex, problems.length]);
 
   const getQuestionStatus = useCallback(
     (index: number): "unanswered" | "answered" | "marked" => {

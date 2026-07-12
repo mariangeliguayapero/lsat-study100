@@ -25,7 +25,7 @@ import { useSound } from "@/hooks/useSound";
 import { MathContent } from "@/components/quiz/math-content";
 import { PracticeGradientCard } from "@/components/quiz/practice-gradient-card";
 import type { Problem } from "@/components/quiz/types";
-import { WhiteboardSkeleton } from "@/components/whiteboard/whiteboard-skeleton";
+import { LearningWorkspaceState } from "@/components/whiteboard/learning-workspace-state";
 import { GenerationProgress } from "@/components/lessons/generation-progress";
 import { WhyThisMattersModal } from "@/components/learning/why-this-matters-modal";
 
@@ -193,9 +193,9 @@ function CheckInCard({
                 "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-sm transition-colors",
                 !isRevealed && !isWrong && "hover:bg-muted cursor-pointer",
                 isRevealed && isRight && "border-green-500 bg-green-500/10",
-                isRevealed && isThis && !isRight && "border-red-500 bg-red-500/10",
+                isRevealed && isThis && !isRight && "border-destructive/45 bg-destructive/5",
                 isRevealed && !isThis && !isRight && "opacity-50",
-                isWrong && !isRevealed && "border-red-500/50 bg-red-500/5 opacity-60",
+                isWrong && !isRevealed && "border-destructive/35 bg-destructive/[0.03] opacity-70",
               )}
               style={
                 isRevealed && isRight
@@ -207,7 +207,7 @@ function CheckInCard({
                 {isRevealed && isRight ? (
                   <Check className="h-3 w-3 text-green-500" />
                 ) : (isRevealed && isThis && !isRight) || isWrong ? (
-                  <X className="h-3 w-3 text-red-500" />
+                  <X className="h-3 w-3 text-destructive" />
                 ) : (
                   String.fromCharCode(65 + i)
                 )}
@@ -235,9 +235,9 @@ function CheckInCard({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2"
+          className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2"
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-0.5">
+          <p className="mb-0.5 text-xs font-bold uppercase tracking-widest text-primary">
             Let me walk you through it:
           </p>
           <p className="text-sm text-muted-foreground">{checkIn.detailedHint}</p>
@@ -357,16 +357,16 @@ function PredictCard({
                 "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-sm transition-colors",
                 !revealed && !isWrong && "hover:bg-muted cursor-pointer",
                 revealed && isRight && "border-green-500 bg-green-500/10",
-                revealed && isThis && !isRight && "border-red-500 bg-red-500/10",
+                revealed && isThis && !isRight && "border-destructive/45 bg-destructive/5",
                 revealed && !isThis && !isRight && "opacity-50",
-                isWrong && !revealed && "border-red-500/50 bg-red-500/5 opacity-60",
+                isWrong && !revealed && "border-destructive/35 bg-destructive/[0.03] opacity-70",
               )}
             >
               <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-xs font-medium">
                 {revealed && isRight ? (
                   <Check className="h-3 w-3 text-green-500" />
                 ) : (revealed && isThis && !isRight) || isWrong ? (
-                  <X className="h-3 w-3 text-red-500" />
+                  <X className="h-3 w-3 text-destructive" />
                 ) : (
                   String.fromCharCode(65 + i)
                 )}
@@ -554,9 +554,9 @@ function FillBlankCard({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2"
+          className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2"
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-500 mb-0.5">
+          <p className="mb-0.5 text-xs font-bold uppercase tracking-widest text-primary">
             Let me walk you through it:
           </p>
           <p className="text-sm text-muted-foreground">{fillBlank.detailedHint}</p>
@@ -645,6 +645,9 @@ export function MicroLesson({
 
   const activePracticeProblems = providedPracticeProblems ?? fetchedPracticeProblems;
   const currentPracticeProblem = activePracticeProblems[currentProblemIndex] ?? null;
+  const hasPracticeQuestions = activePracticeProblems.length > 0;
+  const isPerfectPractice =
+    hasPracticeQuestions && practiceCorrectCount === activePracticeProblems.length;
 
   const fetchPracticeProblems = useCallback(async () => {
     if (providedPracticeProblems) return;
@@ -1053,12 +1056,31 @@ export function MicroLesson({
   const hasChatSteps = chat.chatWhiteboardSteps.length > 0;
   const emptyVisibleIds = useMemo(() => new Set<number>(), []);
   const isPracticeCanvas = (lessonPhase === "practice" || lessonPhase === "complete") && !isChatting;
+  const showPracticeCompletionWorkspace =
+    lessonPhase === "complete" && !isChatting && !interactionVisualStep;
+  const practiceAccuracy = hasPracticeQuestions
+    ? Math.round((practiceCorrectCount / activePracticeProblems.length) * 100)
+    : null;
+  const practiceObjective =
+    metadata.learningObjectives?.[0] ??
+    metadata.description ??
+    `Apply the core ${subtopic} reasoning pattern in LSAT-style questions.`;
+  const recommendedPracticeAction = !hasPracticeQuestions
+    ? "Return to the study library and choose another focused lesson."
+    : isPerfectPractice
+      ? "Continue to another question type or try a timed practice set."
+      : "Review the lesson context, then retry this question type in focused practice.";
 
   const voiceOrbState: "idle" | "listening" | "processing" | "speaking" =
     chat.isRecording ? "listening" : chat.isProcessing ? "processing" : chat.isSpeaking ? "speaking" : "idle";
 
   // ── Generating state ──────────────────────────────────────────────
   const isGenerating = phase === "generating" && whiteboardSteps.length === 0;
+  const displayedCanvasSteps = interactionVisualStep
+    ? [interactionVisualStep]
+    : isChatting && hasChatSteps
+      ? chat.chatWhiteboardSteps
+      : whiteboardSteps;
 
   // ── Character state ────────────────────────────────────────────────
   const pixelEmotion: "neutral" | "happy" | "thinking" | "encouraging" = isGenerating
@@ -1108,52 +1130,13 @@ export function MicroLesson({
             </motion.span>
           )}
         </div>
-        <motion.button
+        <button
           onClick={() => setWhyModalOpen(true)}
-          className="relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-amber-300 cursor-pointer overflow-hidden"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="inline-flex h-9 items-center gap-2 border border-border bg-background/50 px-3 text-xs font-semibold text-primary transition-colors hover:border-primary/40 hover:bg-muted"
         >
-          {/* Siri-style animated gradient glow */}
-          <motion.div
-            className="absolute inset-0 rounded-full opacity-60"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(251,191,36,0.25), rgba(244,114,182,0.2), rgba(129,140,248,0.2), rgba(251,191,36,0.25))",
-              backgroundSize: "300% 300%",
-            }}
-            animate={{
-              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Soft pulsing border glow */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{
-              boxShadow: "inset 0 0 0 1px rgba(251,191,36,0.3)",
-            }}
-            animate={{
-              boxShadow: [
-                "inset 0 0 0 1px rgba(251,191,36,0.3), 0 0 6px rgba(251,191,36,0.15)",
-                "inset 0 0 0 1px rgba(244,114,182,0.3), 0 0 10px rgba(244,114,182,0.2)",
-                "inset 0 0 0 1px rgba(129,140,248,0.3), 0 0 6px rgba(129,140,248,0.15)",
-                "inset 0 0 0 1px rgba(251,191,36,0.3), 0 0 6px rgba(251,191,36,0.15)",
-              ],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="relative flex items-center gap-1.5"
-            animate={{
-              color: ["#fbbf24", "#f472b6", "#818cf8", "#fbbf24"],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            <span>Lore</span>
-          </motion.div>
-        </motion.button>
+          <BookOpen className="h-3.5 w-3.5" />
+          Why this matters
+        </button>
       </div>
 
       {/* Error state */}
@@ -1302,22 +1285,30 @@ export function MicroLesson({
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-3 text-center pt-4"
                       >
-                        <CheckInConfetti />
+                        {isPerfectPractice && <CheckInConfetti />}
                         <div className="flex flex-col items-center gap-1">
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 200, damping: 15 }}
                           >
-                            <CheckCircle className="h-10 w-10 text-green-500" />
+                            {hasPracticeQuestions ? (
+                              <CheckCircle className="h-10 w-10 text-green-500" />
+                            ) : (
+                              <BookOpen className="h-10 w-10 text-muted-foreground" />
+                            )}
                           </motion.div>
                           <p className="text-sm font-semibold">
-                            {practiceCorrectCount}/{activePracticeProblems.length} correct
+                            {hasPracticeQuestions
+                              ? `${practiceCorrectCount}/${activePracticeProblems.length} correct`
+                              : "Practice not started"}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {practiceCorrectCount === activePracticeProblems.length
-                              ? "Perfect! Great work on this lesson."
-                              : "Keep it up, you're making progress!"}
+                            {!hasPracticeQuestions
+                              ? "No practice questions were available for this lesson."
+                              : isPerfectPractice
+                                ? "Perfect! Great work on this lesson."
+                                : "Review your answers and continue when you're ready."}
                           </p>
                         </div>
                         <Button size="sm" className="gap-1" onClick={onClose}>
@@ -1510,12 +1501,101 @@ export function MicroLesson({
            <AnimatePresence mode="wait">
             {isGenerating ? (
               <motion.div
-                key="skeleton"
+                key="workspace-loading"
                 className="h-full w-full"
                 exit={{ opacity: 0, scale: 1.02, filter: "blur(4px)" }}
                 transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <WhiteboardSkeleton className="h-full" />
+                <LearningWorkspaceState
+                  variant="loading"
+                  title="Building your lesson workspace"
+                  description="Athena is organizing the concept breakdown, reasoning pattern, and visual notes."
+                  className="h-full border-0"
+                />
+              </motion.div>
+            ) : showPracticeCompletionWorkspace ? (
+              <motion.div
+                key="practice-completion"
+                className="flex h-full w-full items-center justify-center bg-[hsl(var(--background))] p-6 sm:p-10"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <section className="w-full max-w-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-start">
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                          Practice summary
+                        </p>
+                        <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                          {subtopic}
+                        </h2>
+                        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+                          Your focused practice is complete. Use this summary to decide what to review next.
+                        </p>
+                      </div>
+                      <div className="min-w-32 border border-border bg-background px-4 py-3 text-left sm:text-right">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Score
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-foreground">
+                          {hasPracticeQuestions
+                            ? `${practiceCorrectCount}/${activePracticeProblems.length}`
+                            : "Not scored"}
+                        </p>
+                        {practiceAccuracy !== null && (
+                          <p className="text-xs text-muted-foreground">{practiceAccuracy}% accuracy</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="border border-border bg-background/60 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Topic practiced
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-foreground">{topic}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{subtopic}</p>
+                      </div>
+                      <div className="border border-border bg-background/60 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          What this tested
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-foreground">{practiceObjective}</p>
+                      </div>
+                    </div>
+
+                    <div className="border-l-2 border-primary bg-primary/5 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                        Recommended next action
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-foreground">
+                        {recommendedPracticeAction}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center gap-2 sm:justify-start"
+                        onClick={() => setWhyModalOpen(true)}
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Review lesson
+                      </Button>
+                      <Button
+                        type="button"
+                        className="justify-center gap-2 sm:ml-auto sm:justify-start"
+                        onClick={onClose}
+                      >
+                        Back to Study Library
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </section>
               </motion.div>
             ) : interactionVisualStep && (interactionVisualStep.action.type === "coordinate_plane" || interactionVisualStep.action.type === "geometry") ? (
             <motion.div key={`interaction-visual-${interactionHintPhase}`} className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1539,6 +1619,23 @@ export function MicroLesson({
                 )}
               </svg>
             </motion.div>
+           ) : displayedCanvasSteps.length === 0 ? (
+            <motion.div
+              key="workspace-empty"
+              className="h-full w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <LearningWorkspaceState
+                title={isPracticeCanvas ? "Practice workspace ready" : "Lesson workspace ready"}
+                description={
+                  isPracticeCanvas
+                    ? "Choose an answer or ask Athena for guidance. The next explanation will appear here."
+                    : "Continue the lesson to reveal the next concept map, worked example, or guided note."
+                }
+                className="h-full border-0"
+              />
+            </motion.div>
            ) : (
             <motion.div
               key={interactionVisualStep ? `canvas-${interactionHintPhase}` : "canvas"}
@@ -1548,11 +1645,7 @@ export function MicroLesson({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
             <WhiteboardCanvas
-              steps={
-                interactionVisualStep ? [interactionVisualStep]
-                : isChatting && hasChatSteps ? chat.chatWhiteboardSteps
-                : whiteboardSteps
-              }
+              steps={displayedCanvasSteps}
               visibleStepIds={
                 isPracticeCanvas ? emptyVisibleIds
                 : interactionVisualIds ? interactionVisualIds

@@ -12,7 +12,7 @@ export default function QuestLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isError) {
-      toast.error("Failed to load quest");
+      toast.error("Failed to load practice set");
       router.push("/dashboard");
     }
   }, [isError, router]);
@@ -28,7 +28,7 @@ export default function QuestLayout({ children }: { children: React.ReactNode })
   if (!data.quest || !data.problems) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <p className="text-muted-foreground">No quest generated yet.</p>
+        <p className="text-muted-foreground">No practice set generated yet.</p>
         <button
           onClick={() => router.push("/dashboard")}
           className="text-sm font-medium text-primary hover:underline"

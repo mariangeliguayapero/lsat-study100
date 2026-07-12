@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getUserByClerkId } from "@/lib/db/queries/users";
-import { getUserAttempts } from "@/lib/db/queries/full-sat";
+import { getAttemptAnswers, getUserAttempts } from "@/lib/db/queries/full-sat";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -15,6 +15,18 @@ export async function GET() {
   }
 
   const attempts = await getUserAttempts(user.id);
+  const attemptsWithTotals = await Promise.all(
+    attempts.map(async (attempt) => {
+      if (attempt.status !== "completed") return attempt;
 
-  return NextResponse.json({ attempts });
+      const answers = await getAttemptAnswers(attempt.id);
+      return {
+        ...attempt,
+        rwTotalQuestions: answers.filter((answer) => answer.section === "reading_writing").length,
+        mathTotalQuestions: answers.filter((answer) => answer.section === "math").length,
+      };
+    })
+  );
+
+  return NextResponse.json({ attempts: attemptsWithTotals });
 }

@@ -146,7 +146,7 @@ export function Toolbar({
       <Dialog open={confirmExit} onOpenChange={setConfirmExit}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Exit Quiz?</DialogTitle>
+          <DialogTitle>Exit Practice Set?</DialogTitle>
             <DialogDescription>
               You have unsaved answers. Your progress will be lost if you exit
               now.
@@ -157,7 +157,7 @@ export function Toolbar({
               Cancel
             </Button>
             <Button variant="destructive" onClick={onClose}>
-              Exit Quiz
+              Exit Practice Set
             </Button>
           </DialogFooter>
         </DialogContent>

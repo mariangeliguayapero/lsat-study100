@@ -55,20 +55,25 @@ export default function FullSatQuestionPage() {
   };
 
   const isLow = ctx.timeLeft < 300; // 5 minutes warning
-  const isSecondSection = ctx.currentSection === "math";
 
-  // Determine section boundaries for the bottom bar
-  // Legacy storage keeps a two-section split: first 54, second 44.
-  const sectionStart = isSecondSection ? 54 : 0;
-  const sectionEnd = isSecondSection ? 98 : 54;
-  const sectionTotal = sectionEnd - sectionStart;
-  const sectionIndex = ctx.currentIndex - sectionStart;
+  const sectionGlobalIndices = ctx.problems
+    .map((problem, index) => ({ problem, index }))
+    .filter(({ problem }) => problem.section === currentProblem.section)
+    .map(({ index }) => index);
+  const sectionTotal = sectionGlobalIndices.length;
+  const sectionIndex = Math.max(0, sectionGlobalIndices.indexOf(ctx.currentIndex));
+  const unansweredCount = sectionGlobalIndices.filter(
+    (index) => ctx.getQuestionStatus(index) === "unanswered"
+  ).length;
+  const hasNextSection = ctx.problems
+    .slice(ctx.currentIndex + 1)
+    .some((problem) => problem.section !== currentProblem.section);
 
   const handleSubmitOrFinishSection = () => {
-    if (isSecondSection) {
-      ctx.submitTest();
-    } else {
+    if (hasNextSection) {
       ctx.finishSection();
+    } else {
+      ctx.submitTest();
     }
   };
 
@@ -91,7 +96,7 @@ export default function FullSatQuestionPage() {
       <SegmentProgressBar
         total={sectionTotal}
         currentIndex={sectionIndex}
-        getStatus={(i) => ctx.getQuestionStatus(i + sectionStart)}
+        getStatus={(i) => ctx.getQuestionStatus(sectionGlobalIndices[i] ?? -1)}
         onNavigate={() => {}}
       />
 
@@ -132,22 +137,26 @@ export default function FullSatQuestionPage() {
       <BottomBar
         currentIndex={sectionIndex}
         total={sectionTotal}
-        unansweredCount={
-          Array.from({ length: sectionTotal }, (_, i) =>
-            ctx.getQuestionStatus(i + sectionStart)
-          ).filter((s) => s === "unanswered").length
-        }
+        unansweredCount={unansweredCount}
         onBack={() => {
-          if (sectionIndex > 0) ctx.goBack();
+          const previousIndex = sectionGlobalIndices[sectionIndex - 1];
+          if (previousIndex != null) ctx.goTo(previousIndex);
         }}
         onNext={() => {
-          if (sectionIndex < sectionTotal - 1) ctx.goNext();
+          const nextIndex = sectionGlobalIndices[sectionIndex + 1];
+          if (nextIndex != null) ctx.goTo(nextIndex);
         }}
-        onGoTo={(i) => ctx.goTo(i + sectionStart)}
+        onGoTo={(i) => ctx.goTo(sectionGlobalIndices[i] ?? ctx.currentIndex)}
         onSubmit={handleSubmitOrFinishSection}
-        getStatus={(i) => ctx.getQuestionStatus(i + sectionStart)}
+        getStatus={(i) => ctx.getQuestionStatus(sectionGlobalIndices[i] ?? -1)}
         sequential={false}
         nextDisabled={false}
+        submitTitle={hasNextSection ? "Finish section?" : "Submit practice test?"}
+        submitDescription={
+          hasNextSection
+            ? "You are about to move to the next LSAT section. You can review unanswered questions before continuing."
+            : "You are about to submit the full LSAT practice test."
+        }
       />
     </div>
   );

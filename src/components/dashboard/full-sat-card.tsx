@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useFullSatStatus } from "@/hooks/use-full-sat";
 import { legacyCompositeToLsatScore } from "@/lib/lsat-score";
-import { FileText, Lock, ArrowRight, Trophy } from "lucide-react";
+import { FileText, Lock, ArrowRight } from "lucide-react";
 
 function formatDaysUntil(dateString: string): string {
   const diff = new Date(dateString).getTime() - Date.now();
@@ -56,8 +56,8 @@ export function FullSatCard() {
         className="block rounded-xl border bg-card p-5 transition-colors hover:bg-muted/50"
       >
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-amber-500/10 p-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
+          <div className="rounded-lg bg-primary/10 p-2">
+            <FileText className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">Full LSAT Practice</p>

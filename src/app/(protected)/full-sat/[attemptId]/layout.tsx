@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useStartFullSat } from "@/hooks/use-full-sat";
 import { FullSatProvider } from "@/components/full-sat/full-sat-provider";
 import type {
   FullSatTestProblem,
@@ -25,11 +24,18 @@ export default function FullSatAttemptLayout({
   children: React.ReactNode;
 }) {
   const params = useParams<{ attemptId: string }>();
+  const pathname = usePathname();
   const router = useRouter();
   const [data, setData] = useState<LoadedData | null>(null);
   const [loading, setLoading] = useState(true);
+  const isResultsRoute = pathname.endsWith("/results");
 
   useEffect(() => {
+    if (isResultsRoute) {
+      setLoading(false);
+      return;
+    }
+
     async function load() {
       try {
         // Fetch attempt data via the start endpoint (it handles resume)
@@ -81,7 +87,14 @@ export default function FullSatAttemptLayout({
       }
     }
     load();
-  }, [params.attemptId, router]);
+  }, [isResultsRoute, params.attemptId, router]);
+
+  // Completed-attempt reports load their own history data and do not need the
+  // in-progress test provider. Keeping them outside the resume guard prevents
+  // completed attempts from being redirected back to the landing page.
+  if (isResultsRoute) {
+    return children;
+  }
 
   if (loading || !data) {
     return (

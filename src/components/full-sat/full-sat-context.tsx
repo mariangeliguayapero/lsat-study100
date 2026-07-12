@@ -3,7 +3,6 @@
 import { createContext, useContext } from "react";
 import type {
   FullSatTestProblem,
-  FullSatAnswer,
   FullSatSection,
   FullSatAttempt,
   FullSatTest,
@@ -18,7 +17,7 @@ export type FullSatContextValue = {
   problems: FullSatTestProblem[];
 
   // Current position
-  currentIndex: number; // Global 0-97
+  currentIndex: number;
   currentSection: FullSatSection;
   currentModule: number;
   currentProblem: FullSatTestProblem | null;
@@ -28,8 +27,8 @@ export type FullSatContextValue = {
   lockedIds: Set<string>; // answered problems
   phase: FullSatPhase;
 
-  // Timer (countdown per module)
-  timeLeft: number; // seconds remaining in current module
+  // Timer
+  timeLeft: number; // seconds remaining in current section
   displayTime: string;
 
   // Navigation
@@ -41,6 +40,7 @@ export type FullSatContextValue = {
   // Actions
   handleSelectAnswer: (problemId: string, optionIndex: number) => void;
   finishSection: () => void;
+  resumeAfterBreak: (nextIndex: number) => void;
   submitTest: () => void;
 
   // Status helpers

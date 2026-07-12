@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Clock, Target, TrendingUp } from "lucide-react";
+import { CalendarDays, Settings } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { AnimatedSprite } from "@/components/pixel-art/animated-sprite";
 import { ProfileNameEditor } from "@/components/profile/profile-name-editor";
-import { SatScoreHistory } from "@/components/profile/sat-score-history";
 import { ScheduleEditor } from "@/components/profile/schedule-editor";
 
 type SatAttempt = {
@@ -51,103 +50,12 @@ const staggerItem = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-}
-
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-}
-
-function estimatePercentile(score: number): string {
-  if (score >= 175) return "99th+";
-  if (score >= 170) return "96th-98th";
-  if (score >= 165) return "90th-95th";
-  if (score >= 160) return "80th-89th";
-  if (score >= 155) return "65th-79th";
-  if (score >= 150) return "45th-64th";
-  if (score >= 145) return "30th-44th";
-  if (score >= 140) return "18th-29th";
-  return "Below 18th";
-}
-
-function scoreBand(score: number): string {
-  if (score >= 170) return "Law school ready";
-  if (score >= 165) return "Competitive";
-  if (score >= 160) return "Strong foundation";
-  if (score >= 150) return "Developing";
-  return "Baseline";
-}
-
-function MetricCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
-}: {
-  label: string;
-  value: string | number;
-  detail?: string;
-  icon: typeof Target;
-}) {
-  return (
-    <div className="border border-border/70 bg-card/80 p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {label}
-        </p>
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <p className="mt-5 text-3xl font-bold tabular-nums">{value}</p>
-      {detail && <p className="mt-2 text-sm text-muted-foreground">{detail}</p>}
-    </div>
-  );
-}
-
-function PracticeConsistency({ days }: { days: ConsistencyDay[] }) {
-  const completed = days.filter((day) => day.completed).length;
-
-  return (
-    <div className="border border-border/70 bg-card/80 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Practice Consistency
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {completed} of {days.length} scheduled days completed this week.
-          </p>
-        </div>
-        <p className="text-2xl font-bold tabular-nums">{completed}/{days.length}</p>
-      </div>
-      <div className="mt-5 grid grid-cols-7 gap-2">
-        {days.map((day, index) => (
-          <div key={`${day.day}-${index}`} className="space-y-2">
-            <div
-              className={[
-                "h-2.5 border",
-                day.completed
-                  ? "border-primary bg-primary"
-                  : day.isPast
-                    ? "border-border bg-muted"
-                    : "border-dashed border-border bg-transparent",
-              ].join(" ")}
-            />
-            <p className="text-center text-[10px] uppercase tracking-wide text-muted-foreground">
-              {day.day}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export default function ProfilePage() {
@@ -209,17 +117,11 @@ export default function ProfilePage() {
 
   if (!data || !data.user) return null;
 
-  const { user, questsDone, totalTimeSeconds, accuracy } = data;
-  const currentScore = Math.max(data.totalScore, 120);
+  const { user } = data;
   const targetScore =
     user.targetScore != null && user.targetScore >= 120 && user.targetScore <= 180
       ? user.targetScore
       : 170;
-  const gap = Math.max(targetScore - currentScore, 0);
-  const targetProgress = Math.min(
-    Math.max(Math.round(((currentScore - 120) / (targetScore - 120)) * 100), 0),
-    100
-  );
 
   return (
     <div className="relative z-10 p-4 pb-16 md:p-6">
@@ -240,7 +142,7 @@ export default function ProfilePage() {
           <div className="space-y-6">
             <motion.div
               variants={staggerItem}
-              className="border border-border/70 bg-card/80 p-5"
+              className="lsat-panel lsat-panel-highlight p-5"
             >
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
@@ -256,82 +158,52 @@ export default function ProfilePage() {
                       Prep started {formatDate(user.createdAt)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {scoreBand(currentScore)} · Estimated {estimatePercentile(currentScore)} percentile
+                      LSAT study preferences and account setup
                     </p>
                   </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Estimated LSAT
-                  </p>
-                  <p className="mt-1 text-5xl font-bold tabular-nums">{currentScore}</p>
-                </div>
               </div>
             </motion.div>
 
             <motion.div
               variants={staggerItem}
-              className="grid grid-cols-1 gap-4 md:grid-cols-3"
+              className="lsat-panel p-5"
             >
-              <MetricCard
-                label="Target Score"
-                value={targetScore}
-                detail={gap === 0 ? "Target reached" : `${gap} point gap`}
-                icon={Target}
-              />
-              <MetricCard
-                label="Overall Accuracy"
-                value={`${accuracy}%`}
-                detail={`${questsDone} completed practice sets`}
-                icon={TrendingUp}
-              />
-              <MetricCard
-                label="Study Time"
-                value={formatTime(totalTimeSeconds)}
-                detail="Tracked across practice work"
-                icon={Clock}
-              />
-            </motion.div>
-
-            <motion.div
-              variants={staggerItem}
-              className="border border-border/70 bg-card/80 p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Target Progress
-                  </h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Estimated score movement toward the current LSAT goal.
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-primary" />
+                <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Study Setup
+                </h2>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Preferences used to tailor practice recommendations and pacing.
+              </p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="lsat-panel-soft border p-4">
+                  <p className="text-sm font-semibold">Target outcome</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Target score {targetScore}
                   </p>
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Currently <span className="text-foreground">{currentScore}</span>
-                </p>
+                <div className="lsat-panel-soft border p-4">
+                  <p className="text-sm font-semibold">Recommended session length</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    30-45 minutes for focused LR/RC review
+                  </p>
+                </div>
+                <div className="lsat-panel-soft border p-4">
+                  <p className="text-sm font-semibold">Weekly availability</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {data.weeklyStreakDays.filter((day) => day.completed).length} recent study days logged
+                  </p>
+                </div>
+                <div className="lsat-panel-soft border p-4">
+                  <p className="text-sm font-semibold">Exam timeline</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Add a test date later to personalize pacing
+                  </p>
+                </div>
               </div>
-              <div className="mt-5 flex items-baseline justify-between">
-                <p className="text-3xl font-bold tabular-nums">{targetScore}</p>
-                <p className="text-sm text-muted-foreground">
-                  {gap === 0 ? "At target" : `${gap} points remaining`}
-                </p>
-              </div>
-              <div className="mt-3 h-2 w-full overflow-hidden bg-muted">
-                <motion.div
-                  className="h-full bg-primary"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${targetProgress}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-              </div>
-            </motion.div>
-
-            <motion.div variants={staggerItem}>
-              <PracticeConsistency days={data.weeklyStreakDays} />
-            </motion.div>
-
-            <motion.div variants={staggerItem}>
-              <SatScoreHistory latestAttempt={data.latestSatAttempt} />
             </motion.div>
           </div>
 
@@ -347,30 +219,30 @@ export default function ProfilePage() {
 
             <motion.div
               variants={staggerItem}
-              className="border border-border/70 bg-card/80 p-5"
+              className="lsat-panel p-5"
             >
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Score Context
+                  Account & Preferences
                 </h3>
               </div>
               <dl className="mt-5 space-y-4">
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Score band</dt>
-                  <dd className="text-sm font-medium">{scoreBand(currentScore)}</dd>
+                  <dt className="text-sm text-muted-foreground">Display name</dt>
+                  <dd className="max-w-36 truncate text-sm font-medium">{user.displayName ?? "Student"}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Estimated percentile</dt>
-                  <dd className="text-sm font-medium">{estimatePercentile(currentScore)}</dd>
+                  <dt className="text-sm text-muted-foreground">Prep started</dt>
+                  <dd className="text-sm font-medium">{formatDate(user.createdAt)}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Score gap</dt>
-                  <dd className="text-sm font-medium">{gap} points</dd>
+                  <dt className="text-sm text-muted-foreground">Target score</dt>
+                  <dd className="text-sm font-medium">{targetScore}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Practice sets</dt>
-                  <dd className="text-sm font-medium">{questsDone}</dd>
+                  <dt className="text-sm text-muted-foreground">Notifications</dt>
+                  <dd className="text-sm font-medium">Not configured</dd>
                 </div>
               </dl>
             </motion.div>

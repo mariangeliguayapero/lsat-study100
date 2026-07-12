@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Target, ArrowRight } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Target } from "lucide-react";
 
 export function QuizCompletion({
   skillScore,
@@ -37,14 +37,14 @@ export function QuizCompletion({
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="mx-auto mb-2"
           >
-            <Trophy className="h-12 w-12 text-athena-amber" />
+            <ClipboardCheck className="h-12 w-12 text-primary" />
           </motion.div>
-          <CardTitle className="text-2xl">Quiz Complete!</CardTitle>
+          <CardTitle className="text-2xl">Diagnostic Complete</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">
-              Your skill score
+              Your diagnostic score
             </p>
             <motion.p
               initial={{ opacity: 0 }}

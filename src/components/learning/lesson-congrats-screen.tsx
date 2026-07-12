@@ -184,7 +184,7 @@ export function LessonCongratsScreen({
       </motion.p>
 
       {/* Score badge */}
-      {score && (
+      {score && score.total > 0 && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

@@ -11,9 +11,7 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
-  CheckCircle2,
   Clock,
-  FileText,
   MessageSquareText,
   Search,
   Sparkles,
@@ -45,39 +43,6 @@ const TOPIC_GROUPS = [
   },
 ];
 
-const STUDY_TASKS = [
-  {
-    title: "Flaw Questions",
-    section: "Logical Reasoning",
-    description: "Name the precise reasoning error before you read the choices.",
-  },
-  {
-    title: "Necessary Assumptions",
-    section: "Logical Reasoning",
-    description: "Find the missing bridge and test it with negation.",
-  },
-  {
-    title: "Strengthen/Weaken",
-    section: "Logical Reasoning",
-    description: "Identify the argument’s pressure point and change support strength.",
-  },
-  {
-    title: "Main Point",
-    section: "Reading Comprehension",
-    description: "Separate central claim from supporting detail and paragraph role.",
-  },
-  {
-    title: "Inference/Detail",
-    section: "Reading Comprehension",
-    description: "Choose only what the passage actually supports.",
-  },
-  {
-    title: "Comparative Passages",
-    section: "Reading Comprehension",
-    description: "Track agreement, disagreement, and each author’s purpose.",
-  },
-];
-
 const LEARN_FLOW = [
   "Choose topic",
   "Concept breakdown",
@@ -100,6 +65,22 @@ function timeAgo(dateStr: string): string {
 
 function mentorHref(topic: string) {
   return `/mentor?prompt=${encodeURIComponent(`Help me understand ${topic} for the LSAT and give me a practice plan.`)}`;
+}
+
+function topicDescription(topic: string) {
+  const descriptions: Record<string, string> = {
+    "Flaw Questions": "Name the precise reasoning error before you read the choices.",
+    "Necessary Assumptions": "Find the missing bridge and test it with negation.",
+    "Strengthen/Weaken": "Identify the argument's pressure point and change support strength.",
+    "Parallel Reasoning": "Match argument structure without getting distracted by topic.",
+    "Conditional Logic": "Translate sufficient and necessary conditions cleanly.",
+    "Main Point": "Separate central claim from supporting detail and paragraph role.",
+    "Inference/Detail": "Choose only what the passage actually supports.",
+    "Comparative Passages": "Track agreement, disagreement, and each author's purpose.",
+    "Author Attitude": "Read tone and viewpoint from precise textual signals.",
+    "Passage Structure": "Map each paragraph's role in the author's argument.",
+  };
+  return descriptions[topic] ?? "Build a focused LSAT lesson and practice set.";
 }
 
 export default function MyLearningPage() {
@@ -182,7 +163,7 @@ export default function MyLearningPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
           <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-            <div className="border border-border/70 bg-card/80 p-6">
+            <div className="lsat-panel lsat-panel-highlight p-6">
               <div className="inline-flex items-center gap-2 border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
                 Powered by Athena
@@ -212,7 +193,7 @@ export default function MyLearningPage() {
                   <button
                     onClick={() => handleSubmit(topic)}
                     disabled={isGenerating || !topic.trim()}
-                    className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center justify-center bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="lsat-cta-primary absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center justify-center bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isGenerating ? "Building..." : "Explore"}
                   </button>
@@ -241,7 +222,7 @@ export default function MyLearningPage() {
               </AnimatePresence>
             </div>
 
-            <div className="border border-border/70 bg-card/80 p-6">
+            <div className="lsat-panel p-6">
               <h2 className="text-lg font-semibold">How Learn Works</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Each generated topic follows the same LSAT study loop.
@@ -259,102 +240,91 @@ export default function MyLearningPage() {
             </div>
           </section>
 
-          <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="border border-border/70 bg-card/80 p-5">
+          <section className="lsat-panel mt-8 p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-semibold">Suggested Topics</h2>
+                  <h2 className="text-lg font-semibold">Topic Exploration</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Grouped by LSAT section for faster topic selection.
+                    Choose one topic, then build a lesson or ask Mentor for strategy.
                   </p>
                 </div>
                 <Target className="h-5 w-5 text-primary" />
               </div>
 
-              <div className="mt-5 space-y-5">
+              <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 {TOPIC_GROUPS.map((group) => (
-                  <div key={group.section}>
+                  <div key={group.section} className="lsat-panel-soft border p-4">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                       {group.section}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {group.description}
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 grid gap-3">
                       {group.topics.map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => handleSubmit(t)}
-                          disabled={isGenerating}
-                          className="border border-border bg-background/40 px-3 py-1.5 text-sm transition-colors hover:border-primary/40 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {t}
-                        </button>
+                        <div key={t} className="lsat-panel-soft lsat-interactive border p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold">{t}</p>
+                              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                {topicDescription(t)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleSubmit(t)}
+                              disabled={isGenerating}
+                              className="lsat-cta-primary inline-flex h-8 items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Build lesson
+                              <ArrowRight className="h-3 w-3" />
+                            </button>
+                            <Link
+                              href={mentorHref(t)}
+                              className="lsat-cta-secondary inline-flex h-8 items-center gap-1.5 border px-3 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                            >
+                              <MessageSquareText className="h-3 w-3" />
+                              Ask Mentor
+                            </Link>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="border border-border/70 bg-card/80 p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold">Common LSAT Study Tasks</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Start a lesson or ask the mentor how to approach the topic.
-                  </p>
-                </div>
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-2">
-                {STUDY_TASKS.map((task) => (
-                  <div key={task.title} className="border border-border/70 bg-background/35 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{task.title}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                          {task.section}
-                        </p>
-                      </div>
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {task.description}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSubmit(task.title)}
-                        disabled={isGenerating}
-                        className="inline-flex h-8 items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Build lesson
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
-                      <Link
-                        href={mentorHref(task.title)}
-                        className="inline-flex h-8 items-center gap-1.5 border border-border px-3 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                      >
-                        <MessageSquareText className="h-3 w-3" />
-                        Ask Mentor
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </section>
 
-          <section className="mt-8 border border-border/70 bg-card/80 p-5">
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-primary" />
-              <h2 className="text-lg font-semibold">Use Learn With Review</h2>
+          <section className="lsat-panel mt-8 p-5">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  <h2 className="text-lg font-semibold">Continue with structured review</h2>
+                </div>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  Use the Study Library for an existing LSAT lesson, or open Review for the question type currently costing you the most points.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/study-library"
+                  className="lsat-cta-secondary inline-flex h-10 items-center gap-2 border px-4 text-sm font-semibold transition-colors hover:bg-muted"
+                >
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  Study Library
+                </Link>
+                <Link
+                  href="/learning"
+                  className="lsat-cta-primary inline-flex h-10 items-center gap-2 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Review priorities
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              When Review identifies a weak question type, use Learn to rebuild the underlying concept, then return to focused practice. The goal is not to collect lessons; it is to close score gaps with targeted repetition.
-            </p>
           </section>
         </div>
       </main>

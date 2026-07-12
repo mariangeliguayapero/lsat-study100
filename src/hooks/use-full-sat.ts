@@ -62,7 +62,7 @@ export function useAnswerFullSat() {
       module: number;
       orderIndex: number;
       selectedOption: number;
-      isCorrect: boolean;
+      isCorrect?: boolean;
       responseTimeMs?: number;
     }) => {
       const res = await fetch("/api/full-sat/answer", {

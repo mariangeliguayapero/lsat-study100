@@ -8,6 +8,7 @@ import { PresenceLayer } from "@/components/learning/observation/presence-layer"
 import { WhiteboardCanvas } from "@/components/whiteboard/whiteboard-canvas";
 import { WhiteboardToolbar } from "@/components/whiteboard/whiteboard-toolbar";
 import { WhiteboardTimeline } from "@/components/whiteboard/whiteboard-timeline";
+import { LearningWorkspaceState } from "@/components/whiteboard/learning-workspace-state";
 import { isDiagramStep, type OrbSpotlight, type StepFocus } from "@/components/whiteboard/pen-tip";
 import { TutorQuestionCard } from "@/components/quiz/tutor-question-card";
 import { TutorChatBar } from "@/components/quiz/tutor-chat-bar";
@@ -113,9 +114,7 @@ export function TutorModeOverlay({
 }: TutorModeOverlayProps) {
   const isPractice = !!practiceContent;
   const hasWhiteboard = whiteboardSteps.length > 0;
-  // In practice phase keep the canvas visible (blank) even when no steps yet
-  const showCanvas = isPractice || hasWhiteboard;
-  const cursorEnabled = showCanvas;
+  const cursorEnabled = true;
   const penClientRef = useRef<OrbPoint | null>(null);
   const stepFocusRef = useRef<StepFocus | null>(null);
   const spotlightRef = useRef<OrbSpotlight | null>(null);
@@ -168,23 +167,39 @@ export function TutorModeOverlay({
       <motion.div
         className="absolute inset-0"
         initial={{ opacity: 0 }}
-        animate={{ opacity: showCanvas ? 1 : 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
+        style={{ background: hasWhiteboard ? "var(--wb-canvas)" : undefined }}
       >
-        {showCanvas && (
-          <WhiteboardCanvas
-            steps={whiteboardSteps}
-            visibleStepIds={visibleStepIds}
-            currentStepIndex={currentStepIndex}
-            stepProgress={stepProgress}
-            selections={selections}
-            onElementSelect={onElementSelect}
-            onElementToggle={onElementToggle}
-            onElementsSelect={onElementsSelect}
-            onPenTip={cursorEnabled ? handlePenTip : undefined}
-            onStepFocus={cursorEnabled ? handleStepFocus : undefined}
-            onOrbSpotlight={cursorEnabled ? handleOrbSpotlight : undefined}
-            sequentialDiagrams={cursorEnabled}
+        {hasWhiteboard ? (
+          <div className="absolute inset-x-0 bottom-24 top-16 sm:left-[360px] sm:bottom-28">
+            <div className="mx-auto h-full w-full max-w-[1120px] px-3 sm:px-5 lg:px-8">
+              <WhiteboardCanvas
+                steps={whiteboardSteps}
+                visibleStepIds={visibleStepIds}
+                currentStepIndex={currentStepIndex}
+                stepProgress={stepProgress}
+                selections={selections}
+                onElementSelect={onElementSelect}
+                onElementToggle={onElementToggle}
+                onElementsSelect={onElementsSelect}
+                onPenTip={cursorEnabled ? handlePenTip : undefined}
+                onStepFocus={cursorEnabled ? handleStepFocus : undefined}
+                onOrbSpotlight={cursorEnabled ? handleOrbSpotlight : undefined}
+                sequentialDiagrams={cursorEnabled}
+              />
+            </div>
+          </div>
+        ) : (
+          <LearningWorkspaceState
+            variant={isWhiteboardStreaming || isProcessing ? "loading" : "empty"}
+            title={isPractice ? "Preparing focused practice guidance" : "Tutor workspace ready"}
+            description={
+              isPractice
+                ? "Athena will use this space for the next explanation, reasoning map, or worked example."
+                : "Ask a question or select an answer. Athena's explanation and visual reasoning will appear here."
+            }
+            className="border-0 pb-28 pt-20 sm:pl-[360px]"
           />
         )}
         {cursorEnabled && (
@@ -197,7 +212,7 @@ export function TutorModeOverlay({
             stepFocusRef={stepFocusRef}
             spotlightRef={spotlightRef}
             captionText={orbCaption}
-            suppressCaption={orbMode === "draw"}
+            suppressCaption={orbMode === "draw" || hasWhiteboard}
             restAnchor={{ x: 520, y: 175 }}
           />
         )}

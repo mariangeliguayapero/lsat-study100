@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FullSatContext, type FullSatPhase } from "./full-sat-context";
 import { useAnswerFullSat, useSubmitFullSat } from "@/hooks/use-full-sat";
 import {
-  questionToSectionModule,
   MODULE_TIME_LIMITS,
   type FullSatTestProblem,
   type FullSatAnswer,
@@ -28,6 +27,18 @@ function getModuleTimeLimit(section: FullSatSection, module: number): number {
 
 function getSectionLabel(section: FullSatSection): string {
   return section === "reading_writing" ? "Reading Comprehension" : "Logical Reasoning";
+}
+
+function getProblemPosition(problem: FullSatTestProblem | null): {
+  section: FullSatSection;
+  module: number;
+  orderIndex: number;
+} {
+  return {
+    section: problem?.section ?? "reading_writing",
+    module: problem?.module ?? 1,
+    orderIndex: problem?.orderIndex ?? 0,
+  };
 }
 
 export function FullSatProvider({
@@ -80,7 +91,7 @@ export function FullSatProvider({
 
   // Current problem derived from index
   const currentProblem = problems[currentIndex] ?? null;
-  const currentPos = questionToSectionModule(currentIndex + 1);
+  const currentPos = getProblemPosition(currentProblem);
 
   // Timer — countdown per module
   // Calculate used time per module from answered problems
@@ -169,7 +180,6 @@ export function FullSatProvider({
         module: problem.module,
         orderIndex: problem.orderIndex,
         selectedOption: optionIndex,
-        isCorrect: optionIndex === problem.correctOption,
         responseTimeMs: undefined,
       });
     },
@@ -178,27 +188,43 @@ export function FullSatProvider({
 
   // Section transition
   const finishSection = useCallback(() => {
-    // Record first-section time
     const elapsed = Math.round((Date.now() - sectionStartRef.current) / 1000);
-    setRwTimeUsed((prev) => prev + elapsed);
+    if (currentPos.section === "reading_writing") {
+      setRwTimeUsed((prev) => prev + elapsed);
+    }
 
-    // Move to break phase
     setPhase("break");
     router.push(`/full-sat/${attempt.id}/break`);
-  }, [attempt.id, router]);
+  }, [attempt.id, currentPos.section, router]);
+
+  const resumeAfterBreak = useCallback((nextIndex: number) => {
+    const nextProblem = problems[nextIndex] ?? null;
+    const nextPos = getProblemPosition(nextProblem);
+    const used = nextPos.section === "reading_writing" ? rwTimeUsed : mathTimeUsed;
+    const sectionLimit =
+      getModuleTimeLimit(nextPos.section, 1) +
+      getModuleTimeLimit(nextPos.section, 2);
+
+    setDirection(nextIndex > currentIndex ? 1 : -1);
+    setCurrentIndex(Math.max(0, Math.min(nextIndex, problems.length - 1)));
+    setTimeLeft(Math.max(0, sectionLimit - used));
+    setPhase("active");
+  }, [currentIndex, mathTimeUsed, problems, rwTimeUsed]);
 
   // Submit test
   const submitTest = useCallback(() => {
-    // Record math time
     const elapsed = Math.round((Date.now() - sectionStartRef.current) / 1000);
-    const finalMathTime = mathTimeUsed + elapsed;
+    const finalRwTime =
+      currentPos.section === "reading_writing" ? rwTimeUsed + elapsed : rwTimeUsed;
+    const finalMathTime =
+      currentPos.section === "math" ? mathTimeUsed + elapsed : mathTimeUsed;
 
     setPhase("completed");
 
     submitMutation.mutate(
       {
         attemptId: attempt.id,
-        rwTimeSeconds: rwTimeUsed,
+        rwTimeSeconds: finalRwTime,
         mathTimeSeconds: finalMathTime,
       },
       {
@@ -207,14 +233,18 @@ export function FullSatProvider({
         },
       }
     );
-  }, [attempt.id, rwTimeUsed, mathTimeUsed, submitMutation, router]);
+  }, [attempt.id, currentPos.section, rwTimeUsed, mathTimeUsed, submitMutation, router]);
 
   // Auto-advance when timer hits 0
   useEffect(() => {
     if (timeLeft !== 0 || phase !== "active") return;
 
     const timeout = window.setTimeout(() => {
-      if (currentPos.section === "reading_writing") {
+      const hasNextSection = problems
+        .slice(currentIndex + 1)
+        .some((p) => p.section !== currentPos.section);
+
+      if (hasNextSection) {
         finishSection();
       } else {
         submitTest();
@@ -222,7 +252,7 @@ export function FullSatProvider({
     }, 0);
 
     return () => window.clearTimeout(timeout);
-  }, [timeLeft, phase, currentPos.section, finishSection, submitTest]);
+  }, [timeLeft, phase, currentIndex, currentPos.section, finishSection, submitTest, problems]);
 
   // Status helpers
   const getQuestionStatus = useCallback(
@@ -259,6 +289,7 @@ export function FullSatProvider({
         direction,
         handleSelectAnswer,
         finishSection,
+        resumeAfterBreak,
         submitTest,
         getQuestionStatus,
         totalQuestions: problems.length,

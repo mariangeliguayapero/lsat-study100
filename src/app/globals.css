@@ -62,49 +62,49 @@
 
   /* Athena palette */
   --athena-navy: oklch(0.25 0.05 260);
-  --athena-navy-light: oklch(0.35 0.06 260);
-  --athena-amber: oklch(0.75 0.16 75);
-  --athena-amber-light: oklch(0.85 0.12 80);
+  --athena-navy-light: oklch(0.32 0.055 260);
+  --athena-amber: oklch(0.62 0.13 75);
+  --athena-amber-light: oklch(0.76 0.10 80);
   --athena-success: oklch(0.65 0.17 155);
   --athena-success-light: oklch(0.80 0.12 155);
 
-  /* Light theme — warm, approachable */
-  --background: oklch(0.985 0.002 90);
-  --foreground: oklch(0.18 0.04 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 260);
-  --primary: oklch(0.25 0.05 260);
-  --primary-foreground: oklch(0.98 0.005 90);
-  --secondary: oklch(0.96 0.005 90);
-  --secondary-foreground: oklch(0.25 0.05 260);
-  --muted: oklch(0.96 0.005 90);
-  --muted-foreground: oklch(0.50 0.02 260);
-  --accent: oklch(0.75 0.16 75);
-  --accent-foreground: oklch(0.18 0.04 260);
+  /* Light theme — warm LSAT palette */
+  --background: #f6f2eb;
+  --foreground: #142033;
+  --card: #fffdf8;
+  --card-foreground: #142033;
+  --popover: #fffdf8;
+  --popover-foreground: #142033;
+  --primary: #18365f;
+  --primary-foreground: #fffaf0;
+  --secondary: #eee7dc;
+  --secondary-foreground: #19345c;
+  --muted: #eee7dc;
+  --muted-foreground: #697386;
+  --accent: #9f6b1d;
+  --accent-foreground: #142033;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.005 90);
-  --input: oklch(0.91 0.005 90);
-  --ring: oklch(0.25 0.05 260);
-  --chart-1: oklch(0.25 0.05 260);
-  --chart-2: oklch(0.75 0.16 75);
-  --chart-3: oklch(0.65 0.17 155);
-  --chart-4: oklch(0.60 0.12 240);
-  --chart-5: oklch(0.70 0.15 30);
-  --sidebar: oklch(0.97 0.003 90);
-  --sidebar-foreground: oklch(0.18 0.04 260);
-  --sidebar-primary: oklch(0.25 0.05 260);
-  --sidebar-primary-foreground: oklch(0.98 0.005 90);
-  --sidebar-accent: oklch(0.93 0.005 90);
-  --sidebar-accent-foreground: oklch(0.25 0.05 260);
-  --sidebar-border: oklch(0.91 0.005 90);
-  --sidebar-ring: oklch(0.25 0.05 260);
+  --border: #d9d0c3;
+  --input: #d9d0c3;
+  --ring: #18365f;
+  --chart-1: #18365f;
+  --chart-2: #9f6b1d;
+  --chart-3: #2f7468;
+  --chart-4: #375a86;
+  --chart-5: #b7801f;
+  --sidebar: #f0eae0;
+  --sidebar-foreground: #142033;
+  --sidebar-primary: #18365f;
+  --sidebar-primary-foreground: #fffaf0;
+  --sidebar-accent: #e5ddd0;
+  --sidebar-accent-foreground: #18365f;
+  --sidebar-border: #d9d0c3;
+  --sidebar-ring: #18365f;
 
   /* Tangent lesson accent colors (HSL values for hsl(var(--name)) usage) */
-  --blue: 195 90% 50%;
+  --blue: 205 62% 38%;
   --green: 155 75% 50%;
-  --yellow: 45 95% 58%;
+  --yellow: 40 70% 42%;
   --pink: 340 80% 65%;
   --orange: 25 95% 55%;
   --correct: 155 70% 50%;
@@ -190,6 +190,106 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Shared LSAT product surfaces. These classes add visual hierarchy without
+   changing component layout or behavior. */
+.lsat-panel {
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 84%, var(--primary) 16%);
+  background-color: color-mix(in srgb, var(--card) 97%, var(--primary) 3%);
+  box-shadow:
+    0 1px 2px rgb(20 32 51 / 0.05),
+    0 12px 30px rgb(20 32 51 / 0.065);
+}
+
+.lsat-panel-soft {
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--primary) 12%);
+  background-color: color-mix(in srgb, var(--card) 76%, var(--background) 24%);
+}
+
+.lsat-panel-highlight {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  box-shadow:
+    0 1px 2px rgb(20 32 51 / 0.05),
+    0 14px 34px rgb(20 32 51 / 0.075);
+}
+
+.lsat-selected {
+  border-color: color-mix(in srgb, var(--primary) 62%, var(--border));
+  background-color: color-mix(in srgb, var(--card) 82%, var(--primary) 18%);
+  box-shadow:
+    0 1px 2px rgb(20 32 51 / 0.05),
+    0 12px 28px rgb(20 32 51 / 0.09);
+}
+
+.lsat-interactive {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.lsat-interactive:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+  box-shadow:
+    0 2px 4px rgb(20 32 51 / 0.06),
+    0 16px 34px rgb(20 32 51 / 0.09);
+}
+
+.lsat-cta-primary {
+  border-radius: 6px;
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.lsat-cta-primary:hover {
+  box-shadow: 0 9px 22px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.lsat-cta-secondary {
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--card) 88%, var(--primary) 12%);
+}
+
+.lsat-score-hero {
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 80%, black 20%);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow:
+    0 2px 4px rgb(20 32 51 / 0.08),
+    0 18px 42px rgb(24 54 95 / 0.2);
+}
+
+.lsat-score-hero .text-muted-foreground {
+  color: color-mix(in srgb, var(--primary-foreground) 72%, transparent);
+}
+
+.lsat-score-hero .bg-muted {
+  background-color: color-mix(in srgb, var(--primary-foreground) 16%, transparent);
+}
+
+.dark .lsat-panel,
+.dark .lsat-panel-soft {
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.18);
+}
+
+.dark .lsat-score-hero {
+  border-color: var(--border);
+  background-color: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.2);
+}
+
+.dark .lsat-score-hero .text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.dark .lsat-score-hero .bg-muted {
+  background-color: var(--muted);
 }
 
 /* Tangent lesson pixel-grid background */

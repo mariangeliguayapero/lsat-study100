@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import type { ElementType } from "react";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -9,13 +8,9 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
-  BarChart3,
   CalendarDays,
   ClipboardList,
-  LineChart,
   MessageSquareText,
-  Target,
-  TrendingUp,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { DailyQuestCard } from "@/components/dashboard/daily-quest-card";
@@ -98,7 +93,7 @@ function scoreBand(score: number) {
   if (score >= 160) return "Strong applicant range";
   if (score >= 150) return "Competitive foundation";
   if (score >= 140) return "Developing foundation";
-  return "Baseline";
+  return "Starting range";
 }
 
 function estimatedPercentile(score: number) {
@@ -123,27 +118,90 @@ function formatStudyTime(time: string | null) {
   return `${displayHour}:${minuteText ?? "00"} ${suffix}`;
 }
 
-function MetricCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
+function ScoreProgressCard({
+  currentScore,
+  targetScore,
+  percentile,
+  band,
 }: {
-  label: string;
-  value: string | number;
-  detail: string;
-  icon: ElementType;
+  currentScore: number;
+  targetScore: number;
+  percentile: string;
+  band: string;
 }) {
+  const gap = Math.max(0, targetScore - currentScore);
+  const progress = Math.min(
+    100,
+    Math.max(0, Math.round(((currentScore - 120) / 60) * 100))
+  );
+  const targetProgress = Math.min(
+    100,
+    Math.max(0, ((targetScore - 120) / 60) * 100)
+  );
+
   return (
-    <div className="border bg-card/80 p-4">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          {label}
-        </p>
-        <Icon className="h-4 w-4 text-primary" />
+    <div className="lsat-score-hero p-6 lg:col-span-2 lg:p-7">
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Score Progress
+          </p>
+          <div className="mt-3 flex items-end gap-4">
+            <p className="text-5xl font-semibold tabular-nums">{currentScore}</p>
+            <div className="pb-1">
+              <p className="text-sm font-medium">{band}</p>
+              <p className="text-xs text-muted-foreground">
+                Estimated {percentile} percentile
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-md border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-3 text-left md:text-right dark:border-border dark:bg-background/45">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Target
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">{targetScore}</p>
+          <p className="text-xs text-muted-foreground">
+            {gap === 0 ? "Target reached" : `${gap} points to close`}
+          </p>
+        </div>
       </div>
-      <p className="text-3xl font-semibold tabular-nums">{value}</p>
-      <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
+      <div className="mt-7">
+        <div className="mb-3 flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>120</span>
+          <span className="font-semibold text-primary-foreground dark:text-foreground">
+            Current {currentScore}
+          </span>
+          <span>180</span>
+        </div>
+        <div
+          className="relative h-3 bg-primary-foreground/15 dark:bg-muted"
+          role="progressbar"
+          aria-label="Estimated LSAT score progress"
+          aria-valuemin={120}
+          aria-valuemax={180}
+          aria-valuenow={currentScore}
+        >
+          <div
+            className="h-full bg-primary-foreground/55 transition-[width] duration-500 dark:bg-primary/65"
+            style={{ width: `${progress}%` }}
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -top-1 h-5 w-px bg-accent shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+            style={{ left: `${targetProgress}%` }}
+          />
+          <span
+            aria-hidden="true"
+            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-primary-foreground shadow-sm dark:border-card dark:bg-foreground"
+            style={{ left: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-3 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>{gap === 0 ? "Target reached" : `${gap} points remaining`}</span>
+          <span>Target marker: {targetScore}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -160,7 +218,7 @@ function SectionAccuracy({
   total: number;
 }) {
   return (
-    <div className="border bg-background/35 p-4">
+    <div className="lsat-panel-soft border p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold">{label}</p>
@@ -180,11 +238,19 @@ function SectionAccuracy({
   );
 }
 
-function PracticeHeatmap({ days }: { days: StreakDay[] }) {
+function PracticeHeatmap({
+  days,
+  studyTime,
+  completedSets,
+}: {
+  days: StreakDay[];
+  studyTime: string;
+  completedSets: number;
+}) {
   const practiced = days.filter((day) => day.completed).length;
 
   return (
-    <div className="border bg-card/80 p-5">
+    <div className="lsat-panel p-5">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -193,6 +259,9 @@ function PracticeHeatmap({ days }: { days: StreakDay[] }) {
           <h2 className="mt-2 text-xl font-semibold">
             {practiced} day{practiced === 1 ? "" : "s"} practiced this week
           </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Study time {studyTime} · {completedSets} completed sets
+          </p>
         </div>
         <CalendarDays className="h-5 w-5 text-primary" />
       </div>
@@ -217,7 +286,7 @@ function PracticeHeatmap({ days }: { days: StreakDay[] }) {
         ))}
       </div>
       <p className="mt-4 text-xs text-muted-foreground">
-        Consistency is measured by completed daily practice sets, not streak rewards.
+        Consistency is measured by completed daily practice sets and recent study activity.
       </p>
     </div>
   );
@@ -307,7 +376,6 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const targetScore = data.user.targetScore ?? data.targetScore ?? 170;
-  const scoreGap = Math.max(0, targetScore - currentScore);
   const lr = progress?.sectionScores.math ?? {
     total: 0,
     correct: 0,
@@ -321,8 +389,11 @@ export default function DashboardPage() {
     scaledScore: 120,
   };
   const weakAreas =
-    progress?.subtopicPerformance.filter((area) => area.total > 0).slice(0, 3) ?? [];
+    progress?.subtopicPerformance.filter((area) => area.total > 0).slice(0, 2) ?? [];
+  const nextReview = weakAreas[0];
   const displayName = data.user.displayName?.split(" ")[0] ?? "Student";
+  const completedSets = progress?.overallStats.sessionCount ?? data.completedSessions;
+  const studyTime = formatStudyTime(data.todayStudyTime);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -346,52 +417,31 @@ export default function DashboardPage() {
                 Welcome back, {displayName}
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                Track score movement, section accuracy, review priorities, and your next adaptive practice set.
+                See the next best action for today, from adaptive practice to targeted review.
               </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="border bg-card/70 px-3 py-2">
-                Study time: {formatStudyTime(data.todayStudyTime)}
-              </span>
-              <span className="border bg-card/70 px-3 py-2">
-                {progress?.overallStats.sessionCount ?? data.completedSessions} completed sets
-              </span>
             </div>
           </motion.header>
 
           <motion.section
             variants={staggerItem}
-            className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+            className="grid gap-4 lg:grid-cols-3"
           >
-            <MetricCard
-              label="Estimated Score"
-              value={currentScore}
-              detail={scoreBand(currentScore)}
-              icon={LineChart}
+            <ScoreProgressCard
+              currentScore={currentScore}
+              targetScore={targetScore}
+              percentile={estimatedPercentile(currentScore)}
+              band={scoreBand(currentScore)}
             />
-            <MetricCard
-              label="Target Score"
-              value={targetScore}
-              detail={scoreGap === 0 ? "Target reached" : `${scoreGap} points to target`}
-              icon={Target}
-            />
-            <MetricCard
-              label="Score Gap"
-              value={scoreGap}
-              detail="Based on current estimated score"
-              icon={TrendingUp}
-            />
-            <MetricCard
-              label="Estimated Percentile"
-              value={estimatedPercentile(currentScore)}
-              detail="Approximate score-band context"
-              icon={BarChart3}
+            <PracticeHeatmap
+              days={data.weeklyStreakDays}
+              studyTime={studyTime}
+              completedSets={completedSets}
             />
           </motion.section>
 
           <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_0.85fr]">
             <motion.div variants={staggerContainer} className="space-y-5">
-              <motion.section variants={staggerItem} className="border bg-card/80 p-5">
+              <motion.section variants={staggerItem} className="lsat-panel p-5">
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -427,53 +477,62 @@ export default function DashboardPage() {
                 <DailyQuestCard />
               </motion.div>
 
-              <motion.section variants={staggerItem} className="border bg-card/80 p-5">
+              <motion.section variants={staggerItem} className="lsat-panel p-5">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Review Priorities
+                      Today&apos;s Focus
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold">Weak area summary</h2>
+                    <h2 className="mt-2 text-xl font-semibold">Next review action</h2>
                   </div>
                   <ClipboardList className="h-5 w-5 text-primary" />
                 </div>
 
-                {weakAreas.length > 0 ? (
-                  <div className="space-y-3">
-                    {weakAreas.map((area) => (
+                {nextReview ? (
+                  <div className="lsat-panel-soft border p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{nextReview.name}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          {nextReview.topicName} · {nextReview.correct}/{nextReview.total} correct.
+                          Review the concept, then test it in a short focused set.
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-primary">
+                        {nextReview.accuracy}% accuracy
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
                       <Link
-                        key={area.id}
-                        href={`/learning/${area.topicSlug}/${area.slug}/micro-lesson`}
-                        className="block border bg-background/35 p-4 transition-colors hover:border-primary/40"
+                        href={`/learning/${nextReview.topicSlug}/${nextReview.slug}/quiz`}
+                        className="lsat-cta-primary inline-flex items-center gap-2 bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
                       >
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold">{area.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {area.topicName}, {area.correct}/{area.total} correct
-                            </p>
-                          </div>
-                          <span className="text-sm font-semibold tabular-nums text-primary">
-                            {area.accuracy}%
-                          </span>
-                        </div>
+                        Start focused practice
+                        <ArrowRight className="h-3 w-3" />
                       </Link>
-                    ))}
+                      <Link
+                        href="/learning"
+                        className="lsat-cta-secondary inline-flex items-center gap-2 border px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                      >
+                        View review plan
+                      </Link>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Complete LSAT practice sets to surface focused review priorities.
-                  </p>
+                  <div className="flex flex-col gap-4 border border-dashed border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Complete a practice set to generate a targeted review action.
+                    </p>
+                    <Link href="/study-library" className="text-sm font-semibold text-primary hover:underline">
+                      Browse Study Library
+                    </Link>
+                  </div>
                 )}
               </motion.section>
             </motion.div>
 
             <motion.aside variants={staggerContainer} className="space-y-5">
-              <motion.div variants={staggerItem}>
-                <PracticeHeatmap days={data.weeklyStreakDays} />
-              </motion.div>
-
-              <motion.div variants={staggerItem} className="border bg-card/80 p-5">
+              <motion.div variants={staggerItem} className="lsat-panel lsat-panel-highlight p-5">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -488,7 +547,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/mentor"
-                  className="mt-5 inline-flex items-center gap-2 border bg-background/40 px-4 py-2 text-sm font-medium text-primary transition-colors hover:border-primary/50"
+                  className="lsat-cta-secondary mt-5 inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium text-primary transition-colors hover:border-primary/50"
                 >
                   Build study plan
                   <ArrowRight className="h-4 w-4" />

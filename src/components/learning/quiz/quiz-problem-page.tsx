@@ -33,6 +33,7 @@ export function QuizProblemPageContent() {
     setFeedbackMap,
     setLockedIds,
     handleSelectAnswer,
+    handleGoNext,
     stuckModalShownIds,
     markStuckModalShown,
   } = useQuizRouteContext();
@@ -175,8 +176,8 @@ export function QuizProblemPageContent() {
         onNavigate={() => {}}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex w-full flex-col md:flex-row md:divide-x">
+      <div className="flex flex-1 overflow-hidden bg-card/45">
+        <div className="m-0 flex w-full flex-col border-border/70 md:m-4 md:flex-row md:divide-x md:border">
           <QuestionPanel
             problem={currentProblem}
             questionNumber={quiz.currentIndex + 1}
@@ -213,7 +214,7 @@ export function QuizProblemPageContent() {
         total={problems.length}
         unansweredCount={quiz.unansweredCount}
         onBack={quiz.goBack}
-        onNext={quiz.goNext}
+        onNext={handleGoNext}
         onGoTo={quiz.goTo}
         onSubmit={quiz.submit}
         getStatus={quiz.getQuestionStatus}

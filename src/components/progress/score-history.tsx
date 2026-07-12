@@ -14,6 +14,11 @@ type ScorePoint = {
   score: number;
 };
 
+const chartTextColor = "var(--foreground)";
+const chartMutedTextColor = "var(--muted-foreground)";
+const chartForegroundColor = "var(--foreground)";
+const chartBackgroundColor = "var(--background)";
+
 export function ScoreHistory({ data }: { data: ScorePoint[] }) {
   if (data.length === 0) {
     return (
@@ -68,34 +73,37 @@ export function ScoreHistory({ data }: { data: ScorePoint[] }) {
           <LineChart data={chartData}>
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 11 }}
-              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 11, fill: chartTextColor }}
+              stroke={chartMutedTextColor}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11 }}
-              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 11, fill: chartTextColor }}
+              stroke={chartMutedTextColor}
               tickLine={false}
               axisLine={false}
               width={40}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
                 fontSize: 12,
+                color: chartForegroundColor,
               }}
+              labelStyle={{ color: chartForegroundColor }}
+              itemStyle={{ color: chartForegroundColor }}
             />
             <Line
               type="monotone"
               dataKey="score"
-              stroke="hsl(var(--foreground))"
+              stroke={chartForegroundColor}
               strokeWidth={2}
               dot={{
                 r: 5,
-                fill: "hsl(var(--background))",
-                stroke: "hsl(var(--foreground))",
+                fill: chartBackgroundColor,
+                stroke: chartForegroundColor,
                 strokeWidth: 2,
               }}
               activeDot={{ r: 6 }}

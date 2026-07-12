@@ -17,8 +17,10 @@ export type FullSatAttempt = {
   status: FullSatAttemptStatus;
   rwRawScore: number | null;
   rwScaledScore: number | null;
+  rwTotalQuestions?: number;
   mathRawScore: number | null;
   mathScaledScore: number | null;
+  mathTotalQuestions?: number;
   totalScore: number | null;
   rwModule1Correct: number;
   mathModule1Correct: number;
@@ -131,8 +133,10 @@ export type FullSatStartResponse = {
 export type FullSatSubmitResponse = {
   rwRawScore: number;
   rwScaledScore: number;
+  rwTotalQuestions?: number;
   mathRawScore: number;
   mathScaledScore: number;
+  mathTotalQuestions?: number;
   totalScore: number;
 };
 

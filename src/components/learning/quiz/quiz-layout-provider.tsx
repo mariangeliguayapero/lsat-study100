@@ -65,6 +65,9 @@ export function QuizLayoutProvider({
   const [feedbackMap, setFeedbackMap] = useState<Map<string, FeedbackState>>(new Map());
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const pendingAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeProblemIdRef = useRef(problems[quiz.currentIndex]?.id);
+  const isAdvancingRef = useRef(false);
   const [stuckModalShownIds, setStuckModalShownIds] = useState<Set<string>>(new Set());
   const markStuckModalShown = useCallback((problemId: string) => {
     setStuckModalShownIds((prev) => new Set(prev).add(problemId));
@@ -89,6 +92,46 @@ export function QuizLayoutProvider({
   useEffect(() => {
     prevIndexRef.current = quiz.currentIndex;
   }, [quiz.currentIndex]);
+
+  const cancelPendingAdvance = useCallback(() => {
+    if (pendingAdvanceRef.current) {
+      clearTimeout(pendingAdvanceRef.current);
+      pendingAdvanceRef.current = null;
+    }
+  }, []);
+
+  const advanceFromProblem = useCallback(
+    (problemId: string) => {
+      if (isAdvancingRef.current || activeProblemIdRef.current !== problemId) return;
+
+      isAdvancingRef.current = true;
+      cancelPendingAdvance();
+      setFeedbackMap((prev) => {
+        const next = new Map(prev);
+        next.delete(problemId);
+        return next;
+      });
+      quiz.goNext();
+    },
+    [cancelPendingAdvance, quiz]
+  );
+
+  const handleGoNext = useCallback(() => {
+    const problemId = problems[quiz.currentIndex]?.id;
+    if (problemId) advanceFromProblem(problemId);
+  }, [advanceFromProblem, problems, quiz.currentIndex]);
+
+  useEffect(() => {
+    activeProblemIdRef.current = problems[quiz.currentIndex]?.id;
+    isAdvancingRef.current = false;
+    cancelPendingAdvance();
+  }, [cancelPendingAdvance, problems, quiz.currentIndex]);
+
+  useEffect(() => {
+    if (onTutorRoute || quiz.phase !== "active") cancelPendingAdvance();
+  }, [cancelPendingAdvance, onTutorRoute, quiz.phase]);
+
+  useEffect(() => cancelPendingAdvance, [cancelPendingAdvance]);
 
   // Pause timer when on tutor sub-route
   useEffect(() => {
@@ -126,9 +169,10 @@ export function QuizLayoutProvider({
           }, 1000);
         } else {
           recordEvent({ problemId, eventType: "answer_correct", responseTimeMs, selectedOption: optionIndex });
-          setTimeout(() => {
-            setFeedbackMap((prev) => { const n = new Map(prev); n.delete(problemId); return n; });
-            quiz.goNext();
+          cancelPendingAdvance();
+          pendingAdvanceRef.current = setTimeout(() => {
+            pendingAdvanceRef.current = null;
+            advanceFromProblem(problemId);
           }, 1200);
         }
       } else {
@@ -152,7 +196,7 @@ export function QuizLayoutProvider({
         }, 2000);
       }
     },
-    [lockedIds, problems, quiz, onTutorRoute, recordEvent]
+    [advanceFromProblem, cancelPendingAdvance, lockedIds, problems, quiz, onTutorRoute, recordEvent]
   );
 
   // Save results when submitted
@@ -203,6 +247,7 @@ export function QuizLayoutProvider({
         setFeedbackMap,
         setLockedIds,
         handleSelectAnswer,
+        handleGoNext,
         stuckModalShownIds,
         markStuckModalShown,
         practiceEntryModalShownIds,

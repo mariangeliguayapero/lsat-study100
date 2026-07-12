@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useFullSatStatus, useStartFullSat, useFullSatHistory } from "@/hooks/use-full-sat";
 import { legacyCompositeToLsatScore } from "@/lib/lsat-score";
 import { motion } from "framer-motion";
-import { Clock, Trophy, Lock, ArrowRight, ChevronLeft } from "lucide-react";
+import { Clock, FileText, Lock, ArrowRight, ChevronLeft } from "lucide-react";
 
 function formatDaysUntil(dateString: string): string {
   const diff = new Date(dateString).getTime() - Date.now();
@@ -40,7 +40,7 @@ export default function FullSatLandingPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8 md:py-10">
       <button
         onClick={() => router.push("/dashboard")}
         className="mb-6 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -52,7 +52,7 @@ export default function FullSatLandingPage() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="lsat-panel lsat-panel-highlight mb-8 p-6 md:p-7"
       >
         <h1 className="text-2xl font-bold tracking-tight">Full LSAT Practice Test</h1>
         <p className="mt-2 text-muted-foreground">
@@ -66,9 +66,9 @@ export default function FullSatLandingPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-6 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3"
+          className="lsat-panel mb-6 flex items-center gap-3 border-accent/40 bg-accent/10 px-4 py-3"
         >
-          <Lock className="h-5 w-5 text-amber-500 shrink-0" />
+          <Lock className="h-5 w-5 shrink-0 text-[var(--chart-2)]" />
           <div>
             <p className="text-sm font-medium">Cooldown Active</p>
             <p className="text-xs text-muted-foreground">
@@ -87,7 +87,7 @@ export default function FullSatLandingPage() {
         >
           <button
             onClick={handleResume}
-            className="w-full rounded-lg border-2 border-primary bg-primary/5 px-6 py-4 text-left transition-colors hover:bg-primary/10"
+            className="lsat-panel lsat-interactive w-full border-2 border-primary bg-primary/5 px-6 py-4 text-left hover:bg-primary/10"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -117,7 +117,7 @@ export default function FullSatLandingPage() {
               key={test.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-lg border bg-card p-5"
+              className="lsat-panel p-5"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -125,7 +125,7 @@ export default function FullSatLandingPage() {
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
-                      134 min
+                      Timed sections
                     </span>
                     <span>Timed LSAT-style set</span>
                     <span>Logical Reasoning + Reading Comprehension</span>
@@ -134,7 +134,7 @@ export default function FullSatLandingPage() {
                 <button
                   onClick={() => handleStart(test.id)}
                   disabled={!status.canTakeTest || !!status.currentAttempt || startMutation.isPending}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="lsat-cta-primary bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {startMutation.isPending ? "Starting..." : "Start"}
                 </button>
@@ -153,9 +153,15 @@ export default function FullSatLandingPage() {
           {history.attempts
             .filter((a) => a.status === "completed")
             .map((attempt) => (
-              <div
+              <button
                 key={attempt.id}
-                className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+                type="button"
+                onClick={() => {
+                  if (attempt.id) router.push(`/full-sat/${attempt.id}/results`);
+                }}
+                disabled={!attempt.id}
+                aria-label={attempt.id ? "View LSAT practice score report" : "Score report unavailable"}
+                className="lsat-panel lsat-interactive flex w-full flex-col gap-3 p-4 text-left hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm font-medium">
@@ -174,12 +180,16 @@ export default function FullSatLandingPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-500" />
+                  <FileText className="h-4 w-4 text-primary" />
                   <span className="text-lg font-bold tabular-nums">
                     {legacyCompositeToLsatScore(attempt.totalScore)}
                   </span>
+                  <span className="hidden text-xs font-medium uppercase tracking-widest text-muted-foreground sm:inline">
+                    {attempt.id ? "View report" : "Report unavailable"}
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </div>
-              </div>
+              </button>
             ))}
         </div>
       )}

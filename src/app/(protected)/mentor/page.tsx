@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -56,33 +56,29 @@ type ProgressData = {
   };
 };
 
-const STARTER_PROMPTS = [
-  "Build a 7-day Logical Reasoning plan",
-  "Explain my weakest area",
-  "What should I review before timed practice?",
-  "How do I improve Reading Comprehension?",
-];
-
 const MENTOR_MODES = [
   {
+    key: "ask",
     title: "Ask Mentor",
     description: "Get a direct answer about LSAT strategy, timing, or a concept.",
     prompt: "How should I think about my current LSAT prep?",
     icon: Brain,
   },
   {
+    key: "plan",
     title: "Build Study Plan",
     description: "Turn your target score and recent accuracy into a weekly plan.",
     prompt: "Build a study plan for this week based on my current progress.",
     icon: Target,
   },
   {
+    key: "weak",
     title: "Explore Weak Areas",
     description: "Identify what to review next and how to practice it.",
     prompt: "Explain my weakest area and give me the next three steps.",
     icon: BarChart3,
   },
-];
+] as const;
 
 function estimateScore(progress?: ProgressData) {
   if (!progress) return 120;
@@ -98,7 +94,7 @@ function scoreBand(score: number): string {
   if (score >= 165) return "Competitive";
   if (score >= 160) return "Strong foundation";
   if (score >= 150) return "Developing";
-  return "Baseline";
+  return "Starting range";
 }
 
 function weakestArea(progress?: ProgressData) {
@@ -115,6 +111,7 @@ function weakestArea(progress?: ProgressData) {
 export default function MentorPage() {
   const searchParams = useSearchParams();
   const [input, setInput] = useState(() => searchParams.get("prompt") ?? "");
+  const [selectedMode, setSelectedMode] = useState<(typeof MENTOR_MODES)[number]["key"]>("ask");
   const [selections, setSelections] = useState<SelectedElement[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -163,6 +160,32 @@ export default function MentorPage() {
   const targetScore = progress?.user.targetScore ?? progress?.targetScore ?? 170;
   const scoreGap = Math.max(targetScore - score, 0);
   const currentWeakestArea = weakestArea(progress);
+  const starterPrompts = useMemo(() => {
+    const weakName = currentWeakestArea?.name ?? "my weakest LSAT area";
+    const recentAccuracy = progress?.overallStats.accuracy ?? 0;
+    if (selectedMode === "plan") {
+      return [
+        `Build a 7-day plan to move from ${score} toward ${targetScore}.`,
+        `Plan my next three study sessions around ${weakName}.`,
+        `Create a timed-practice schedule for a ${scoreGap}-point score gap.`,
+        `Balance Logical Reasoning and Reading Comprehension this week.`,
+      ];
+    }
+    if (selectedMode === "weak") {
+      return [
+        `Explain why ${weakName} is costing me points.`,
+        `Give me a drill sequence for ${weakName}.`,
+        `What should I review before another timed set at ${recentAccuracy}% accuracy?`,
+        "Turn my recent misses into a focused review checklist.",
+      ];
+    }
+    return [
+      "How should I think about my current LSAT prep?",
+      "What is the highest-leverage thing to do today?",
+      "How do I improve Reading Comprehension without rereading too much?",
+      "What should I do when two answer choices feel close?",
+    ];
+  }, [currentWeakestArea?.name, progress?.overallStats.accuracy, score, scoreGap, selectedMode, targetScore]);
 
   const checkNearBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -277,7 +300,7 @@ export default function MentorPage() {
           {messages.length === 0 && (
             <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[1.05fr_0.95fr]">
               <div className="space-y-5">
-                <div className="border border-border/70 bg-card/80 p-6">
+                <div className="lsat-panel lsat-panel-highlight p-6">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-2xl">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
@@ -290,7 +313,7 @@ export default function MentorPage() {
                         Use Athena to connect your Learn topics, Review priorities, and practice results into a concrete LSAT plan. Ask a question, build a schedule, or dig into the area costing you the most points.
                       </p>
                     </div>
-                    <div className="border border-border/70 bg-background/40 p-4 lg:min-w-48">
+                    <div className="lsat-panel-soft border p-4 lg:min-w-48">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                         Estimated LSAT
                       </p>
@@ -307,8 +330,16 @@ export default function MentorPage() {
                     <button
                       key={item.title}
                       type="button"
-                      onClick={() => setInput(item.prompt)}
-                      className="min-h-44 border border-border/70 bg-card/80 p-5 text-left transition-colors hover:bg-muted/40"
+                      onClick={() => {
+                        setSelectedMode(item.key);
+                        setInput(item.prompt);
+                      }}
+                      className={[
+                        "lsat-panel lsat-interactive min-h-44 border p-5 text-left hover:bg-muted/40",
+                        selectedMode === item.key
+                          ? "lsat-selected"
+                          : "border-border/70",
+                      ].join(" ")}
                     >
                       <item.icon className="h-5 w-5 text-primary" />
                       <p className="mt-5 font-semibold">{item.title}</p>
@@ -321,7 +352,7 @@ export default function MentorPage() {
               </div>
 
               <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
-                <div className="border border-border/70 bg-card/80 p-5">
+                <div className="lsat-panel p-5">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-primary" />
                     <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
@@ -350,22 +381,22 @@ export default function MentorPage() {
                   </dl>
                 </div>
 
-                <div className="border border-border/70 bg-card/80 p-5">
+                <div className="lsat-panel p-5">
                   <div className="mb-5 flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-lg font-semibold">Starter Prompts</h2>
+                      <h2 className="text-lg font-semibold">Performance-aware prompts</h2>
                       <p className="text-sm text-muted-foreground">
-                        Start from a practical LSAT planning question.
+                        These update based on the selected mentor mode.
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-primary" />
                   </div>
                   <div className="grid gap-2">
-                    {STARTER_PROMPTS.map((s) => (
+                    {starterPrompts.map((s) => (
                       <button
                         key={s}
                         onClick={() => handleSuggestion(s)}
-                        className="border border-border/70 bg-background/35 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                        className="lsat-panel-soft lsat-interactive border px-4 py-3 text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                       >
                         {s}
                       </button>
@@ -374,7 +405,7 @@ export default function MentorPage() {
                 </div>
               </div>
 
-              <div className="border border-border/70 bg-card/80 p-4 xl:col-span-2">
+              <div className="lsat-panel p-4 xl:col-span-2">
                 <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold">Ask Mentor</h2>
@@ -387,7 +418,7 @@ export default function MentorPage() {
                   </p>
                 </div>
                 {mode === "text" ? (
-                  <form onSubmit={handleSubmit} className="flex items-end gap-2 border border-border/70 bg-background/45 p-2">
+                  <form onSubmit={handleSubmit} className="lsat-panel-soft flex items-end gap-2 border p-2">
                     <textarea
                       ref={textareaRef}
                       value={input}
@@ -424,7 +455,7 @@ export default function MentorPage() {
                     </motion.div>
                   </form>
                 ) : (
-                  <div className="flex flex-col items-center gap-4 border border-border/70 bg-background/45 p-5">
+                  <div className="lsat-panel-soft flex flex-col items-center gap-4 border p-5">
                     <VoiceOrb
                       state={voiceOrbState}
                       amplitude={amplitude}
@@ -500,7 +531,7 @@ export default function MentorPage() {
             onSubmit={handleSubmit}
             className="border-t bg-background/80 p-3 md:px-6 lg:px-8"
           >
-            <div className={hasWhiteboard ? "flex items-end gap-2" : "mx-auto flex w-full max-w-7xl items-end gap-2 border border-border/70 bg-card/80 p-2"}>
+            <div className={hasWhiteboard ? "flex items-end gap-2" : "lsat-panel mx-auto flex w-full max-w-7xl items-end gap-2 p-2"}>
               <textarea
                 ref={textareaRef}
                 value={input}

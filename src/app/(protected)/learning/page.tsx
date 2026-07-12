@@ -1,33 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowRight,
+  BarChart3,
   BookOpen,
-  BookOpenCheck,
   Brain,
-  Clock,
+  LibraryBig,
+  MessageSquareText,
   PlayCircle,
   Target,
   TrendingUp,
 } from "lucide-react";
-import { getTopicIcon } from "@/lib/topic-icons";
 import { cn } from "@/lib/utils";
-
-type Topic = {
-  id: string;
-  slug: string;
-  name: string;
-  overview: string;
-  estimatedTotalMinutes: number;
-  satRelevance: { percentageOfTest: number };
-  subtopics: { id: string }[];
-  subject: string;
-};
 
 type TopicPerformance = {
   name: string;
@@ -50,15 +39,6 @@ type SubtopicPerformance = {
   accuracy: number;
 };
 
-type RecentSession = {
-  id: string;
-  subtopicName: string;
-  score: number;
-  totalQuestions: number;
-  timeElapsedSeconds: number;
-  date: string;
-};
-
 type SectionScore = {
   subject: string;
   total: number;
@@ -75,7 +55,6 @@ type ProgressData = {
   targetScore: number | null;
   topicPerformance: TopicPerformance[];
   subtopicPerformance?: SubtopicPerformance[];
-  recentSessions: RecentSession[];
   overallStats: {
     totalQuestions: number;
     accuracy: number;
@@ -96,20 +75,6 @@ type ProgressData = {
   };
 };
 
-type LearningData = { topics: Topic[] };
-
-const SUBJECTS = [
-  { key: "logical-reasoning", label: "Logical Reasoning" },
-  { key: "reading-comprehension", label: "Reading Comprehension" },
-] as const;
-
-function formatSessionDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
-}
-
 function estimatePercentile(score: number): string {
   if (score >= 175) return "99th+";
   if (score >= 170) return "96th-98th";
@@ -127,14 +92,14 @@ function scoreBand(score: number): string {
   if (score >= 165) return "Competitive";
   if (score >= 160) return "Strong foundation";
   if (score >= 150) return "Developing";
-  return "Baseline";
+  return "Starting range";
 }
 
 function accuracyTone(accuracy: number, total: number) {
   if (total === 0) return "text-muted-foreground";
-  if (accuracy < 50) return "text-red-400";
-  if (accuracy < 70) return "text-amber-300";
-  return "text-emerald-300";
+  if (accuracy < 50) return "text-destructive";
+  if (accuracy < 70) return "text-[var(--chart-2)]";
+  return "text-[var(--chart-3)]";
 }
 
 function weakAreaGuidance(slug: string | null | undefined) {
@@ -144,7 +109,7 @@ function weakAreaGuidance(slug: string | null | undefined) {
     case "assumption-questions":
       return "Assumption work builds the core LR habit: finding the missing bridge between evidence and conclusion.";
     case "strengthen-weaken":
-      return "Strengthen and weaken questions reward pressure-point thinking, which transfers directly into most LR families.";
+      return "Strengthen and weaken questions build pressure-point thinking, which transfers directly into most LR families.";
     case "main-point-structure":
       return "Main point and structure work improves passage mapping, timing, and answer elimination on Reading Comprehension.";
     case "inference-detail":
@@ -183,7 +148,7 @@ function SummaryCard({
   icon: typeof Target;
 }) {
   return (
-    <div className="border border-border/70 bg-card/80 p-5">
+    <div className="lsat-panel p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {label}
@@ -197,32 +162,18 @@ function SummaryCard({
 }
 
 export default function LearningPage() {
-  const [activeSubject, setActiveSubject] = useState<string>(
-    "logical-reasoning"
-  );
-
   const {
     data,
     isLoading: loading,
     isError,
-  } = useQuery<{ learning: LearningData; progress: ProgressData }>({
+  } = useQuery<ProgressData>({
     queryKey: ["review"],
     queryFn: async () => {
-      const [learningRes, progressRes] = await Promise.all([
-        fetch("/api/learning"),
-        fetch("/api/progress"),
-      ]);
-
-      if (!learningRes.ok || !progressRes.ok) {
+      const progressRes = await fetch("/api/progress");
+      if (!progressRes.ok) {
         throw new Error("Failed to load review data");
       }
-
-      const [learning, progress] = await Promise.all([
-        learningRes.json(),
-        progressRes.json(),
-      ]);
-
-      return { learning, progress };
+      return progressRes.json();
     },
     staleTime: 5 * 60_000,
   });
@@ -231,18 +182,7 @@ export default function LearningPage() {
     if (isError) toast.error("Failed to load review data");
   }, [isError]);
 
-  const topics = data?.learning.topics ?? [];
-  const progress = data?.progress;
-
-  const filteredTopics = topics.filter((t) => t.subject === activeSubject);
-
-  const topicPerfBySlug = useMemo(() => {
-    const map = new Map<string, TopicPerformance>();
-    for (const item of progress?.topicPerformance ?? []) {
-      map.set(item.slug, item);
-    }
-    return map;
-  }, [progress?.topicPerformance]);
+  const progress = data;
 
   const weakAreas = useMemo(() => {
     const subtopicWeakAreas = [...(progress?.subtopicPerformance ?? [])]
@@ -282,9 +222,10 @@ export default function LearningPage() {
       2
     : 0;
   const estimatedScore = Math.round(120 + (averageAccuracy / 100) * 60);
+  const targetScore = progress?.user.targetScore ?? progress?.targetScore ?? 170;
+  const scoreGap = Math.max(targetScore - estimatedScore, 0);
   const masteredTopics =
     progress?.topicMastery.items.filter((topic) => topic.mastered) ?? [];
-  const recentSessions = progress?.recentSessions.slice(0, 3) ?? [];
 
   const focusLessonHref = nextFocus?.slug
     ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/micro-lesson`
@@ -333,7 +274,7 @@ export default function LearningPage() {
         <SummaryCard
           label="Estimated Score"
           value={estimatedScore}
-          detail={`${scoreBand(estimatedScore)} · ${estimatePercentile(estimatedScore)} percentile`}
+          detail={scoreGap === 0 ? `At or above ${targetScore} target` : `${scoreGap} points from ${targetScore} target`}
           icon={TrendingUp}
         />
         <SummaryCard
@@ -357,7 +298,7 @@ export default function LearningPage() {
       </section>
 
       <section className="mb-8 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="border border-primary/35 bg-card/90 p-6 shadow-[0_0_40px_rgba(20,184,166,0.08)]">
+        <div className="lsat-panel lsat-panel-highlight border-primary/35 p-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -368,7 +309,7 @@ export default function LearningPage() {
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 {nextFocus
-                  ? `${nextFocus.topicName} · ${nextFocus.subject === "logical-reasoning" ? "Logical Reasoning" : "Reading Comprehension"}`
+                  ? `${nextFocus.subject === "logical-reasoning" ? "Logical Reasoning" : "Reading Comprehension"} · ${nextFocus.name}`
                   : "Complete a daily practice set or topic quiz to activate your review plan."}
               </p>
             </div>
@@ -394,14 +335,14 @@ export default function LearningPage() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href={focusPracticeHref}
-              className="inline-flex h-11 items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              className="lsat-cta-primary inline-flex h-11 items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               <PlayCircle className="h-4 w-4" />
               Start focused practice
             </Link>
             <Link
               href={focusLessonHref}
-              className="inline-flex h-11 items-center justify-center gap-2 border border-border bg-background/50 px-5 text-sm font-semibold text-foreground transition hover:bg-muted"
+              className="lsat-cta-secondary inline-flex h-11 items-center justify-center gap-2 border px-5 text-sm font-semibold text-foreground transition hover:bg-muted"
             >
               <BookOpen className="h-4 w-4" />
               Open lesson
@@ -409,7 +350,7 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="border border-border/70 bg-card/80 p-5">
+        <div className="lsat-panel p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Mastered Topics</h2>
@@ -439,8 +380,8 @@ export default function LearningPage() {
         </div>
       </section>
 
-      <section className="mb-8 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="border border-border/70 bg-card/80 p-5">
+      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="lsat-panel p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Review Priorities</h2>
@@ -460,7 +401,7 @@ export default function LearningPage() {
                 <Link
                   key={area.id}
                   href={href}
-                  className="block border border-border/70 bg-background/35 p-4 transition-colors hover:bg-muted/40"
+                  className="lsat-panel-soft lsat-interactive block border p-4 hover:bg-muted/40"
                 >
                   <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
@@ -500,143 +441,48 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="border border-border/70 bg-card/80 p-5">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Recent Practice</h2>
-              <p className="text-sm text-muted-foreground">
-                Latest attempts that shaped this review plan.
-              </p>
-            </div>
-            <BookOpenCheck className="h-5 w-5 text-primary" />
-          </div>
-
-          <div className="space-y-3">
-            {recentSessions.map((session) => {
-              const accuracy =
-                session.totalQuestions > 0
-                  ? Math.round((session.score / session.totalQuestions) * 100)
-                  : 0;
-              return (
-                <div
-                  key={session.id}
-                  className="border-b border-border/60 pb-3 last:border-b-0 last:pb-0"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {session.subtopicName || "LSAT practice"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatSessionDate(session.date)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">
-                        {session.score}/{session.totalQuestions}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-xs",
-                          accuracyTone(accuracy, session.totalQuestions)
-                        )}
-                      >
-                        {accuracy}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {recentSessions.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Recent LSAT sessions will appear after your first quiz or daily practice set.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Focused Study Library</h2>
-            <p className="text-sm text-muted-foreground">
-              Use this only when you want to choose a section manually instead of following the current focus.
+        <aside className="space-y-4">
+          <div className="lsat-panel p-5">
+            <LibraryBig className="h-5 w-5 text-primary" />
+            <h2 className="mt-4 text-lg font-semibold">Choose another review area</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Browse lessons and focused practice by LSAT section or question type.
             </p>
+            <Link
+              href="/study-library"
+              className="lsat-cta-primary mt-5 inline-flex h-10 items-center gap-2 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Open Study Library
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <div className="inline-flex h-10 shrink-0 items-center gap-1 border border-border/70 bg-card/80 p-1">
-            {SUBJECTS.map((s) => (
-              <button
-                key={s.key}
-                onClick={() => setActiveSubject(s.key)}
-                className={cn(
-                  "inline-flex h-8 items-center justify-center whitespace-nowrap px-3 text-xs font-medium transition md:px-4",
-                  activeSubject === s.key
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filteredTopics.map((topic) => {
-            const Icon = getTopicIcon(topic.slug);
-            const perf = topicPerfBySlug.get(topic.slug);
-            return (
+          <div className="lsat-panel p-5">
+            <h2 className="text-sm font-semibold">Need help prioritizing?</h2>
+            <div className="mt-4 grid gap-2">
               <Link
-                key={topic.id}
-                href={`/learning/${topic.slug}`}
-                className="border border-border/70 bg-card/80 p-4 transition-colors hover:bg-muted/40"
+                href="/mentor?prompt=Help%20me%20prioritize%20my%20current%20LSAT%20review%20areas."
+                className="lsat-cta-secondary inline-flex h-10 items-center justify-between border px-3 text-sm font-medium transition-colors hover:bg-muted"
               >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-muted">
-                    <Icon className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-sm font-semibold">{topic.name}</h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {topic.subtopics.length} question type{topic.subtopics.length !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                      {perf && perf.total > 0 && (
-                        <span className={cn("text-sm font-semibold", accuracyTone(perf.accuracy, perf.total))}>
-                          {perf.accuracy}%
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                      {topic.overview}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {topic.estimatedTotalMinutes} min
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Target className="h-3 w-3" />
-                        {topic.satRelevance.percentageOfTest}% of LSAT
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <span className="inline-flex items-center gap-2">
+                  <MessageSquareText className="h-4 w-4 text-primary" />
+                  Ask Mentor
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </Link>
-            );
-          })}
-        </div>
-
-        {filteredTopics.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No LSAT topics available yet for this section.
-          </p>
-        )}
+              <Link
+                href="/queue"
+                className="lsat-cta-secondary inline-flex h-10 items-center justify-between border px-3 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  View practice history
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            </div>
+          </div>
+        </aside>
       </section>
     </div>
   );

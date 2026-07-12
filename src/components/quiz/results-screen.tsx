@@ -61,7 +61,7 @@ export function ResultsScreen({
         </p>
         <div className="flex items-center gap-3 pt-2">
           <Button variant="outline" onClick={onRetry}>
-            Retry Quiz
+            Retry Practice Set
           </Button>
           {onPractice && (
             <Button onClick={onPractice}>

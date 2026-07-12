@@ -159,7 +159,7 @@ export function ScheduleEditor() {
     : null;
 
   return (
-    <div className="border bg-card p-4">
+    <div className="lsat-panel p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Study Schedule
@@ -223,7 +223,7 @@ export function ScheduleEditor() {
             <button
               onClick={handleSave}
               disabled={mutation.isPending || activeDays.size === 0 || !selectedTime}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-muted py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
+              className="lsat-cta-primary flex w-full items-center justify-center gap-2 bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {mutation.isPending ? "Saving..." : "Save Schedule"}
             </button>

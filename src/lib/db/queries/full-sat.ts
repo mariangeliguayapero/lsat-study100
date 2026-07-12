@@ -1,4 +1,5 @@
-import { supabase } from "@/lib/supabase/client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { supabaseServer } from "@/lib/supabase/server";
 import type {
   FullSatTest,
   FullSatAttempt,
@@ -9,7 +10,7 @@ import type {
 
 // Cast to any since supabase.ts types haven't been regenerated yet.
 // After running the migration + `npx supabase gen types`, these casts can be removed.
-const db = supabase as any;
+const db = supabaseServer as any;
 
 // ── Tests ──
 
@@ -164,11 +165,15 @@ export async function getTestProblems(
     `
     )
     .eq("test_id", testId)
-    .order("section")
     .order("module")
     .order("order_index");
 
-  return (data ?? []).map((row: any) => ({
+  const sectionOrder: Record<FullSatSection, number> = {
+    reading_writing: 0,
+    math: 1,
+  };
+
+  const mapped: FullSatTestProblem[] = (data ?? []).map((row: any) => ({
     id: row.id,
     problemId: row.problem_id,
     section: row.section as FullSatSection,
@@ -185,6 +190,13 @@ export async function getTestProblems(
     difficultyLevel: row.problems.difficulty_level,
     difficulty: row.problems.difficulty,
   }));
+
+  return mapped.sort((a, b) => {
+    const sectionDiff = sectionOrder[a.section] - sectionOrder[b.section];
+    if (sectionDiff !== 0) return sectionDiff;
+    if (a.module !== b.module) return a.module - b.module;
+    return a.orderIndex - b.orderIndex;
+  });
 }
 
 // ── Answers ──

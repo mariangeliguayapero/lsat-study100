@@ -105,9 +105,9 @@ export function PracticeGradientCard({
                 "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
                 !isRevealed && !isWrong && "hover:bg-muted cursor-pointer",
                 isRevealed && isRight && "border-green-500 bg-green-500/10",
-                isRevealed && isThis && !isRight && "border-red-500 bg-red-500/10",
+                isRevealed && isThis && !isRight && "border-destructive/45 bg-destructive/5",
                 isRevealed && !isThis && !isRight && "opacity-50",
-                isWrong && !isRevealed && "border-red-500/50 bg-red-500/5 opacity-60",
+                isWrong && !isRevealed && "border-destructive/35 bg-destructive/[0.03] opacity-70",
               )}
               style={
                 isRevealed && isRight
@@ -120,7 +120,7 @@ export function PracticeGradientCard({
                   "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs font-medium mt-0.5",
                   isRevealed && isRight && "border-green-500 bg-green-500 text-white",
                   ((isRevealed && isThis && !isRight) || isWrong) &&
-                    "border-red-500 bg-red-500 text-white",
+                    "border-destructive bg-destructive text-white",
                 )}
               >
                 {isRevealed && isRight ? (
@@ -160,9 +160,9 @@ export function PracticeGradientCard({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2"
+          className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2"
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-0.5">
+          <p className="mb-0.5 text-xs font-bold uppercase tracking-widest text-primary">
             Let me walk you through it:
           </p>
           <p className="text-sm text-muted-foreground">

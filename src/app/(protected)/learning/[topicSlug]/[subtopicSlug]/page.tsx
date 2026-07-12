@@ -188,7 +188,7 @@ export default function SubtopicPage() {
           </button>
         ) : (
           <div className="h-full border-2 border-dashed border-muted-foreground/20 p-5 flex items-center justify-center">
-            <p className="text-xs text-muted-foreground text-center">Quiz loading…</p>
+            <p className="text-center text-xs text-muted-foreground">Practice set preparing…</p>
           </div>
         )}
       </motion.div>
@@ -226,8 +226,8 @@ export default function SubtopicPage() {
         {/* Conceptual Overview */}
         <motion.div variants={fadeUp} className="border bg-card">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/30">
-            <div className="flex h-6 w-6 items-center justify-center bg-blue-500/10">
-              <BookText className="h-3.5 w-3.5 text-blue-500" />
+            <div className="flex h-6 w-6 items-center justify-center bg-primary/10">
+              <BookText className="h-3.5 w-3.5 text-primary" />
             </div>
             <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Conceptual Overview</h2>
           </div>
@@ -292,17 +292,17 @@ export default function SubtopicPage() {
         {/* Common Mistakes */}
         {subtopic.commonMistakes.length > 0 && (
           <motion.div variants={fadeUp} className="border bg-card">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-destructive/5">
-              <div className="flex h-6 w-6 items-center justify-center bg-destructive/10">
-                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+            <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-5 py-3">
+              <div className="flex h-6 w-6 items-center justify-center bg-accent/10">
+                <AlertTriangle className="h-3.5 w-3.5 text-[var(--chart-2)]" />
               </div>
-              <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Danger Zones</h2>
-              <span className="ml-auto text-xs font-bold text-destructive">{subtopic.commonMistakes.length}</span>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Common Traps</h2>
+              <span className="ml-auto text-xs font-bold text-[var(--chart-2)]">{subtopic.commonMistakes.length}</span>
             </div>
             <div className="p-5 space-y-3">
               {subtopic.commonMistakes.map((m, i) => (
-                <div key={i} className="bg-destructive/5 px-4 py-3 space-y-1.5">
-                  <p className="text-sm font-semibold text-destructive">{m.mistake}</p>
+                <div key={i} className="space-y-1.5 border border-border/60 bg-background/35 px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground">{m.mistake}</p>
                   <p className="text-sm text-muted-foreground">
                     <span className="font-semibold text-green-600 dark:text-green-400">Fix: </span>
                     {m.correction}

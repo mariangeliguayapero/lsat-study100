@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/queries/subsection-skills";
 import { updateSkillAfterAnswer } from "@/lib/adaptive/engine";
 import { computeFullSatScore } from "@/lib/full-sat/scoring";
-import { supabase } from "@/lib/supabase/client";
+import { supabaseServer } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { SectionCategory } from "@/types/adaptive";
 
@@ -44,17 +44,26 @@ export async function POST(req: Request) {
   // Count correct per section
   let rwCorrect = 0;
   let mathCorrect = 0;
+  let rwTotal = 0;
+  let mathTotal = 0;
 
   for (const a of answers) {
     if (a.section === "reading_writing") {
+      rwTotal++;
       if (a.isCorrect) rwCorrect++;
     } else {
+      mathTotal++;
       if (a.isCorrect) mathCorrect++;
     }
   }
 
   // Compute scaled scores
-  const { rwScaled, mathScaled, total } = computeFullSatScore(rwCorrect, mathCorrect);
+  const { rwScaled, mathScaled, total } = computeFullSatScore(
+    rwCorrect,
+    mathCorrect,
+    rwTotal,
+    mathTotal
+  );
 
   // Save completion
   await completeAttempt(attemptId, {
@@ -71,7 +80,7 @@ export async function POST(req: Request) {
   // Update subsection skills for adaptive tracking
   try {
     // Get the test's problem data for subtopic mapping
-    const { data: attemptRow } = await supabase
+    const { data: attemptRow } = await supabaseServer
       .from("full_sat_attempts")
       .select("test_id")
       .eq("id", attemptId)
@@ -104,7 +113,7 @@ export async function POST(req: Request) {
 
       for (const [subtopicId, subtopicAnswers] of bySubtopic) {
         // Look up section category
-        const { data: subtopicData } = await supabase
+        const { data: subtopicData } = await supabaseServer
           .from("subtopics")
           .select("id, topics!inner(subject)")
           .eq("id", subtopicId)
@@ -161,8 +170,10 @@ export async function POST(req: Request) {
   return NextResponse.json({
     rwRawScore: rwCorrect,
     rwScaledScore: rwScaled,
+    rwTotalQuestions: rwTotal,
     mathRawScore: mathCorrect,
     mathScaledScore: mathScaled,
+    mathTotalQuestions: mathTotal,
     totalScore: total,
   });
 }

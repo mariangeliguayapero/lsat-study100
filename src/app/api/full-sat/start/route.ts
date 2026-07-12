@@ -8,39 +8,105 @@ import {
   createAnswerRows,
   getAttemptAnswers,
 } from "@/lib/db/queries/full-sat";
-import { FULL_SAT_COOLDOWN_MS } from "@/types/full-sat";
+import { FULL_SAT_COOLDOWN_MS, type FullSatTestProblem } from "@/types/full-sat";
 import { NextResponse } from "next/server";
 
+function toClientProblem(problem: FullSatTestProblem) {
+  return {
+    id: problem.id,
+    problemId: problem.problemId,
+    section: problem.section,
+    module: problem.module,
+    orderIndex: problem.orderIndex,
+    questionText: problem.questionText,
+    options: problem.options,
+    explanation: problem.explanation,
+    solutionSteps: problem.solutionSteps,
+    hint: problem.hint,
+    detailedHint: problem.detailedHint,
+    subtopicId: problem.subtopicId,
+    difficultyLevel: problem.difficultyLevel,
+    difficulty: problem.difficulty,
+  };
+}
+
 export async function POST(req: Request) {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const user = await getUserByClerkId(clerkId);
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+    const user = await getUserByClerkId(clerkId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-  const { testId } = (await req.json()) as { testId: string };
-  if (!testId) {
-    return NextResponse.json({ error: "testId is required" }, { status: 400 });
-  }
+    const { testId } = (await req.json()) as { testId: string };
+    if (!testId) {
+      return NextResponse.json({ error: "testId is required" }, { status: 400 });
+    }
 
-  // Check for existing in-progress attempt — resume it
-  const existing = await getInProgressAttempt(user.id);
-  if (existing) {
-    const problems = await getTestProblems(existing.testId);
-    const answers = await getAttemptAnswers(existing.id);
+    // Check for existing in-progress attempt — resume it
+    const existing = await getInProgressAttempt(user.id);
+    if (existing) {
+      const problems = await getTestProblems(existing.testId);
+      const answers = await getAttemptAnswers(existing.id);
+
+      // Strip correctOption for the client
+      const clientProblems = problems.map(toClientProblem);
+
+      return NextResponse.json({
+        attemptId: existing.id,
+        test: {
+          id: existing.testId,
+          testNumber: 0, // will be resolved on client via tests list
+          name: "",
+          status: "active",
+          createdAt: "",
+        },
+        problems: clientProblems,
+        answers,
+      });
+    }
+
+    // Enforce cooldown
+    const lastCompleted = await getLastCompletedAttempt(user.id);
+    if (lastCompleted?.completedAt) {
+      const elapsed = Date.now() - new Date(lastCompleted.completedAt).getTime();
+      if (elapsed < FULL_SAT_COOLDOWN_MS) {
+        const nextDate = new Date(
+          new Date(lastCompleted.completedAt).getTime() + FULL_SAT_COOLDOWN_MS
+        ).toISOString();
+        return NextResponse.json(
+          { error: "Cooldown active", nextAvailableDate: nextDate },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Load test problems
+    const problems = await getTestProblems(testId);
+    if (problems.length === 0) {
+      return NextResponse.json(
+        { error: "Test has no problems" },
+        { status: 404 }
+      );
+    }
+
+    // Create attempt and answer placeholders
+    const attempt = await createAttempt(user.id, testId);
+    await createAnswerRows(attempt.id, problems);
+    const answers = await getAttemptAnswers(attempt.id);
 
     // Strip correctOption for the client
-    const clientProblems = problems.map(({ correctOption, ...rest }) => rest);
+    const clientProblems = problems.map(toClientProblem);
 
     return NextResponse.json({
-      attemptId: existing.id,
+      attemptId: attempt.id,
       test: {
-        id: existing.testId,
-        testNumber: 0, // will be resolved on client via tests list
+        id: testId,
+        testNumber: 0,
         name: "",
         status: "active",
         createdAt: "",
@@ -48,50 +114,16 @@ export async function POST(req: Request) {
       problems: clientProblems,
       answers,
     });
-  }
-
-  // Enforce cooldown
-  const lastCompleted = await getLastCompletedAttempt(user.id);
-  if (lastCompleted?.completedAt) {
-    const elapsed = Date.now() - new Date(lastCompleted.completedAt).getTime();
-    if (elapsed < FULL_SAT_COOLDOWN_MS) {
-      const nextDate = new Date(
-        new Date(lastCompleted.completedAt).getTime() + FULL_SAT_COOLDOWN_MS
-      ).toISOString();
-      return NextResponse.json(
-        { error: "Cooldown active", nextAvailableDate: nextDate },
-        { status: 403 }
-      );
-    }
-  }
-
-  // Load test problems
-  const problems = await getTestProblems(testId);
-  if (problems.length === 0) {
+  } catch (error) {
+    console.error("Failed to start Full LSAT practice:", error);
     return NextResponse.json(
-      { error: "Test has no problems" },
-      { status: 404 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to start Full LSAT practice",
+      },
+      { status: 500 }
     );
   }
-
-  // Create attempt and answer placeholders
-  const attempt = await createAttempt(user.id, testId);
-  await createAnswerRows(attempt.id, problems);
-  const answers = await getAttemptAnswers(attempt.id);
-
-  // Strip correctOption for the client
-  const clientProblems = problems.map(({ correctOption, ...rest }) => rest);
-
-  return NextResponse.json({
-    attemptId: attempt.id,
-    test: {
-      id: testId,
-      testNumber: 0,
-      name: "",
-      status: "active",
-      createdAt: "",
-    },
-    problems: clientProblems,
-    answers,
-  });
 }

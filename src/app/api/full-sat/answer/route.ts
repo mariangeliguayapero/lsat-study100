@@ -4,6 +4,7 @@ import {
   upsertAnswer,
   updateAttemptPosition,
 } from "@/lib/db/queries/full-sat";
+import { supabaseServer } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -25,7 +26,6 @@ export async function POST(req: Request) {
     module,
     orderIndex,
     selectedOption,
-    isCorrect,
     responseTimeMs,
   } = body as {
     attemptId: string;
@@ -34,12 +34,24 @@ export async function POST(req: Request) {
     module: number;
     orderIndex: number;
     selectedOption: number;
-    isCorrect: boolean;
     responseTimeMs?: number;
   };
 
-  if (!attemptId || !problemId || !section || module == null || orderIndex == null || selectedOption == null || isCorrect == null) {
+  if (!attemptId || !problemId || !section || module == null || orderIndex == null || selectedOption == null) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  const { data: problem, error } = await supabaseServer
+    .from("problems")
+    .select("correct_option")
+    .eq("id", problemId)
+    .single();
+
+  if (error || !problem || problem.correct_option == null) {
+    return NextResponse.json(
+      { error: "Problem answer key not found" },
+      { status: 404 }
+    );
   }
 
   await upsertAnswer(attemptId, {
@@ -48,7 +60,7 @@ export async function POST(req: Request) {
     module,
     orderIndex,
     selectedOption,
-    isCorrect,
+    isCorrect: selectedOption === problem.correct_option,
     responseTimeMs,
   });
 

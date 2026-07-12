@@ -1,18 +1,21 @@
 /**
- * SAT scoring: raw-to-scaled conversion.
+ * Legacy full-test raw-to-scaled conversion.
  *
- * The real SAT uses equating tables that vary per test form.
- * We approximate with a piecewise linear mapping that closely matches
- * published College Board score conversion charts.
+ * The app still stores full practice section scores in the original SAT-shaped
+ * columns, then converts the composite to the visible LSAT 120-180 estimate.
+ * Totals are configurable so demo LSAT sets can use the actual seeded question
+ * counts instead of the old 54/44 section sizes.
  */
 
 /**
- * Scale a Reading & Writing raw score (0-54) to 200-800.
+ * Scale a Reading/Reading Comprehension raw score to 200-800.
  */
 export function scaleRwScore(rawCorrect: number, totalQuestions = 54): number {
-  const ratio = Math.max(0, Math.min(1, rawCorrect / totalQuestions));
+  const ratio = totalQuestions > 0
+    ? Math.max(0, Math.min(1, rawCorrect / totalQuestions))
+    : 0;
 
-  // Piecewise linear approximation matching typical SAT R&W curves
+  // Piecewise linear approximation used only as an internal bridge to LSAT scale.
   if (ratio >= 0.96) return 800;
   if (ratio >= 0.89) return 750 + Math.round(((ratio - 0.89) / 0.07) * 50);
   if (ratio >= 0.78) return 650 + Math.round(((ratio - 0.78) / 0.11) * 100);
@@ -24,12 +27,14 @@ export function scaleRwScore(rawCorrect: number, totalQuestions = 54): number {
 }
 
 /**
- * Scale a Math raw score (0-44) to 200-800.
+ * Scale a Math/Logical Reasoning raw score to 200-800.
  */
 export function scaleMathScore(rawCorrect: number, totalQuestions = 44): number {
-  const ratio = Math.max(0, Math.min(1, rawCorrect / totalQuestions));
+  const ratio = totalQuestions > 0
+    ? Math.max(0, Math.min(1, rawCorrect / totalQuestions))
+    : 0;
 
-  // Piecewise linear approximation matching typical SAT Math curves
+  // Piecewise linear approximation used only as an internal bridge to LSAT scale.
   if (ratio >= 0.98) return 800;
   if (ratio >= 0.91) return 750 + Math.round(((ratio - 0.91) / 0.07) * 50);
   if (ratio >= 0.80) return 650 + Math.round(((ratio - 0.80) / 0.11) * 100);
@@ -41,11 +46,16 @@ export function scaleMathScore(rawCorrect: number, totalQuestions = 44): number 
 }
 
 /**
- * Compute the full SAT composite score from raw correct counts.
+ * Compute the legacy composite score from raw correct counts.
  */
-export function computeFullSatScore(rwRaw: number, mathRaw: number) {
-  const rwScaled = scaleRwScore(rwRaw);
-  const mathScaled = scaleMathScore(mathRaw);
+export function computeFullSatScore(
+  rwRaw: number,
+  mathRaw: number,
+  rwTotalQuestions = 54,
+  mathTotalQuestions = 44
+) {
+  const rwScaled = scaleRwScore(rwRaw, rwTotalQuestions);
+  const mathScaled = scaleMathScore(mathRaw, mathTotalQuestions);
   return {
     rwScaled,
     mathScaled,

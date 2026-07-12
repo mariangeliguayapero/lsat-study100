@@ -102,6 +102,10 @@ const FILTERS: { value: FilterRange; label: string }[] = [
   { value: "all", label: "All" },
 ];
 
+const chartTextColor = "var(--foreground)";
+const chartMutedTextColor = "var(--muted-foreground)";
+const chartForegroundColor = "var(--foreground)";
+
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -152,7 +156,7 @@ function scoreBand(score: number): string {
   if (score >= 165) return "Competitive";
   if (score >= 160) return "Strong foundation";
   if (score >= 150) return "Developing";
-  return "Baseline";
+  return "Starting range";
 }
 
 function MetricCard({
@@ -167,7 +171,7 @@ function MetricCard({
   icon: typeof Target;
 }) {
   return (
-    <div className="border border-border/70 bg-card/80 p-5">
+    <div className="lsat-panel p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {label}
@@ -274,7 +278,7 @@ export default function ProgressPage() {
   const scoreGap = Math.max(targetScore - currentScore, 0);
   const logicalReasoning = data.sectionScores.math;
   const readingComprehension = data.sectionScores.readingWriting;
-  const weakestAreas = data.subtopicPerformance.slice(0, 4);
+  const areaBreakdown = data.subtopicPerformance.slice(0, 6);
   const chartData =
     filteredScoreHistory.length > 0
       ? filteredScoreHistory.map((point) => ({
@@ -308,10 +312,10 @@ export default function ProgressPage() {
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight">Performance Overview</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Track score movement, section accuracy, and the review areas most likely to improve your next practice set.
+              Track how your LSAT estimate and section accuracy change over time.
             </p>
           </div>
-          <div className="inline-flex h-10 shrink-0 items-center gap-1 border border-border/70 bg-card/80 p-1">
+          <div className="lsat-panel-soft inline-flex h-10 shrink-0 items-center gap-1 border p-1 shadow-sm">
             {FILTERS.map((filter) => (
               <button
                 key={filter.value}
@@ -363,7 +367,7 @@ export default function ProgressPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
           <motion.div
             variants={staggerItem}
-            className="border border-border/70 bg-card/80 p-5 lg:col-span-3"
+            className="lsat-panel p-5 lg:col-span-3"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -384,16 +388,16 @@ export default function ProgressPage() {
                   <LineChart data={chartData}>
                     <XAxis
                       dataKey="label"
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fontSize: 11, fill: chartTextColor }}
+                      stroke={chartMutedTextColor}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
                       yAxisId="score"
                       domain={[120, 180]}
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fontSize: 11, fill: chartTextColor }}
+                      stroke={chartMutedTextColor}
                       tickLine={false}
                       axisLine={false}
                       width={36}
@@ -402,35 +406,37 @@ export default function ProgressPage() {
                       yAxisId="accuracy"
                       orientation="right"
                       domain={[0, 100]}
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fontSize: 11, fill: chartTextColor }}
+                      stroke={chartMutedTextColor}
                       tickLine={false}
                       axisLine={false}
                       width={36}
                     />
                     <Tooltip
                       contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        color: "hsl(var(--foreground))",
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        color: chartForegroundColor,
                         fontSize: 12,
                       }}
+                      labelStyle={{ color: chartForegroundColor }}
+                      itemStyle={{ color: chartForegroundColor }}
                     />
                     <Line
                       yAxisId="score"
                       type="monotone"
                       dataKey="score"
                       name="Estimated score"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--primary)"
                       strokeWidth={2}
-                      dot={{ r: 4 }}
+                      dot={{ r: 4, fill: "var(--foreground)", stroke: "var(--foreground)" }}
                     />
                     <Line
                       yAxisId="accuracy"
                       type="monotone"
                       dataKey="logicalReasoning"
                       name="Logical Reasoning accuracy"
-                      stroke="#60a5fa"
+                      stroke="var(--chart-4)"
                       strokeWidth={2}
                       dot={false}
                     />
@@ -439,7 +445,7 @@ export default function ProgressPage() {
                       type="monotone"
                       dataKey="readingComprehension"
                       name="Reading Comprehension accuracy"
-                      stroke="#34d399"
+                      stroke="var(--chart-3)"
                       strokeWidth={2}
                       dot={false}
                     />
@@ -453,7 +459,7 @@ export default function ProgressPage() {
 
           <motion.div
             variants={staggerItem}
-            className="border border-border/70 bg-card/80 p-5 lg:col-span-2"
+            className="lsat-panel p-5 lg:col-span-2"
           >
             <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Section Performance
@@ -478,18 +484,18 @@ export default function ProgressPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
           <motion.div
             variants={staggerItem}
-            className="border border-border/70 bg-card/80 p-5 lg:col-span-3"
+            className="lsat-panel p-5 lg:col-span-3"
           >
             <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Review Priorities
+              Area Performance Breakdown
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Lowest-performing LSAT areas based on completed practice.
+              Accuracy by practiced question type in the selected range.
             </p>
             <div className="mt-5 space-y-4">
-              {weakestAreas.length > 0 ? (
-                weakestAreas.map((area) => (
-                  <div key={area.id} className="border border-border/60 p-4">
+              {areaBreakdown.length > 0 ? (
+                areaBreakdown.map((area) => (
+                  <div key={area.id} className="lsat-panel-soft border p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="font-medium">{area.name}</p>
@@ -509,14 +515,14 @@ export default function ProgressPage() {
                   </div>
                 ))
               ) : (
-                <EmptyState>Practice data will surface weak areas here.</EmptyState>
+                <EmptyState>Practice data will populate this performance breakdown.</EmptyState>
               )}
             </div>
           </motion.div>
 
           <motion.div
             variants={staggerItem}
-            className="border border-border/70 bg-card/80 p-5 lg:col-span-2"
+            className="lsat-panel p-5 lg:col-span-2"
           >
             <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Practice History

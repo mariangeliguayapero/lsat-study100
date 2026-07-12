@@ -75,13 +75,14 @@ function WbTableInner({ action, width, progress, isAnimating }: WbTableProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      style={{ width: `${width}px`, padding: "4px 0" }}
+      style={{ width: `${width}px`, maxWidth: "100%", minWidth: 0, overflow: "hidden", padding: "4px 0" }}
     >
       <table
         style={{
           borderCollapse: "collapse",
           width: "100%",
           maxWidth: `${width}px`,
+          tableLayout: "fixed",
           fontFamily: "system-ui, sans-serif",
           fontSize: "14px",
         }}
@@ -99,9 +100,15 @@ function WbTableInner({ action, width, progress, isAnimating }: WbTableProps) {
                     fontWeight: "bold",
                     color: "var(--foreground)",
                     backgroundColor: "var(--muted)",
+                    lineHeight: 1.4,
+                    overflowWrap: "anywhere",
+                    whiteSpace: "normal",
                   }}
                 >
-                  <span dangerouslySetInnerHTML={{ __html: renderCellHtml(h ?? "") }} />
+                  <span
+                    style={{ display: "block", maxWidth: "100%", overflowWrap: "anywhere" }}
+                    dangerouslySetInnerHTML={{ __html: renderCellHtml(h ?? "") }}
+                  />
                 </th>
               ))}
             </tr>
@@ -131,9 +138,16 @@ function WbTableInner({ action, width, progress, isAnimating }: WbTableProps) {
                         borderBottom: "1px solid var(--border)",
                         color: "var(--secondary-foreground)",
                         backgroundColor: hlColor ? `${hlColor}33` : "transparent",
+                        lineHeight: 1.45,
+                        overflowWrap: "anywhere",
+                        verticalAlign: "top",
+                        whiteSpace: "normal",
                       }}
                     >
-                      <span dangerouslySetInnerHTML={{ __html: renderCellHtml(cell ?? "") }} />
+                      <span
+                        style={{ display: "block", maxWidth: "100%", overflowWrap: "anywhere" }}
+                        dangerouslySetInnerHTML={{ __html: renderCellHtml(cell ?? "") }}
+                      />
                     </td>
                   );
                 })}

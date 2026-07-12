@@ -82,7 +82,7 @@ export default function TopicPage() {
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-6 space-y-1">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-          Review Library
+          Focused Study Library
         </p>
         <h1 className="text-lg font-bold">Choose A Review Area</h1>
       </div>

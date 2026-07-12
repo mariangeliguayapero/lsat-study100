@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, Zap, Clock, Target, ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Target, TrendingUp } from "lucide-react";
 import { useQuestContext } from "./quest-context";
 
 export function QuestResultsScreen() {
@@ -27,14 +27,14 @@ export function QuestResultsScreen() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Trophy className="h-8 w-8 text-primary" />
+            <CheckCircle2 className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold">Practice Complete</h1>
           <p className="mt-1 text-muted-foreground">
             {accuracy >= 80
-              ? "Outstanding performance!"
+              ? "Strong accuracy for this practice set."
               : accuracy >= 60
-                ? "Good effort, keep pushing!"
+                ? "Useful data logged for your next review."
                 : "Every practice set gives us better data."}
           </p>
         </div>
@@ -57,9 +57,9 @@ export function QuestResultsScreen() {
             <p className="text-xs text-muted-foreground">Time</p>
           </div>
           <div className="rounded-lg border bg-card p-4 text-center">
-            <Zap className="mx-auto mb-2 h-5 w-5 text-athena-amber" />
-            <p className="text-2xl font-bold text-athena-amber">+{ctx.xpEarned}</p>
-            <p className="text-xs text-muted-foreground">XP Earned</p>
+            <TrendingUp className="mx-auto mb-2 h-5 w-5 text-primary" />
+            <p className="text-2xl font-bold text-primary">{ctx.problems.length}</p>
+            <p className="text-xs text-muted-foreground">Questions Logged</p>
           </div>
         </div>
 

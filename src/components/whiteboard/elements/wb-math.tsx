@@ -806,10 +806,15 @@ export function WbMath({
           const side = ann.side ?? "bottom";
           const LINE = 14;
           const LABEL_GAP = 4;
-          const labelColor = ann.color ?? "oklch(0.65 0.02 285)";
+          const requestedColor = ann.color ?? "oklch(0.55 0.04 275)";
+          const labelColor = !isDark && /^(#fbbf24|#f59e0b)$/i.test(requestedColor)
+            ? "var(--athena-amber)"
+            : adaptWbColor(requestedColor, isDark);
+          const labelWidth = Math.min(180, Math.max(112, effectiveWidth - 24));
+          const labelLeft = Math.max(12, Math.min(centerX - labelWidth / 2, effectiveWidth - labelWidth - 12));
           const lineTop = side === "bottom" ? bottom + 1 : top - 1 - LINE;
           const labelTop =
-            side === "bottom" ? bottom + 1 + LINE + LABEL_GAP : top - 1 - LINE - LABEL_GAP - 14;
+            side === "bottom" ? bottom + 1 + LINE + LABEL_GAP : top - 1 - LINE - LABEL_GAP;
           return (
             <div
               key={`ann-${i}-${ann.id}`}
@@ -830,19 +835,20 @@ export function WbMath({
               <div
                 style={{
                   position: "absolute",
-                  left: centerX - 60,
+                  left: labelLeft,
                   top: labelTop,
-                  width: 120,
+                  width: labelWidth,
+                  transform: side === "top" ? "translateY(-100%)" : undefined,
                   textAlign: "center",
                   fontFamily: "var(--font-geist-sans, system-ui)",
                   fontSize: 10,
-                  fontWeight: 500,
-                  letterSpacing: "0.12em",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  lineHeight: 1.35,
                   textTransform: "uppercase",
                   color: labelColor,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  whiteSpace: "normal",
+                  overflowWrap: "anywhere",
                 }}
               >
                 {ann.label}

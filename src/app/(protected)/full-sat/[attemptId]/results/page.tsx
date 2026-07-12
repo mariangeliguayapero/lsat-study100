@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, BookOpen, Brain, ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, Target } from "lucide-react";
 import type { FullSatHistoryResponse, FullSatSubmitResponse } from "@/types/full-sat";
 import { legacyCompositeToLsatScore, percentCorrect } from "@/lib/lsat-score";
 
@@ -27,8 +27,10 @@ export default function FullSatResultsPage() {
           setResults({
             rwRawScore: attempt.rwRawScore ?? 0,
             rwScaledScore: attempt.rwScaledScore ?? 0,
+            rwTotalQuestions: attempt.rwTotalQuestions,
             mathRawScore: attempt.mathRawScore ?? 0,
             mathScaledScore: attempt.mathScaledScore ?? 0,
+            mathTotalQuestions: attempt.mathTotalQuestions,
             totalScore: attempt.totalScore ?? 0,
           });
         }
@@ -64,33 +66,40 @@ export default function FullSatResultsPage() {
   }
 
   const lsatScore = legacyCompositeToLsatScore(results.totalScore);
-  const readingAccuracy = percentCorrect(results.rwRawScore, 54);
-  const reasoningAccuracy = percentCorrect(results.mathRawScore, 44);
-
-  const scoreColor =
-    lsatScore >= 165
-      ? "text-green-500"
-      : lsatScore >= 150
-        ? "text-amber-500"
-        : "text-red-500";
+  const readingTotal = results.rwTotalQuestions ?? 54;
+  const reasoningTotal = results.mathTotalQuestions ?? 44;
+  const readingAccuracy = percentCorrect(results.rwRawScore, readingTotal);
+  const reasoningAccuracy = percentCorrect(results.mathRawScore, reasoningTotal);
+  const targetScore = 170;
+  const targetGap = Math.max(0, targetScore - lsatScore);
+  const scoreBand =
+    lsatScore >= 170
+      ? "Target-ready"
+      : lsatScore >= 160
+        ? "Strong foundation"
+        : lsatScore >= 150
+          ? "Developing range"
+          : "Starting score range";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-auto">
       <div className="mx-auto max-w-2xl px-4 py-12 w-full">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
           <div className="mb-4 flex items-center justify-center">
-            <div className="rounded-full bg-primary/10 p-4">
-              <Trophy className="h-10 w-10 text-amber-500" />
+            <div className="lsat-panel-soft border-primary/25 bg-primary/10 p-4">
+              <Target className="h-9 w-9 text-primary" />
             </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            LSAT Practice Test Complete
+            LSAT Practice Score Report
           </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Estimated score, section performance, and next steps from this timed set.
+          </p>
         </motion.div>
 
         {/* Total score */}
@@ -103,10 +112,12 @@ export default function FullSatResultsPage() {
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
             Estimated LSAT Score
           </p>
-          <p className={`text-6xl font-bold tabular-nums mt-2 ${scoreColor}`}>
+          <p className="mt-2 text-6xl font-bold tabular-nums text-primary">
             {lsatScore}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">out of 180</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {scoreBand} · {targetGap === 0 ? "target reached" : `${targetGap} points from 170`}
+          </p>
         </motion.div>
 
         {/* Section breakdown */}
@@ -114,10 +125,10 @@ export default function FullSatResultsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-10 grid grid-cols-2 gap-4"
+          className="mt-10 grid gap-4 sm:grid-cols-2"
         >
           {/* Reading Comprehension */}
-          <div className="rounded-lg border bg-card p-5 text-center">
+          <div className="lsat-panel p-5 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-3">
               <BookOpen className="h-4 w-4" />
               Reading Comprehension
@@ -126,18 +137,18 @@ export default function FullSatResultsPage() {
               {readingAccuracy}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {results.rwRawScore}/54 correct
+              {results.rwRawScore}/{readingTotal} correct
             </p>
-            <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
+            <div className="mt-3 h-2 overflow-hidden bg-muted">
               <div
-                className="h-full rounded-full bg-blue-500 transition-all"
+                className="h-full bg-primary transition-all"
                 style={{ width: `${readingAccuracy}%` }}
               />
             </div>
           </div>
 
           {/* Logical Reasoning */}
-          <div className="rounded-lg border bg-card p-5 text-center">
+          <div className="lsat-panel p-5 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-3">
               <Brain className="h-4 w-4" />
               Logical Reasoning
@@ -146,11 +157,11 @@ export default function FullSatResultsPage() {
               {reasoningAccuracy}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {results.mathRawScore}/44 correct
+              {results.mathRawScore}/{reasoningTotal} correct
             </p>
-            <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
+            <div className="mt-3 h-2 overflow-hidden bg-muted">
               <div
-                className="h-full rounded-full bg-purple-500 transition-all"
+                className="h-full bg-primary transition-all"
                 style={{ width: `${reasoningAccuracy}%` }}
               />
             </div>
@@ -162,25 +173,31 @@ export default function FullSatResultsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 rounded-lg border bg-card p-5"
+          className="lsat-panel mt-8 p-5"
         >
-          <h3 className="text-sm font-semibold mb-2">Score Breakdown</h3>
+          <h3 className="mb-2 text-sm font-semibold">Score Breakdown</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>Reading Comprehension Accuracy</span>
               <span className="font-medium text-foreground">
-                {results.rwRawScore} / 54 ({readingAccuracy}%)
+                {results.rwRawScore} / {readingTotal} ({readingAccuracy}%)
               </span>
             </div>
             <div className="flex justify-between border-t pt-2">
               <span>Logical Reasoning Accuracy</span>
               <span className="font-medium text-foreground">
-                {results.mathRawScore} / 44 ({reasoningAccuracy}%)
+                {results.mathRawScore} / {reasoningTotal} ({reasoningAccuracy}%)
               </span>
             </div>
             <div className="flex justify-between border-t pt-2 font-semibold text-foreground">
               <span>Estimated LSAT</span>
               <span>{lsatScore} / 180</span>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span>Target relation</span>
+              <span className="font-medium text-foreground">
+                {targetGap === 0 ? "At or above 170 target" : `${targetGap} points from 170 target`}
+              </span>
             </div>
           </div>
         </motion.div>
@@ -194,13 +211,13 @@ export default function FullSatResultsPage() {
         >
           <button
             onClick={() => router.push("/full-sat")}
-            className="flex-1 rounded-md border px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            className="lsat-cta-secondary flex-1 border px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             Back to Full LSAT
           </button>
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="lsat-cta-primary inline-flex flex-1 items-center justify-center gap-2 bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Dashboard
             <ArrowRight className="h-4 w-4" />
