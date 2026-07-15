@@ -162,8 +162,8 @@ export default function MyLearningPage() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
-          <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-            <div className="lsat-panel lsat-panel-highlight p-6">
+          <section className="grid items-stretch gap-6 lg:grid-cols-2">
+            <div className="lsat-panel lsat-panel-highlight h-full p-6">
               <div className="inline-flex items-center gap-2 border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
                 Powered by Athena
@@ -222,7 +222,7 @@ export default function MyLearningPage() {
               </AnimatePresence>
             </div>
 
-            <div className="lsat-panel p-6">
+            <div className="lsat-panel h-full p-6">
               <h2 className="text-lg font-semibold">How Learn Works</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Each generated topic follows the same LSAT study loop.
@@ -253,14 +253,14 @@ export default function MyLearningPage() {
 
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 {TOPIC_GROUPS.map((group) => (
-                  <div key={group.section} className="lsat-panel-soft border p-4">
+                  <div key={group.section} className="lsat-panel-soft flex h-full flex-col border p-4">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                       {group.section}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {group.description}
                     </p>
-                    <div className="mt-4 grid gap-3">
+                    <div className="mt-4 grid flex-1 auto-rows-fr gap-3">
                       {group.topics.map((t) => (
                         <div key={t} className="lsat-panel-soft lsat-interactive border p-3">
                           <div className="flex items-start justify-between gap-3">
@@ -271,7 +271,7 @@ export default function MyLearningPage() {
                               </p>
                             </div>
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
+                          <div className="mt-4 flex flex-wrap gap-3">
                             <button
                               type="button"
                               onClick={() => handleSubmit(t)}
@@ -283,7 +283,7 @@ export default function MyLearningPage() {
                             </button>
                             <Link
                               href={mentorHref(t)}
-                              className="lsat-cta-secondary inline-flex h-8 items-center gap-1.5 border px-3 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                              className="inline-flex h-8 items-center gap-1.5 border border-primary/35 px-3 text-xs font-semibold text-primary transition hover:border-primary hover:bg-primary/10"
                             >
                               <MessageSquareText className="h-3 w-3" />
                               Ask Mentor

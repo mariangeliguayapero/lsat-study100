@@ -122,7 +122,6 @@ export default function FullSatQuestionPage() {
           />
           <AnswerPanel
             problem={asProblem}
-            questionNumber={sectionIndex + 1}
             selectedOption={ctx.answers.get(currentProblem.problemId)}
             isMarked={false}
             onSelect={(i) => ctx.handleSelectAnswer(currentProblem.problemId, i)}

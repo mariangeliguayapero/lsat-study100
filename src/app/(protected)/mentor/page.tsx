@@ -298,8 +298,8 @@ export default function MentorPage() {
         >
           {/* Welcome state */}
           {messages.length === 0 && (
-            <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-              <div className="space-y-5">
+            <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[1.05fr_0.95fr] xl:[grid-template-areas:'main_context'_'chat_context']">
+              <div className="space-y-5 xl:[grid-area:main]">
                 <div className="lsat-panel lsat-panel-highlight p-6">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-2xl">
@@ -335,7 +335,7 @@ export default function MentorPage() {
                         setInput(item.prompt);
                       }}
                       className={[
-                        "lsat-panel lsat-interactive min-h-44 border p-5 text-left hover:bg-muted/40",
+                        "lsat-panel lsat-interactive min-h-40 border p-5 text-left hover:bg-muted/40",
                         selectedMode === item.key
                           ? "lsat-selected"
                           : "border-border/70",
@@ -351,8 +351,8 @@ export default function MentorPage() {
                 </div>
               </div>
 
-              <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
-                <div className="lsat-panel p-5">
+              <div className="grid h-full gap-5 lg:grid-cols-2 xl:[grid-area:context] xl:grid-cols-1 xl:grid-rows-[auto_1fr]">
+                <div className="lsat-panel h-full p-5">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-primary" />
                     <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">
@@ -405,7 +405,7 @@ export default function MentorPage() {
                 </div>
               </div>
 
-              <div className="lsat-panel p-4 xl:col-span-2">
+              <div className="lsat-panel p-4 xl:[grid-area:chat]">
                 <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold">Ask Mentor</h2>

@@ -63,8 +63,8 @@
   /* Athena palette */
   --athena-navy: oklch(0.25 0.05 260);
   --athena-navy-light: oklch(0.32 0.055 260);
-  --athena-amber: oklch(0.62 0.13 75);
-  --athena-amber-light: oklch(0.76 0.10 80);
+  --athena-amber: oklch(0.66 0.15 76);
+  --athena-amber-light: oklch(0.79 0.12 82);
   --athena-success: oklch(0.65 0.17 155);
   --athena-success-light: oklch(0.80 0.12 155);
 
@@ -81,7 +81,7 @@
   --secondary-foreground: #19345c;
   --muted: #eee7dc;
   --muted-foreground: #697386;
-  --accent: #9f6b1d;
+  --accent: #b87912;
   --accent-foreground: #142033;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #d9d0c3;
@@ -246,6 +246,8 @@
 }
 
 .lsat-cta-primary:hover {
+  transform: translateY(-1px);
+  background-color: color-mix(in srgb, var(--primary) 88%, white 12%);
   box-shadow: 0 9px 22px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 

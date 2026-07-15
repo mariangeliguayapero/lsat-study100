@@ -184,7 +184,6 @@ export function QuizProblemPageContent() {
           />
           <AnswerPanel
             problem={currentProblem}
-            questionNumber={quiz.currentIndex + 1}
             selectedOption={quiz.answers.get(currentProblem.id)}
             isMarked={quiz.markedIds.has(currentProblem.id)}
             onSelect={(i) => handleSelectAnswer(currentProblem.id, i)}

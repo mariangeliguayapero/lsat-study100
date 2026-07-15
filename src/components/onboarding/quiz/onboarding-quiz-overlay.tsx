@@ -384,7 +384,6 @@ export function OnboardingQuizOverlay() {
           />
           <AnswerPanel
             problem={problem}
-            questionNumber={currentIndex + 1}
             selectedOption={selectedOption}
             isMarked={false}
             onSelect={handleAnswer}

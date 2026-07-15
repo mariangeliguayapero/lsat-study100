@@ -28,6 +28,13 @@ export async function POST() {
     avatarUrl: clerkUser.imageUrl || undefined,
   });
 
+  if (!user) {
+    return NextResponse.json(
+      { error: "Unable to create user profile" },
+      { status: 500 }
+    );
+  }
+
   if (!existingUser && email) {
     const { subject, html } = welcomeEmailHtml({
       displayName: displayName || "there",

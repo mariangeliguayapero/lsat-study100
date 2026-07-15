@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Settings } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  CreditCard,
+  LockKeyhole,
+  Mail,
+  Settings,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { AnimatedSprite } from "@/components/pixel-art/animated-sprite";
 import { ProfileNameEditor } from "@/components/profile/profile-name-editor";
@@ -118,11 +126,6 @@ export default function ProfilePage() {
   if (!data || !data.user) return null;
 
   const { user } = data;
-  const targetScore =
-    user.targetScore != null && user.targetScore >= 120 && user.targetScore <= 180
-      ? user.targetScore
-      : 170;
-
   return (
     <div className="relative z-10 p-4 pb-16 md:p-6">
       <motion.div
@@ -180,12 +183,6 @@ export default function ProfilePage() {
               </p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="lsat-panel-soft border p-4">
-                  <p className="text-sm font-semibold">Target outcome</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Target score {targetScore}
-                  </p>
-                </div>
-                <div className="lsat-panel-soft border p-4">
                   <p className="text-sm font-semibold">Recommended session length</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     30-45 minutes for focused LR/RC review
@@ -197,7 +194,7 @@ export default function ProfilePage() {
                     {data.weeklyStreakDays.filter((day) => day.completed).length} recent study days logged
                   </p>
                 </div>
-                <div className="lsat-panel-soft border p-4">
+                <div className="lsat-panel-soft border p-4 sm:col-span-2">
                   <p className="text-sm font-semibold">Exam timeline</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Add a test date later to personalize pacing
@@ -227,24 +224,28 @@ export default function ProfilePage() {
                   Account & Preferences
                 </h3>
               </div>
-              <dl className="mt-5 space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Display name</dt>
-                  <dd className="max-w-36 truncate text-sm font-medium">{user.displayName ?? "Student"}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Prep started</dt>
-                  <dd className="text-sm font-medium">{formatDate(user.createdAt)}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Target score</dt>
-                  <dd className="text-sm font-medium">{targetScore}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-muted-foreground">Notifications</dt>
-                  <dd className="text-sm font-medium">Not configured</dd>
-                </div>
-              </dl>
+              <div className="mt-5 space-y-3">
+                {[
+                  { icon: Mail, label: "Email address", status: "Managed by sign-in" },
+                  { icon: LockKeyhole, label: "Password & security", status: "Managed by sign-in" },
+                  { icon: CreditCard, label: "Subscription plan", status: "Not configured" },
+                  { icon: Bell, label: "Notifications", status: "Not configured" },
+                  { icon: SlidersHorizontal, label: "App preferences", status: "Coming later" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <item.icon className="h-4 w-4 shrink-0 text-primary" />
+                      <p className="text-sm font-medium">{item.label}</p>
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {item.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         </div>

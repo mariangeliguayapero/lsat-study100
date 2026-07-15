@@ -140,7 +140,7 @@ function ScoreProgressCard({
   );
 
   return (
-    <div className="lsat-score-hero p-6 lg:col-span-2 lg:p-7">
+    <div className="lsat-panel lsat-panel-highlight h-full p-6 lg:p-7">
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -156,7 +156,7 @@ function ScoreProgressCard({
             </div>
           </div>
         </div>
-        <div className="rounded-md border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-3 text-left md:text-right dark:border-border dark:bg-background/45">
+        <div className="rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-left md:text-right">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Target
           </p>
@@ -169,13 +169,13 @@ function ScoreProgressCard({
       <div className="mt-7">
         <div className="mb-3 flex items-center justify-between text-[11px] text-muted-foreground">
           <span>120</span>
-          <span className="font-semibold text-primary-foreground dark:text-foreground">
+          <span className="font-semibold text-primary">
             Current {currentScore}
           </span>
           <span>180</span>
         </div>
         <div
-          className="relative h-3 bg-primary-foreground/15 dark:bg-muted"
+          className="relative h-3 bg-primary/10"
           role="progressbar"
           aria-label="Estimated LSAT score progress"
           aria-valuemin={120}
@@ -183,7 +183,7 @@ function ScoreProgressCard({
           aria-valuenow={currentScore}
         >
           <div
-            className="h-full bg-primary-foreground/55 transition-[width] duration-500 dark:bg-primary/65"
+            className="h-full bg-primary/65 transition-[width] duration-500"
             style={{ width: `${progress}%` }}
           />
           <span
@@ -193,7 +193,7 @@ function ScoreProgressCard({
           />
           <span
             aria-hidden="true"
-            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-primary-foreground shadow-sm dark:border-card dark:bg-foreground"
+            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card bg-primary shadow-sm"
             style={{ left: `${progress}%` }}
           />
         </div>
@@ -250,7 +250,7 @@ function PracticeHeatmap({
   const practiced = days.filter((day) => day.completed).length;
 
   return (
-    <div className="lsat-panel p-5">
+    <div className="lsat-panel h-full p-5">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -424,7 +424,7 @@ export default function DashboardPage() {
 
           <motion.section
             variants={staggerItem}
-            className="grid gap-4 lg:grid-cols-3"
+            className="grid items-stretch gap-5 lg:grid-cols-2"
           >
             <ScoreProgressCard
               currentScore={currentScore}
@@ -439,9 +439,11 @@ export default function DashboardPage() {
             />
           </motion.section>
 
-          <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_0.85fr]">
-            <motion.div variants={staggerContainer} className="space-y-5">
-              <motion.section variants={staggerItem} className="lsat-panel p-5">
+          <motion.div
+            variants={staggerContainer}
+            className="mt-5 grid items-stretch gap-5 lg:grid-cols-2"
+          >
+              <motion.section variants={staggerItem} className="lsat-panel h-full p-5">
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -473,11 +475,7 @@ export default function DashboardPage() {
                 </div>
               </motion.section>
 
-              <motion.div variants={staggerItem}>
-                <DailyQuestCard />
-              </motion.div>
-
-              <motion.section variants={staggerItem} className="lsat-panel p-5">
+              <motion.section variants={staggerItem} className="lsat-panel h-full p-5">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -529,10 +527,12 @@ export default function DashboardPage() {
                   </div>
                 )}
               </motion.section>
-            </motion.div>
 
-            <motion.aside variants={staggerContainer} className="space-y-5">
-              <motion.div variants={staggerItem} className="lsat-panel lsat-panel-highlight p-5">
+              <motion.div variants={staggerItem} className="h-full [&>*]:h-full">
+                <DailyQuestCard />
+              </motion.div>
+
+              <motion.div variants={staggerItem} className="lsat-panel lsat-panel-highlight h-full p-5">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -553,8 +553,7 @@ export default function DashboardPage() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </motion.div>
-            </motion.aside>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>

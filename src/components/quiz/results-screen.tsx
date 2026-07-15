@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ReviewItem } from "./review-item";
@@ -39,7 +41,7 @@ export function ResultsScreen({
   return (
     <div className="flex h-full flex-col">
       {/* Score header */}
-      <div className="flex flex-col items-center gap-3 border-b py-8">
+      <div className="flex flex-col items-center gap-3 border-b bg-card/55 px-6 py-8">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -59,7 +61,7 @@ export function ResultsScreen({
         <p className="text-sm text-muted-foreground">
           Time: {formatTime(elapsed)}
         </p>
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Button variant="outline" onClick={onRetry}>
             Retry Practice Set
           </Button>
@@ -71,6 +73,12 @@ export function ResultsScreen({
           {onClose && !onPractice && (
             <Button onClick={onClose}>Close</Button>
           )}
+          <Button variant="outline" asChild>
+            <Link href="/dashboard">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -90,7 +98,7 @@ export function ResultsScreen({
       )}
 
       {/* Question review list */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto p-6">
         <h3 className="mb-4 text-lg font-semibold">Question Review</h3>
         <div className="space-y-4">
           {problems.map((problem, i) => (

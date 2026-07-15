@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronUp, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { MathContent } from "./math-content";
 import type { Problem } from "./types";
 
@@ -15,14 +14,11 @@ type QuestionPanelProps = {
 };
 
 export function QuestionPanel({ problem, questionNumber, hintRevealed = false }: QuestionPanelProps) {
-  const [hintOpen, setHintOpen] = useState(false);
-
-  useEffect(() => {
-    if (hintRevealed) setHintOpen(true);
-  }, [hintRevealed]);
+  const [closedHintId, setClosedHintId] = useState<string | null>(null);
+  const hintOpen = hintRevealed && closedHintId !== problem.id;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="shrink-0 overflow-y-auto p-6 md:flex-1">
       <div className="mb-4">
         <span className="text-sm font-medium text-muted-foreground">
           Question {questionNumber}
@@ -37,7 +33,7 @@ export function QuestionPanel({ problem, questionNumber, hintRevealed = false }:
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            onClick={() => setHintOpen((h) => !h)}
+            onClick={() => setClosedHintId(hintOpen ? problem.id : null)}
           >
             <Lightbulb className="mr-1 h-4 w-4" />
             Need a hint?

@@ -17,7 +17,7 @@ export function DailyQuestCard() {
   // Quest unavailable until LSAT content/adaptive generation is ready.
   if (!quest) {
     return (
-      <div className="lsat-panel p-6">
+      <div className="lsat-panel h-full p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -41,7 +41,7 @@ export function DailyQuestCard() {
       : 0;
 
     return (
-      <div className="lsat-panel border-emerald-500/25 p-6">
+      <div className="lsat-panel h-full border-emerald-500/25 p-6">
         <div className="flex items-start gap-4">
           <span className="flex h-10 w-10 items-center justify-center bg-emerald-500/10 text-emerald-300">
             <CheckCircle2 className="h-5 w-5" />
@@ -70,11 +70,11 @@ export function DailyQuestCard() {
   const progress = Math.round((answered / quest.totalQuestions) * 100);
 
   return (
-    <Link href="/quest">
+    <Link href="/quest" className="block h-full">
       <motion.div
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
-        className="lsat-panel lsat-interactive group cursor-pointer p-6 hover:border-primary/50"
+        className="lsat-panel lsat-interactive group h-full cursor-pointer p-6 hover:border-primary/50"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>

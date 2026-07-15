@@ -151,12 +151,6 @@ export function ProtectedShell({ children }: { children: React.ReactNode }) {
                             )}
                           />
                           <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          {isActive && (
-                            <motion.span
-                              layoutId="mobile-active-route-dot"
-                              className="h-2 w-2 shrink-0 rounded-full bg-primary"
-                            />
-                          )}
                         </Link>
                       </motion.div>
                     );

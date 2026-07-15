@@ -14,7 +14,6 @@ export type FeedbackState = {
 
 type AnswerPanelProps = {
   problem: Problem;
-  questionNumber: number;
   selectedOption: number | undefined;
   isMarked: boolean;
   onSelect: (optionIndex: number) => void;
@@ -32,7 +31,6 @@ type AnswerPanelProps = {
 
 export function AnswerPanel({
   problem,
-  questionNumber,
   selectedOption,
   isMarked,
   onSelect,
@@ -45,8 +43,7 @@ export function AnswerPanel({
 }: AnswerPanelProps) {
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-lg font-bold">{questionNumber}</span>
+      <div className="mb-4 flex min-h-8 items-center justify-end">
         {showMark && (
           <Button
             variant="ghost"

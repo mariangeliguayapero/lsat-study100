@@ -127,7 +127,6 @@ export function QuestProblemPageContent() {
           />
           <AnswerPanel
             problem={asProblem}
-            questionNumber={ctx.currentIndex + 1}
             selectedOption={
               ctx.answers.get(currentProblem.id) ??
               (currentProblem.selectedOption ?? undefined)

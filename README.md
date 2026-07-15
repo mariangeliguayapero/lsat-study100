@@ -502,6 +502,10 @@ make dev-all     # Start both services concurrently
 
 Schema is managed directly via Supabase (no DrizzleKit). Drizzle is used as a query builder only.
 
+QA and staging environments must also apply the LSAT content SQL files. See
+[`docs/LSAT_CONTENT_SEED.md`](docs/LSAT_CONTENT_SEED.md) for the required order,
+rerun behavior, and verification query.
+
 | Command | Description |
 |---------|-------------|
 | `make db-seed` | Seed questions and lessons |

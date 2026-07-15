@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,7 +13,6 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { getTopicIcon } from "@/lib/topic-icons";
-import { cn } from "@/lib/utils";
 
 type Subtopic = {
   id: string;
@@ -34,12 +33,6 @@ type Topic = {
   subtopics: Subtopic[];
 };
 
-const SECTIONS = [
-  { value: "all", label: "All topics" },
-  { value: "logical-reasoning", label: "Logical Reasoning" },
-  { value: "reading-comprehension", label: "Reading Comprehension" },
-] as const;
-
 function sectionLabel(subject: string) {
   return subject === "reading-comprehension"
     ? "Reading Comprehension"
@@ -47,7 +40,6 @@ function sectionLabel(subject: string) {
 }
 
 export default function StudyLibraryPage() {
-  const [section, setSection] = useState<(typeof SECTIONS)[number]["value"]>("all");
   const { data, isLoading, isError } = useQuery<{ topics: Topic[] }>({
     queryKey: ["study-library"],
     queryFn: () =>
@@ -62,12 +54,7 @@ export default function StudyLibraryPage() {
     if (isError) toast.error("Failed to load the study library");
   }, [isError]);
 
-  const topics = useMemo(() => {
-    const allTopics = data?.topics ?? [];
-    return section === "all"
-      ? allTopics
-      : allTopics.filter((topic) => topic.subject === section);
-  }, [data?.topics, section]);
+  const topics = data?.topics ?? [];
 
   return (
     <div className="p-4 pb-16 md:p-6">
@@ -94,24 +81,6 @@ export default function StudyLibraryPage() {
           </Link>
         </header>
 
-        <div className="mt-6 flex flex-wrap gap-2" aria-label="Filter study library by section">
-          {SECTIONS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => setSection(item.value)}
-              className={cn(
-                "inline-flex h-10 items-center border px-4 text-sm font-medium transition-colors",
-                section === item.value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
         {isLoading ? (
           <div className="mt-7 grid gap-5 lg:grid-cols-2">
             {[1, 2, 3, 4].map((item) => (
@@ -119,11 +88,11 @@ export default function StudyLibraryPage() {
             ))}
           </div>
         ) : topics.length > 0 ? (
-          <div className="mt-7 grid items-start gap-5 lg:grid-cols-2">
+          <div className="mt-7 grid items-stretch gap-5 lg:grid-cols-2">
             {topics.map((topic) => {
               const Icon = getTopicIcon(topic.slug);
               return (
-                <article key={topic.id} className="lsat-panel lsat-interactive p-5">
+                <article key={topic.id} className="lsat-panel lsat-interactive flex h-full flex-col p-5">
                   <div className="flex items-start gap-4">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" />
@@ -143,7 +112,7 @@ export default function StudyLibraryPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 space-y-2 border-t border-border/70 pt-4">
+                  <div className="mt-5 flex-1 space-y-2 border-t border-border/70 pt-4">
                     {topic.subtopics.map((subtopic) => (
                       <div
                         key={subtopic.id}
@@ -190,7 +159,7 @@ export default function StudyLibraryPage() {
           <div className="mt-7 border border-dashed border-border p-10 text-center">
             <LibraryBig className="mx-auto h-6 w-6 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">
-              No LSAT review content is available for this section yet.
+              No LSAT review content is available yet.
             </p>
           </div>
         )}

@@ -224,8 +224,17 @@ export default function LearningPage() {
   const estimatedScore = Math.round(120 + (averageAccuracy / 100) * 60);
   const targetScore = progress?.user.targetScore ?? progress?.targetScore ?? 170;
   const scoreGap = Math.max(targetScore - estimatedScore, 0);
-  const masteredTopics =
-    progress?.topicMastery.items.filter((topic) => topic.mastered) ?? [];
+  const masteredSubtopics = useMemo(
+    () =>
+      [...(progress?.subtopicPerformance ?? [])]
+        .filter((subtopic) => subtopic.total >= 5 && subtopic.accuracy >= 70)
+        .sort((a, b) => {
+          if (a.accuracy !== b.accuracy) return b.accuracy - a.accuracy;
+          return b.total - a.total;
+        })
+        .slice(0, 5),
+    [progress?.subtopicPerformance]
+  );
 
   const focusLessonHref = nextFocus?.slug
     ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/micro-lesson`
@@ -297,8 +306,8 @@ export default function LearningPage() {
         />
       </section>
 
-      <section className="mb-8 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="lsat-panel lsat-panel-highlight border-primary/35 p-6">
+      <section className="mb-8 grid items-stretch gap-5 lg:grid-cols-2">
+        <div className="lsat-panel lsat-panel-highlight h-full border-primary/35 p-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -350,38 +359,49 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="lsat-panel p-5">
+        <div className="lsat-panel h-full p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Mastered Topics</h2>
               <p className="text-sm text-muted-foreground">
-                Topics where recent accuracy is at or above mastery threshold.
+                Strongest mastered question types from recent practice.
               </p>
             </div>
             <Brain className="h-5 w-5 text-primary" />
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {masteredTopics.length > 0 ? (
-              masteredTopics.map((topic) => (
-                <span
-                  key={topic.name}
-                  className="border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
+          <div className="mt-5 max-h-64 space-y-2 overflow-y-auto pr-1">
+            {masteredSubtopics.length > 0 ? (
+              masteredSubtopics.map((subtopic) => (
+                <Link
+                  key={subtopic.id}
+                  href={`/learning/${subtopic.topicSlug}/${subtopic.slug}/micro-lesson`}
+                  className="lsat-panel-soft lsat-interactive flex items-center justify-between gap-4 border px-3 py-2.5 hover:bg-muted/40"
                 >
-                  {topic.name}
-                </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">
+                      {subtopic.name}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {subtopic.topicName} · {subtopic.correct}/{subtopic.total} correct
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm font-semibold text-primary">
+                    {subtopic.accuracy}%
+                  </span>
+                </Link>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                No mastered topics yet. Keep completing focused sets to establish reliable strengths.
+                No mastered subtopics yet. A question type appears here after at least five attempts at 70% accuracy or better.
               </p>
             )}
           </div>
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="lsat-panel p-5">
+      <section className="grid items-stretch gap-5 lg:grid-cols-2">
+        <div className="lsat-panel h-full p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">Review Priorities</h2>
@@ -441,8 +461,8 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <aside className="space-y-4">
-          <div className="lsat-panel p-5">
+        <aside className="grid h-full gap-5 md:grid-cols-2 lg:grid-cols-1 lg:grid-rows-2">
+          <div className="lsat-panel h-full p-5">
             <LibraryBig className="h-5 w-5 text-primary" />
             <h2 className="mt-4 text-lg font-semibold">Choose another review area</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -457,7 +477,7 @@ export default function LearningPage() {
             </Link>
           </div>
 
-          <div className="lsat-panel p-5">
+          <div className="lsat-panel h-full p-5">
             <h2 className="text-sm font-semibold">Need help prioritizing?</h2>
             <div className="mt-4 grid gap-2">
               <Link
