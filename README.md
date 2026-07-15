@@ -506,6 +506,10 @@ QA and staging environments must also apply the LSAT content SQL files. See
 [`docs/LSAT_CONTENT_SEED.md`](docs/LSAT_CONTENT_SEED.md) for the required order,
 rerun behavior, and verification query.
 
+Before deploying a QA environment, follow
+[`docs/QA_DEPLOYMENT.md`](docs/QA_DEPLOYMENT.md) for the Vercel, Render, Clerk,
+Supabase, and smoke-test checklist.
+
 | Command | Description |
 |---------|-------------|
 | `make db-seed` | Seed questions and lessons |

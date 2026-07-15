@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  Suspense,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -108,7 +115,7 @@ function weakestArea(progress?: ProgressData) {
     .sort((a, b) => a.accuracy - b.accuracy)[0];
 }
 
-export default function MentorPage() {
+function MentorPageContent() {
   const searchParams = useSearchParams();
   const [input, setInput] = useState(() => searchParams.get("prompt") ?? "");
   const [selectedMode, setSelectedMode] = useState<(typeof MENTOR_MODES)[number]["key"]>("ask");
@@ -650,5 +657,13 @@ export default function MentorPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function MentorPage() {
+  return (
+    <Suspense fallback={null}>
+      <MentorPageContent />
+    </Suspense>
   );
 }

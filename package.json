@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "qa:verify-env": "node scripts/verify-qa-env.mjs",
+    "qa:build": "pnpm qa:verify-env && next build",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx --env-file=.env src/db/seed/index.ts"

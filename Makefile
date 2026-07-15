@@ -36,7 +36,8 @@ db-reset: ## Reset local Supabase database
 	supabase db reset
 
 db-types: ## Regenerate Supabase TypeScript types
-	npx supabase gen types typescript --project-id "xyhkkzuomlzfqfkdyoor" --schema public > src/types/supabase.ts
+	@test -n "$$SUPABASE_PROJECT_ID" || (echo "SUPABASE_PROJECT_ID is required" >&2; exit 1)
+	npx supabase gen types typescript --project-id "$$SUPABASE_PROJECT_ID" --schema public > src/types/supabase.ts
 
 
 db-seed: ## Seed questions and lessons
