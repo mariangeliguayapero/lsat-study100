@@ -6,10 +6,11 @@ import {
   getUserCustomTopics,
 } from "@/lib/db/queries/custom-learning";
 
-export const maxDuration = 60;
+export const maxDuration = 180;
 
-const AGENT_URL =
-  process.env.AGENT_SERVICE_URL || "http://localhost:8080";
+const AGENT_URL = (
+  process.env.AGENT_SERVICE_URL || "http://localhost:8080"
+).replace(/\/+$/, "");
 
 export async function GET() {
   const { userId: clerkId } = await auth();
@@ -42,13 +43,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
 
-  const agentRes = await fetch(`${AGENT_URL}/my-learning/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic }),
-  });
+  let agentRes: Response;
+  try {
+    agentRes = await fetch(`${AGENT_URL}/my-learning/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic }),
+      signal: AbortSignal.timeout(170_000),
+    });
+  } catch (error) {
+    console.error("[my-learning/topics] Agent request failed", {
+      message: error instanceof Error ? error.message : "Unknown request error",
+    });
+    return NextResponse.json(
+      { error: "Lesson generation service is unavailable. Please try again." },
+      { status: 502 }
+    );
+  }
 
   if (!agentRes.ok) {
+    const detail = (await agentRes.text()).slice(0, 500);
+    console.error("[my-learning/topics] Agent generation failed", {
+      status: agentRes.status,
+      detail,
+    });
     return NextResponse.json(
       { error: "Failed to generate topic" },
       { status: 502 }

@@ -131,7 +131,7 @@ export default function SubtopicPage() {
       >
         <div className="inline-flex items-center gap-1.5 border border-primary/30 bg-primary/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
           <BookOpen className="h-2.5 w-2.5" />
-          Review Topic
+          Study Topic
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-3">{subtopic.name}</h1>
         <p className="text-muted-foreground leading-relaxed mb-2">

@@ -29,6 +29,15 @@ const navItems = [
 
 export { navItems as protectedNavItems };
 
+export function isProtectedNavItemActive(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/learning") return pathname === "/learning";
+  if (href === "/study-library") {
+    return pathname.startsWith("/study-library") || pathname.startsWith("/learning/");
+  }
+  return pathname.startsWith(href);
+}
+
 export function Sidebar() {
   const pathname = usePathname();
 
@@ -51,10 +60,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+          const isActive = isProtectedNavItemActive(pathname, item.href);
           return (
             <Link
               key={item.href}

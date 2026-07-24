@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { Sidebar, protectedNavItems } from "@/components/layout/sidebar";
+import {
+  isProtectedNavItemActive,
+  Sidebar,
+  protectedNavItems,
+} from "@/components/layout/sidebar";
 import { NavUser } from "@/components/layout/nav-user";
 import { cn } from "@/lib/utils";
 import { Menu, Scale, X } from "lucide-react";
@@ -120,10 +124,7 @@ export function ProtectedShell({ children }: { children: React.ReactNode }) {
                   }}
                 >
                   {protectedNavItems.map((item) => {
-                    const isActive =
-                      item.href === "/dashboard"
-                        ? pathname === "/dashboard"
-                        : pathname.startsWith(item.href);
+                    const isActive = isProtectedNavItemActive(pathname, item.href);
 
                     return (
                       <motion.div
