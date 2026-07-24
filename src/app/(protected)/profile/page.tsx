@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -15,7 +16,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { AnimatedSprite } from "@/components/pixel-art/animated-sprite";
 import { ProfileNameEditor } from "@/components/profile/profile-name-editor";
 import { ScheduleEditor } from "@/components/profile/schedule-editor";
 
@@ -149,12 +149,15 @@ export default function ProfilePage() {
             >
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <AnimatedSprite
-                    src="/images/pixel-art/profile-avatar.png"
-                    alt="Profile avatar"
-                    width={64}
-                    height={64}
-                  />
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                    <Image
+                      src={user.avatarUrl || "/images/pixel-art/profile-avatar.png"}
+                      alt={`${user.displayName ?? "Student"} profile photo`}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="min-w-0">
                     <ProfileNameEditor displayName={user.displayName} />
                     <p className="text-sm text-muted-foreground">

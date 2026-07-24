@@ -16,16 +16,29 @@ export async function POST() {
   }
 
   const existingUser = await getUserByClerkId(clerkUser.id);
-  const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+  const email =
+    clerkUser.emailAddresses.find(
+      (address) => address.id === clerkUser.primaryEmailAddressId
+    )?.emailAddress ??
+    clerkUser.emailAddresses[0]?.emailAddress ??
+    "";
   const displayName =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+    clerkUser.username ||
+    existingUser?.displayName ||
     undefined;
+  const avatarUrl = clerkUser.imageUrl || existingUser?.avatarUrl || undefined;
+  const changed =
+    !existingUser ||
+    existingUser.email !== email ||
+    existingUser.displayName !== (displayName ?? null) ||
+    existingUser.avatarUrl !== (avatarUrl ?? null);
 
   const user = await createUser({
     clerkId: clerkUser.id,
     email,
     displayName,
-    avatarUrl: clerkUser.imageUrl || undefined,
+    avatarUrl,
   });
 
   if (!user) {
@@ -42,5 +55,5 @@ export async function POST() {
     sendEmail({ to: email, subject, html }).catch(console.error);
   }
 
-  return NextResponse.json({ user });
+  return NextResponse.json({ user, changed });
 }

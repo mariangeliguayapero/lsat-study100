@@ -23,14 +23,12 @@ const LEARNER_TYPES = [
   { emoji: "\u{1F9D8}", label: "Solitary Learner", desc: "I focus best studying alone" },
 ];
 
-const GRADE_OPTIONS = [
-  "8th Grade",
-  "9th Grade",
-  "10th Grade",
-  "11th Grade",
-  "12th Grade",
-  "College Freshman",
-  "College Sophomore",
+const LSAT_STAGE_OPTIONS = [
+  "Just Exploring",
+  "Planning My Test",
+  "Early Prep",
+  "Active Prep",
+  "Retaking the LSAT",
   "Other",
 ];
 
@@ -212,12 +210,14 @@ export default function OnboardingPlanPage() {
             {step === 1 && (
               <>
                 <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">
-                  Where Are You?
+                  Where Are You in Your LSAT Prep?
                 </h1>
-                <p className="mb-1 text-white/70">Your grade helps us tailor the journey perfectly.</p>
-                <p className="mb-8 font-semibold text-white">Pick the one that fits.</p>
+                <p className="mb-1 text-white/70">
+                  Your current stage helps us tailor your study plan.
+                </p>
+                <p className="mb-8 font-semibold text-white">Choose the option that fits best.</p>
                 <div className="flex flex-wrap justify-center gap-3">
-                  {GRADE_OPTIONS.map((g) => (
+                  {LSAT_STAGE_OPTIONS.map((g) => (
                     <button
                       key={g}
                       className={`rounded-xl border px-5 py-3 text-sm font-medium transition-all ${
@@ -311,10 +311,14 @@ export default function OnboardingPlanPage() {
             {step === 3 && (
               <>
                 <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">
-                  What Are Your Interests?
+                  What Topics Interest You?
                 </h1>
-                <p className="mb-1 text-white/70">Type anything you&apos;re passionate about and press Enter.</p>
-                <p className="mb-8 font-semibold text-white">The more we know, the better.</p>
+                <p className="mb-1 text-white/70">
+                  Add subjects you enjoy reading about and press Enter.
+                </p>
+                <p className="mb-8 font-semibold text-white">
+                  We&apos;ll use them to make practice more relevant.
+                </p>
                 <div className="flex w-full max-w-md mx-auto flex-wrap items-center gap-2 rounded-xl border border-white/15 bg-black/50 px-4 py-3 backdrop-blur-xl">
                   {data.interests.map((interest) => (
                     <span
@@ -329,7 +333,7 @@ export default function OnboardingPlanPage() {
                   ))}
                   <input
                     className="min-w-[120px] flex-1 bg-transparent text-sm text-white placeholder-white/40 outline-none"
-                    placeholder="e.g. Space, Music, Basketball..."
+                    placeholder="e.g. Law, public policy, science..."
                     value={interestInput}
                     onChange={(e) => setInterestInput(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, addInterest)}
@@ -342,15 +346,17 @@ export default function OnboardingPlanPage() {
             {step === 4 && (
               <>
                 <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">
-                  What Topic Is Tough?
+                  Which LSAT Area Is Toughest?
                 </h1>
                 <p className="mb-1 text-white/70">
-                  Tell us what subject or concept you&apos;re struggling with. We&apos;ll build your path around it.
+                  Tell us which section, question type, or reasoning skill you want to improve.
                 </p>
-                <p className="mb-8 font-semibold text-white">Don&apos;t worry, everyone has one.</p>
+                <p className="mb-8 font-semibold text-white">
+                  We&apos;ll use this as a starting point.
+                </p>
                 <input
                   className="w-full rounded-xl border border-white/15 bg-black/50 px-5 py-4 text-sm text-white placeholder-white/40 outline-none backdrop-blur-xl focus:border-white/30"
-                  placeholder="e.g. Quadratic Equations, Essay Writing..."
+                  placeholder="e.g. Assumption Questions, Reading Comprehension..."
                   value={data.strugglingTopic}
                   onChange={(e) => setData({ ...data, strugglingTopic: e.target.value })}
                   onKeyDown={(e) => handleKeyDown(e, () => canContinue() && next())}
