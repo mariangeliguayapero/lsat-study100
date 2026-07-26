@@ -41,9 +41,41 @@ type UseMicroLessonOptions = {
     microLessonId: string;
     subtopicId: string;
   };
+  minimumTeachingStepMs?: number;
 };
 
-export function useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStreamUrl, existingLesson, subtopicApiPath, tracking }: UseMicroLessonOptions) {
+function applyMinimumTeachingDuration(
+  step: WhiteboardStep,
+  minimumTeachingStepMs?: number,
+): WhiteboardStep {
+  if (!minimumTeachingStepMs) return step;
+
+  const type = step.action.type;
+  const requiresInput =
+    type === "check_in" ||
+    type === "predict" ||
+    type === "fill_blank" ||
+    type === "pulse_check";
+
+  if (requiresInput) return step;
+
+  return {
+    ...step,
+    durationMs: Math.max(step.durationMs ?? 0, minimumTeachingStepMs),
+  };
+}
+
+export function useMicroLesson({
+  topic,
+  subtopic,
+  metadata,
+  streamUrl,
+  chatStreamUrl,
+  existingLesson,
+  subtopicApiPath,
+  tracking,
+  minimumTeachingStepMs,
+}: UseMicroLessonOptions) {
   const [phase, setPhase] = useState<Phase>("generating");
   const [lessonContent, setLessonContent] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -214,10 +246,13 @@ export function useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStrea
                   whiteboardStepsRef.current = [];
                   setWhiteboardSteps([]);
                 }
-                const step = {
-                  ...parsed.wb_step,
-                  id: nextStepIdRef.current++,
-                } as WhiteboardStep;
+                const step = applyMinimumTeachingDuration(
+                  {
+                    ...parsed.wb_step,
+                    id: nextStepIdRef.current++,
+                  } as WhiteboardStep,
+                  minimumTeachingStepMs,
+                );
                 whiteboardStepsRef.current = [...whiteboardStepsRef.current, step];
                 setWhiteboardSteps((prev) => [...prev, step]);
               }
@@ -243,7 +278,7 @@ export function useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStrea
 
       return fullContent;
     },
-    []
+    [minimumTeachingStepMs]
   );
 
   /** Phase 1: Generate the lesson */
@@ -316,7 +351,7 @@ export function useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStrea
     } catch {
       setPhase("error");
     }
-  }, [topic, subtopic, metadata, parseStream, subtopicApiPath, startSession]);
+  }, [topic, subtopic, metadata, parseStream, streamUrl, subtopicApiPath, startSession]);
 
   /** Phase 2: Follow-up chat */
   const sendMessage = useCallback(
@@ -396,7 +431,7 @@ export function useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStrea
         setIsProcessing(false);
       }
     },
-    [isProcessing, topic, subtopic, parseStream]
+    [isProcessing, topic, subtopic, parseStream, chatStreamUrl]
   );
 
   const transcribeAudio = useCallback(async (blob: Blob): Promise<string> => {

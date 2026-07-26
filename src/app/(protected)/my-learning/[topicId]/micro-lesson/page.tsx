@@ -34,6 +34,10 @@ export default function MyLearningMicroLessonPage() {
       streamUrl="/api/my-learning/lesson/stream"
       chatStreamUrl="/api/my-learning/lesson/chat/stream"
       practiceMode={{ subject: "math", quizStreamUrl: "/api/my-learning/quiz-chat/stream" }}
+      playbackPacing={{
+        minimumTeachingStepMs: 4000,
+        finalStepHoldMs: 3000,
+      }}
       onClose={() => router.push(`/my-learning/${params.topicId}`)}
     />
   );

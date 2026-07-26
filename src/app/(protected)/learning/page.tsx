@@ -236,16 +236,13 @@ export default function LearningPage() {
     [progress?.subtopicPerformance]
   );
 
-  const focusLessonHref = nextFocus?.slug
-    ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/micro-lesson`
-    : nextFocus
-      ? `/learning/${nextFocus.topicSlug}`
-      : "/quest";
+  const hasSpecificFocus = Boolean(nextFocus?.slug);
+  const focusLessonHref = hasSpecificFocus
+    ? `/learning/${nextFocus!.topicSlug}/${nextFocus!.slug}/micro-lesson`
+    : "/study-library";
   const focusPracticeHref = nextFocus?.slug
     ? `/learning/${nextFocus.topicSlug}/${nextFocus.slug}/quiz`
-    : nextFocus
-      ? `/learning/${nextFocus.topicSlug}`
-      : "/quest";
+    : "/quest";
 
   if (loading) {
     return (
@@ -347,14 +344,18 @@ export default function LearningPage() {
               className="lsat-cta-primary inline-flex h-11 items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               <PlayCircle className="h-4 w-4" />
-              Start focused practice
+              {nextFocus ? "Start focused practice" : "Start daily practice"}
             </Link>
             <Link
               href={focusLessonHref}
               className="lsat-cta-secondary inline-flex h-11 items-center justify-center gap-2 border px-5 text-sm font-semibold text-foreground transition hover:bg-muted"
             >
-              <BookOpen className="h-4 w-4" />
-              Open lesson
+              {hasSpecificFocus ? (
+                <BookOpen className="h-4 w-4" />
+              ) : (
+                <LibraryBig className="h-4 w-4" />
+              )}
+              {hasSpecificFocus ? "Open lesson" : "Browse Study Library"}
             </Link>
           </div>
         </div>

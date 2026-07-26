@@ -1,14 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { ProgressStepper } from "@/components/onboarding/progress-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 export default function CompletePage() {
   const router = useRouter();
+  const { refetch } = useCurrentUser();
+  const [openingDashboard, setOpeningDashboard] = useState(false);
+
+  const handleOpenDashboard = async () => {
+    setOpeningDashboard(true);
+
+    try {
+      const response = await fetch("/api/onboarding/complete", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to complete onboarding");
+      }
+
+      const refreshedUser = await refetch();
+      if (!refreshedUser.data?.user.onboardingCompleted) {
+        throw new Error("Onboarding status did not refresh");
+      }
+
+      router.replace("/dashboard");
+    } catch {
+      toast.error(
+        "We couldn't finish your setup. Please try opening the dashboard again."
+      );
+      setOpeningDashboard(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -66,9 +97,10 @@ export default function CompletePage() {
               <Button
                 size="lg"
                 className="w-full"
-                onClick={() => router.push("/dashboard")}
+                disabled={openingDashboard}
+                onClick={() => void handleOpenDashboard()}
               >
-                Go to Dashboard
+                {openingDashboard ? "Opening Dashboard..." : "Go to Dashboard"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </motion.div>

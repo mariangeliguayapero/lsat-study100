@@ -58,6 +58,10 @@ type MicroLessonProps = {
     microLessonId: string;
     subtopicId: string;
   };
+  playbackPacing?: {
+    minimumTeachingStepMs?: number;
+    finalStepHoldMs?: number;
+  };
 };
 
 // ── Check-in question UI ──────────────────────────────────────────────
@@ -605,6 +609,7 @@ export function MicroLesson({
   subtopicApiPath,
   practiceMode,
   tracking,
+  playbackPacing,
 }: MicroLessonProps) {
   const {
     phase,
@@ -613,7 +618,17 @@ export function MicroLesson({
     isWhiteboardStreaming,
     generateLesson,
     updateTracking,
-  } = useMicroLesson({ topic, subtopic, metadata, streamUrl, chatStreamUrl, existingLesson, subtopicApiPath, tracking });
+  } = useMicroLesson({
+    topic,
+    subtopic,
+    metadata,
+    streamUrl,
+    chatStreamUrl,
+    existingLesson,
+    subtopicApiPath,
+    tracking,
+    minimumTeachingStepMs: playbackPacing?.minimumTeachingStepMs,
+  });
 
   const {
     state: playerState,
@@ -948,16 +963,40 @@ export function MicroLesson({
     setTimeout(() => advanceRef.current(), 1200);
   }, []);
 
-  // Transition to practice phase when lesson completes
+  // Let the final explanation finish before moving the learner into practice.
   useEffect(() => {
-    if (isLastStep && lessonPhase === "lesson") {
+    if (
+      !isLastStep ||
+      lessonPhase !== "lesson" ||
+      isNarrating ||
+      isTtsLoading ||
+      isChatting ||
+      whyModalOpen
+    ) {
+      return;
+    }
+
+    const transitionTimer = window.setTimeout(() => {
       setLessonPhase("practice");
       // If problems weren't pre-fetched, fetch now
       if (!providedPracticeProblems && fetchedPracticeProblems.length === 0 && !prefetchedRef.current) {
         fetchPracticeProblems();
       }
-    }
-  }, [isLastStep, lessonPhase, providedPracticeProblems, fetchedPracticeProblems.length, fetchPracticeProblems]);
+    }, playbackPacing?.finalStepHoldMs ?? 1200);
+
+    return () => window.clearTimeout(transitionTimer);
+  }, [
+    isLastStep,
+    lessonPhase,
+    isNarrating,
+    isTtsLoading,
+    isChatting,
+    whyModalOpen,
+    playbackPacing?.finalStepHoldMs,
+    providedPracticeProblems,
+    fetchedPracticeProblems.length,
+    fetchPracticeProblems,
+  ]);
 
   // Mark complete when all practice problems are done
   useEffect(() => {
