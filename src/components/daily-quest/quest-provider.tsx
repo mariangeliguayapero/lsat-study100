@@ -76,6 +76,12 @@ export function QuestProvider({ quest, problems, children }: Props) {
     (problemId: string) => {
       if (isAdvancingRef.current || activeProblemIdRef.current !== problemId) return;
 
+      const problemIndex = problems.findIndex((problem) => problem.id === problemId);
+      if (problemIndex < 0 || problemIndex >= problems.length - 1) {
+        cancelPendingAdvance();
+        return;
+      }
+
       isAdvancingRef.current = true;
       cancelPendingAdvance();
       setFeedbackMap((prev) => {
@@ -86,7 +92,7 @@ export function QuestProvider({ quest, problems, children }: Props) {
       setDirection(1);
       setCurrentIndex((index) => Math.min(index + 1, problems.length - 1));
     },
-    [cancelPendingAdvance, problems.length]
+    [cancelPendingAdvance, problems]
   );
 
   useEffect(() => {
@@ -160,10 +166,13 @@ export function QuestProvider({ quest, problems, children }: Props) {
         const currentPhase = questionPhases.get(problemId) ?? "question";
         if (currentPhase !== "tutor") {
           cancelPendingAdvance();
-          pendingAdvanceRef.current = setTimeout(() => {
-            pendingAdvanceRef.current = null;
-            advanceFromProblem(problemId);
-          }, 1200);
+          const problemIndex = problems.findIndex((item) => item.id === problemId);
+          if (problemIndex >= 0 && problemIndex < problems.length - 1) {
+            pendingAdvanceRef.current = setTimeout(() => {
+              pendingAdvanceRef.current = null;
+              advanceFromProblem(problemId);
+            }, 1200);
+          }
         }
       } else {
         setFeedbackMap((prev) =>

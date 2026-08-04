@@ -114,6 +114,7 @@ export function TutorModeOverlay({
 }: TutorModeOverlayProps) {
   const isPractice = !!practiceContent;
   const hasWhiteboard = whiteboardSteps.length > 0;
+  const isWorkspacePreparing = isWhiteboardStreaming || isProcessing;
   const cursorEnabled = true;
   const penClientRef = useRef<OrbPoint | null>(null);
   const stepFocusRef = useRef<StepFocus | null>(null);
@@ -192,11 +193,19 @@ export function TutorModeOverlay({
           </div>
         ) : (
           <LearningWorkspaceState
-            variant={isWhiteboardStreaming || isProcessing ? "loading" : "empty"}
-            title={isPractice ? "Preparing focused practice guidance" : "Tutor workspace ready"}
+            variant={isWorkspacePreparing ? "loading" : "empty"}
+            title={
+              isPractice
+                ? isWorkspacePreparing
+                  ? "Preparing focused practice guidance"
+                  : "Focused practice ready"
+                : "Tutor workspace ready"
+            }
             description={
               isPractice
-                ? "Athena will use this space for the next explanation, reasoning map, or worked example."
+                ? isWorkspacePreparing
+                  ? "Athena is preparing an explanation or reasoning map for this practice question."
+                  : "Work through the practice question, or ask Athena for help. Guidance will appear here when you need it."
                 : "Ask a question or select an answer. Athena's explanation and visual reasoning will appear here."
             }
             className="border-0 pb-28 pt-20 sm:pl-[360px]"

@@ -104,6 +104,12 @@ export function QuizLayoutProvider({
     (problemId: string) => {
       if (isAdvancingRef.current || activeProblemIdRef.current !== problemId) return;
 
+      const problemIndex = problems.findIndex((problem) => problem.id === problemId);
+      if (problemIndex < 0 || problemIndex >= problems.length - 1) {
+        cancelPendingAdvance();
+        return;
+      }
+
       isAdvancingRef.current = true;
       cancelPendingAdvance();
       setFeedbackMap((prev) => {
@@ -113,7 +119,7 @@ export function QuizLayoutProvider({
       });
       quiz.goNext();
     },
-    [cancelPendingAdvance, quiz]
+    [cancelPendingAdvance, problems, quiz]
   );
 
   const handleGoNext = useCallback(() => {
@@ -170,10 +176,13 @@ export function QuizLayoutProvider({
         } else {
           recordEvent({ problemId, eventType: "answer_correct", responseTimeMs, selectedOption: optionIndex });
           cancelPendingAdvance();
-          pendingAdvanceRef.current = setTimeout(() => {
-            pendingAdvanceRef.current = null;
-            advanceFromProblem(problemId);
-          }, 1200);
+          const problemIndex = problems.findIndex((item) => item.id === problemId);
+          if (problemIndex >= 0 && problemIndex < problems.length - 1) {
+            pendingAdvanceRef.current = setTimeout(() => {
+              pendingAdvanceRef.current = null;
+              advanceFromProblem(problemId);
+            }, 1200);
+          }
         }
       } else {
         if (lockedIds.has(problemId)) return;
