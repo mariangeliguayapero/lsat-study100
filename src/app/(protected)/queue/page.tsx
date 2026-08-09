@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BarChart3, Clock, Target, TrendingUp } from "lucide-react";
+import { BarChart3, Clock, Info, Target, TrendingUp } from "lucide-react";
 
 type FilterRange = "week" | "month" | "all";
 
@@ -217,6 +217,12 @@ function EmptyState({ children }: { children: React.ReactNode }) {
   return <p className="py-8 text-sm text-muted-foreground">{children}</p>;
 }
 
+function rangeLabel(range: FilterRange): string {
+  if (range === "week") return "the last 7 days";
+  if (range === "month") return "the last 30 days";
+  return "all activity";
+}
+
 export default function ProgressPage() {
   const [range, setRange] = useState<FilterRange>("month");
 
@@ -279,20 +285,13 @@ export default function ProgressPage() {
   const logicalReasoning = data.sectionScores.math;
   const readingComprehension = data.sectionScores.readingWriting;
   const areaBreakdown = data.subtopicPerformance.slice(0, 6);
-  const chartData =
-    filteredScoreHistory.length > 0
-      ? filteredScoreHistory.map((point) => ({
-          label: formatShortDate(point.date),
-          score: point.score,
-          logicalReasoning: logicalReasoning.accuracy,
-          readingComprehension: readingComprehension.accuracy,
-        }))
-      : data.scoreHistory.map((point) => ({
-          label: formatShortDate(point.date),
-          score: point.score,
-          logicalReasoning: logicalReasoning.accuracy,
-          readingComprehension: readingComprehension.accuracy,
-        }));
+  const chartData = filteredScoreHistory.map((point) => ({
+    label: formatShortDate(point.date),
+    score: point.score,
+    logicalReasoning: logicalReasoning.accuracy,
+    readingComprehension: readingComprehension.accuracy,
+  }));
+  const hasSingleObservation = chartData.length === 1;
 
   return (
     <div className="p-4 pb-16 md:p-6">
@@ -382,6 +381,32 @@ export default function ProgressPage() {
                 {range === "week" ? "Last 7 days" : range === "month" ? "Last 30 days" : "All activity"}
               </p>
             </div>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground" aria-label="Chart legend">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-0.5 w-5 bg-primary" aria-hidden="true" />
+                Estimated LSAT
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-0.5 w-5 bg-[var(--chart-4)]" aria-hidden="true" />
+                Logical Reasoning
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-0.5 w-5 bg-[var(--chart-3)]" aria-hidden="true" />
+                Reading Comprehension
+              </span>
+            </div>
+            {hasSingleObservation && (
+              <div
+                className="mt-4 flex items-start gap-2 border border-border/70 bg-muted/35 px-3 py-2.5 text-xs text-muted-foreground"
+                role="status"
+              >
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                <p>
+                  <span className="font-medium text-foreground">One practice day in this period.</span>{" "}
+                  Complete another practice set to see a trend line.
+                </p>
+              </div>
+            )}
             <div className="mt-6 h-72">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -429,7 +454,7 @@ export default function ProgressPage() {
                       name="Estimated score"
                       stroke="var(--primary)"
                       strokeWidth={2}
-                      dot={{ r: 4, fill: "var(--foreground)", stroke: "var(--foreground)" }}
+                      dot={{ r: 4, fill: "var(--primary)", stroke: "var(--card)", strokeWidth: 2 }}
                     />
                     <Line
                       yAxisId="accuracy"
@@ -438,7 +463,11 @@ export default function ProgressPage() {
                       name="Logical Reasoning accuracy"
                       stroke="var(--chart-4)"
                       strokeWidth={2}
-                      dot={false}
+                      dot={
+                        hasSingleObservation
+                          ? { r: 4, fill: "var(--chart-4)", stroke: "var(--card)", strokeWidth: 2 }
+                          : false
+                      }
                     />
                     <Line
                       yAxisId="accuracy"
@@ -447,12 +476,18 @@ export default function ProgressPage() {
                       name="Reading Comprehension accuracy"
                       stroke="var(--chart-3)"
                       strokeWidth={2}
-                      dot={false}
+                      dot={
+                        hasSingleObservation
+                          ? { r: 4, fill: "var(--chart-3)", stroke: "var(--card)", strokeWidth: 2 }
+                          : false
+                      }
                     />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <EmptyState>Complete practice sets to build your score trend.</EmptyState>
+                <EmptyState>
+                  No completed practice in {rangeLabel(range)}. Complete a practice set to add a data point.
+                </EmptyState>
               )}
             </div>
           </motion.div>
