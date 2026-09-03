@@ -9,6 +9,7 @@ import {
   BookOpen,
   Brain,
   ClipboardList,
+  CreditCard,
   GraduationCap,
   LibraryBig,
   LayoutDashboard,
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/my-learning", label: "Learn", icon: BookOpen },
   { href: "/full-sat", label: "Full LSAT", icon: GraduationCap },
+  { href: "/pricing", label: "Billing", icon: CreditCard },
 ];
 
 export { navItems as protectedNavItems };

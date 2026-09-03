@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -48,6 +49,21 @@ type ProfileData = {
   weeklyStreakDays: ConsistencyDay[];
 };
 
+type BillingStatusData = {
+  access: {
+    reason: "subscription" | "trial" | "expired";
+    trialDaysRemaining: number;
+    trialEndsAt: string;
+  };
+  subscription: {
+    status: string;
+    planInterval: "month" | "year" | null;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    hasCustomer: boolean;
+  };
+};
+
 const staggerContainer = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
@@ -64,6 +80,34 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatSubscriptionPlan(billing?: BillingStatusData): string {
+  if (!billing) return "View billing";
+
+  if (billing.access.reason === "subscription") {
+    if (
+      billing.subscription.cancelAtPeriodEnd &&
+      billing.subscription.currentPeriodEnd
+    ) {
+      return `Ends ${formatDate(billing.subscription.currentPeriodEnd)}`;
+    }
+
+    const plan =
+      billing.subscription.planInterval === "year"
+        ? "Annual"
+        : billing.subscription.planInterval === "month"
+          ? "Monthly"
+          : "Subscription";
+    return `${plan} · Active`;
+  }
+
+  if (billing.access.reason === "trial") {
+    const days = billing.access.trialDaysRemaining;
+    return `Trial · ${days} day${days === 1 ? "" : "s"} left`;
+  }
+
+  return "Trial expired";
 }
 
 export default function ProfilePage() {
@@ -88,6 +132,18 @@ export default function ProfilePage() {
     enabled: readyToLoad,
   });
 
+  const { data: billingData, isLoading: billingLoading } =
+    useQuery<BillingStatusData>({
+      queryKey: ["billing-status"],
+      queryFn: () =>
+        fetch("/api/billing/status").then((response) => {
+          if (!response.ok) throw new Error("Failed to load billing status");
+          return response.json();
+        }),
+      staleTime: 60_000,
+      enabled: readyToLoad,
+    });
+
   useEffect(() => {
     if (!userLoading && userData && !userData.user.onboardingCompleted) {
       router.replace("/onboarding");
@@ -98,7 +154,7 @@ export default function ProfilePage() {
     if (isError) toast.error("Failed to load profile data");
   }, [isError]);
 
-  const loading = userLoading || profileLoading;
+  const loading = userLoading || profileLoading || billingLoading;
 
   if (loading) {
     return (
@@ -126,6 +182,27 @@ export default function ProfilePage() {
   if (!data || !data.user) return null;
 
   const { user } = data;
+  const accountItems = [
+    { icon: Mail, label: "Email address", status: "Managed by sign-in" },
+    {
+      icon: LockKeyhole,
+      label: "Password & security",
+      status: "Managed by sign-in",
+    },
+    {
+      icon: CreditCard,
+      label: "Subscription plan",
+      status: formatSubscriptionPlan(billingData),
+      href: "/pricing",
+    },
+    { icon: Bell, label: "Notifications", status: "Not configured" },
+    {
+      icon: SlidersHorizontal,
+      label: "App preferences",
+      status: "Coming later",
+    },
+  ];
+
   return (
     <div className="relative z-10 p-4 pb-16 md:p-6">
       <motion.div
@@ -228,26 +305,35 @@ export default function ProfilePage() {
                 </h3>
               </div>
               <div className="mt-5 space-y-3">
-                {[
-                  { icon: Mail, label: "Email address", status: "Managed by sign-in" },
-                  { icon: LockKeyhole, label: "Password & security", status: "Managed by sign-in" },
-                  { icon: CreditCard, label: "Subscription plan", status: "Not configured" },
-                  { icon: Bell, label: "Notifications", status: "Not configured" },
-                  { icon: SlidersHorizontal, label: "App preferences", status: "Coming later" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <item.icon className="h-4 w-4 shrink-0 text-primary" />
-                      <p className="text-sm font-medium">{item.label}</p>
+                {accountItems.map((item) => {
+                  const content = (
+                    <>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <item.icon className="h-4 w-4 shrink-0 text-primary" />
+                        <p className="text-sm font-medium">{item.label}</p>
+                      </div>
+                      <span className="shrink-0 text-right text-xs text-muted-foreground">
+                        {item.status}
+                      </span>
+                    </>
+                  );
+                  const className =
+                    "flex items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0";
+
+                  return item.href ? (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`${className} transition-colors hover:text-primary`}
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={item.label} className={className}>
+                      {content}
                     </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           </motion.div>

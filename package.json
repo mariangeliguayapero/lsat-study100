@@ -9,6 +9,9 @@
     "qa:build": "pnpm qa:verify-env && next build",
     "start": "next start",
     "lint": "eslint",
+    "stripe:setup": "node --env-file=.env.local scripts/setup-stripe.mjs",
+    "stripe:verify": "node --env-file=.env.local scripts/verify-stripe.mjs",
+    "test:billing": "tsx --test src/lib/billing/access.test.ts",
     "db:seed": "tsx --env-file=.env src/db/seed/index.ts"
   },
   "dependencies": {
@@ -34,6 +37,7 @@
     "remark-math": "^6.0.0",
     "resend": "^6.11.0",
     "sonner": "^2.0.7",
+    "stripe": "^22.6.0",
     "tailwind-merge": "^3.4.1",
     "zod": "^4.3.6"
   },
