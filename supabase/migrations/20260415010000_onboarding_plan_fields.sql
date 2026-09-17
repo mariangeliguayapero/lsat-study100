@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- Add onboarding plan fields to user_preferences
 ALTER TABLE user_preferences
   ADD COLUMN IF NOT EXISTS name text,

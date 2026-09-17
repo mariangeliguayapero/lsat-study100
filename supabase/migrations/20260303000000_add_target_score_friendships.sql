@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 CREATE TABLE IF NOT EXISTS "friendships" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -9,6 +11,6 @@ CREATE TABLE IF NOT EXISTS "friendships" (
 
 ALTER TABLE "users" ADD COLUMN "target_score" integer;
 
-ALTER TABLE "friendships" ADD CONSTRAINT "friendships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "friendships" ADD CONSTRAINT "friendships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "lsat"."users"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "friendships" ADD CONSTRAINT "friendships_friend_user_id_users_id_fk" FOREIGN KEY ("friend_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "friendships" ADD CONSTRAINT "friendships_friend_user_id_users_id_fk" FOREIGN KEY ("friend_user_id") REFERENCES "lsat"."users"("id") ON DELETE cascade ON UPDATE no action;

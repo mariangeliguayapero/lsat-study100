@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- Excalidraw-based lessons (MCP-powered)
 -- Stores the accumulated Excalidraw element set + lesson text per subtopic.
 

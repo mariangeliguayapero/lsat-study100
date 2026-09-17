@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 CREATE TABLE IF NOT EXISTS "subtopic_lore" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"subtopic_id" uuid NOT NULL,
@@ -8,4 +10,4 @@ CREATE TABLE IF NOT EXISTS "subtopic_lore" (
 	CONSTRAINT "subtopic_lore_subtopic_id_unique" UNIQUE("subtopic_id")
 );
 
-ALTER TABLE "subtopic_lore" ADD CONSTRAINT "subtopic_lore_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "public"."subtopics"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "subtopic_lore" ADD CONSTRAINT "subtopic_lore_subtopic_id_subtopics_id_fk" FOREIGN KEY ("subtopic_id") REFERENCES "lsat"."subtopics"("id") ON DELETE cascade ON UPDATE no action;

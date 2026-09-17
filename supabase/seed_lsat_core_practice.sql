@@ -3,6 +3,8 @@
 -- not yet include "lsat". These LSAT problems use source='sat' for compatibility
 -- with the existing quiz, progress, and daily quest queries.
 
+SET search_path TO "lsat";
+
 INSERT INTO topics (
   slug,
   name,

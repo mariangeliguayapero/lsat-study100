@@ -7,6 +7,8 @@
 --   reading_writing = Reading Comprehension
 --   math            = Logical Reasoning
 
+SET search_path TO "lsat";
+
 BEGIN;
 
 WITH upserted_test AS (

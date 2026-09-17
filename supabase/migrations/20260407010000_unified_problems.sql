@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- Unified problems schema: merges questions, sat_problems, practice_problems, custom_topic_questions
 -- into a single problems table, and merges quiz session/answer tables.
 

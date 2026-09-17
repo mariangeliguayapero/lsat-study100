@@ -12,6 +12,7 @@
     "stripe:setup": "node --env-file=.env.local scripts/setup-stripe.mjs",
     "stripe:verify": "node --env-file=.env.local scripts/verify-stripe.mjs",
     "test:billing": "tsx --test src/lib/billing/access.test.ts",
+    "db:migrate:lsat": "bash scripts/apply-lsat-migrations.sh",
     "db:seed": "tsx --env-file=.env src/db/seed/index.ts"
   },
   "dependencies": {

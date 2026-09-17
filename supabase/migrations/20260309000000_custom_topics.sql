@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 CREATE TABLE IF NOT EXISTS "custom_quiz_answers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"session_id" uuid NOT NULL,
@@ -48,17 +50,17 @@ CREATE TABLE IF NOT EXISTS "custom_topics" (
 );
 
 
-ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_session_id_custom_quiz_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."custom_quiz_sessions"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_session_id_custom_quiz_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "lsat"."custom_quiz_sessions"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_question_id_custom_topic_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."custom_topic_questions"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_quiz_answers" ADD CONSTRAINT "custom_quiz_answers_question_id_custom_topic_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "lsat"."custom_topic_questions"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "lsat"."users"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_quiz_sessions" ADD CONSTRAINT "custom_quiz_sessions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "lsat"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "custom_topic_questions" ADD CONSTRAINT "custom_topic_questions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_topic_questions" ADD CONSTRAINT "custom_topic_questions_topic_id_custom_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "lsat"."custom_topics"("id") ON DELETE cascade ON UPDATE no action;
 
-ALTER TABLE "custom_topics" ADD CONSTRAINT "custom_topics_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "custom_topics" ADD CONSTRAINT "custom_topics_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "lsat"."users"("id") ON DELETE cascade ON UPDATE no action;
 
 CREATE INDEX "custom_quiz_answers_session_id_idx" ON "custom_quiz_answers" USING btree ("session_id");
 

@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- RPC functions for atomic operations
 -- Run these in the Supabase SQL editor or via `supabase db push`
 

@@ -1,11 +1,6 @@
+SET search_path TO "lsat";
+
 -- Full SAT practice test module: test blueprints, attempts, and per-question answers.
-
--- ============================================================
--- A. Extend enums
--- ============================================================
-
-ALTER TYPE problem_source ADD VALUE IF NOT EXISTS 'full_sat';
-ALTER TYPE session_source ADD VALUE IF NOT EXISTS 'full_sat';
 
 -- ============================================================
 -- B. Update CHECK constraint on problems to allow full_sat

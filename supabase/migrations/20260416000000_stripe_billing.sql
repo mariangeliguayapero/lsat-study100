@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 CREATE TABLE IF NOT EXISTS "billing_subscriptions" (
 	"user_id" uuid PRIMARY KEY NOT NULL,
 	"stripe_customer_id" text UNIQUE,
@@ -27,7 +29,7 @@ CREATE TABLE IF NOT EXISTS "billing_subscriptions" (
 		"plan_interval" IS NULL OR "plan_interval" IN ('month', 'year')
 	),
 	CONSTRAINT "billing_subscriptions_user_id_users_id_fk"
-		FOREIGN KEY ("user_id") REFERENCES "public"."users"("id")
+		FOREIGN KEY ("user_id") REFERENCES "lsat"."users"("id")
 		ON DELETE cascade ON UPDATE no action
 );
 
@@ -45,7 +47,7 @@ CREATE OR REPLACE FUNCTION create_billing_subscription_for_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = lsat
 AS $$
 BEGIN
 	INSERT INTO "billing_subscriptions" ("user_id")

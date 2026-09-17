@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 create table if not exists custom_tutor_lesson_plans (
   id              uuid primary key default gen_random_uuid(),
   custom_topic_id uuid not null unique references custom_topics(id) on delete cascade,

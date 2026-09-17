@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- Adaptive Core: subsection skill tracking, difficulty levels, daily quests, XP
 
 -- A. Add difficulty_level (1-10) to sat_problems

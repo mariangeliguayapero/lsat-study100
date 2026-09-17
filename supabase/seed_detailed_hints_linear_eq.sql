@@ -92,3 +92,4 @@ UPDATE practice_problems SET detailed_hint = 'Since $(t+1, 2t-3)$ is a solution 
 UPDATE practice_problems SET detailed_hint = 'For no solution, $px + qy = r$ must be parallel to $4x + 8y = 12$, meaning $\frac{p}{4} = \frac{q}{8}$ but $\frac{r}{12}$ must differ from that ratio. Simplify $\frac{4}{8} = \frac{1}{2}$, so you need $\frac{p}{q} = \frac{1}{2}$ with $\frac{r}{12} \neq \frac{p}{4}$. Check each option against these conditions.' WHERE id = 'ef035eec-d24d-4092-b552-59091a0618b6';
 
 UPDATE practice_problems SET detailed_hint = 'Notice that $6x + 10y$ is exactly $2$ times $3x + 5y$. For the system to have infinitely many solutions, the second equation must be a constant multiple of the first. Since the left side is multiplied by $2$, the right side $b$ must also equal $2$ times $a$.' WHERE id = '8cbeadf6-20ea-4104-98d3-8bf451595d2e';
+SET search_path TO "lsat";

@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- =============================================================
 -- Engagement Tracking: quiz question events + micro-lesson sessions
 -- =============================================================

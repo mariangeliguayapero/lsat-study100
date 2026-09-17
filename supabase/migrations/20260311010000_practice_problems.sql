@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 CREATE TABLE IF NOT EXISTS "practice_problems" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"subtopic_id" uuid,

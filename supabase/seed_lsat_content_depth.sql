@@ -3,6 +3,8 @@
 -- LSAT/LSAC passages or released questions here.
 -- Internal source remains 'sat' for compatibility with existing routes/tables.
 
+SET search_path TO "lsat";
+
 BEGIN;
 
 UPDATE topics

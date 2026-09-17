@@ -25,6 +25,8 @@ this Vercel project is exclusively the stable QA deployment):
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` - the matching QA publishable key
 - `SUPABASE_SECRET_KEY` - the matching QA server key. The legacy
   `SUPABASE_SERVICE_ROLE_KEY` name is also accepted, but do not configure both.
+- `NEXT_PUBLIC_SUPABASE_DB_SCHEMA` - `lsat` on the shared Hetzner Supabase
+  instance; omit it to keep the default `public` schema in older environments.
 - `AGENT_SERVICE_URL` - the public HTTPS URL of the Render agent service, with
   no trailing endpoint path
 - `APP_URL` - the stable HTTPS URL of this Vercel QA deployment

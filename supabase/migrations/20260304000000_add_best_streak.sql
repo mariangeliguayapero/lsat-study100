@@ -1,1 +1,3 @@
-ALTER TABLE "users" ADD COLUMN "best_streak" integer DEFAULT 0 NOT NULL;
+SET search_path TO "lsat";
+
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "best_streak" integer DEFAULT 0 NOT NULL;

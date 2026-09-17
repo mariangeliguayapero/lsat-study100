@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- AI-generated tutor lesson plans per subtopic.
 -- Stores the structured LessonPlan JSON for on-demand AI tutor sessions.
 

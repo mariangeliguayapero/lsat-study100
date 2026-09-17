@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 ALTER TABLE "topics" DROP CONSTRAINT "topics_order_index_unique";
 
 ALTER TABLE "topics" ADD COLUMN "subject" text DEFAULT 'math' NOT NULL;

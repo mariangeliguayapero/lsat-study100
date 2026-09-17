@@ -1,3 +1,5 @@
+SET search_path TO "lsat";
+
 -- Timezone on users for computing reminder windows
 ALTER TABLE users ADD COLUMN timezone text NOT NULL DEFAULT 'America/New_York';
 
